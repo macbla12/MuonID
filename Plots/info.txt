@@ -1,0 +1,32 @@
+Dane Anglikow
+===================================
+All Muons: 98463 After first cut: 0.857825 After second cut: 0.824096
+All Electrons: 10082 After first cut: 0.45973 After second cut: 9.91867e-05
+All Pions: 100250 After first cut: 0.38802 After second cut: 0.00959601
+All Kaons: 20029 After first cut: 0.392681 After second cut: 0.0129312
+All Protons: 10010 After first cut: 0.406593 After second cut: 0.0125874
+===================================
+Muon Efficiency: 82.4096%
+Muon Purity: 98.3659%
+
+Nasze Dane
+===================================
+All Muons: 73631 After first cut: 0.483682 After second cut: 0.204873
+All Electrons: 20430 After first cut: 0.0808615 After second cut: 0
+All Pions: 78560 After first cut: 0.0367744 After second cut: 0.00568992
+All Kaons: 99 After first cut: 0.333333 After second cut: 0.010101
+All Protons: 100 After first cut: 0.4 After second cut: 0
+===================================
+Muon Efficiency: 20.4873%
+Muon Purity: 97.1158%
+
+Nasze Dane bez Mom>1
+===================================
+All Muons: 73631 After first cut: 0.686029 After second cut: 0.357689
+All Electrons: 20430 After first cut: 0.180078 After second cut: 0.0750857
+All Pions: 78560 After first cut: 0.0868763 After second cut: 0.0479252
+All Kaons: 99 After first cut: 0.333333 After second cut: 0.010101
+All Protons: 100 After first cut: 0.41 After second cut: 0
+===================================
+Muon Efficiency: 35.7689%
+Muon Purity: 83.2475%
