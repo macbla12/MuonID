@@ -14,6 +14,7 @@
 #include "ToFFastSim.cxx"
 //#include "Calorimeters.cxx"
 #include "Calorimeternew.cxx"
+#include "GreatCluster.cxx"
 
 
 void IDAnalysisNew()
@@ -82,12 +83,12 @@ void IDAnalysisNew()
    
    vector<TString> files(NumOfFiles);
    
-   //files.at(0)="/run/media/epic/Data/Muons/Grape-10x275/Paper/RECO/*.root";
+   files.at(0)="/run/media/epic/Data/Muons/Grape-10x275/Paper/RECO/*.root";
    //files.at(0)="/run/media/epic/Data/Background/JPsi/March/*.root";
    //files.at(0)="/run/media/epic/Data/Background/JPsi/OLD/*.root";
    //files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
    //files.at(1)="/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
-   //files.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
+   files.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
    //files.at(1)="/run/media/epic/Data/Background/SingleParticles/SingleFiles/Pions.root";
 
 
@@ -151,6 +152,9 @@ void IDAnalysisNew()
 
       // Get B0 Information
       TTreeReaderArray<int> simuAssocB0(tree_reader, "_B0ECalClusterAssociations_sim.index");
+      TTreeReaderArray<float> B0x(tree_reader, "B0ECalClusters.position.x");
+      TTreeReaderArray<float> B0y(tree_reader, "B0ECalClusters.position.y");
+      TTreeReaderArray<float> B0z(tree_reader, "B0ECalClusters.position.z");
       TTreeReaderArray<float> B0Eng(tree_reader, "B0ECalClusters.energy");
       TTreeReaderArray<unsigned int> B0ShPB(tree_reader, "B0ECalClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> B0ShPE(tree_reader, "B0ECalClusters.shapeParameters_end");
@@ -158,19 +162,13 @@ void IDAnalysisNew()
 
 
 
-      TTreeReaderArray<float> B0z(tree_reader, "B0ECalClusters.position.z");
-
-      // Get Forward Detectors Information
-      TTreeReaderArray<float> RPEng(tree_reader, "ForwardRomanPotRecParticles.energy");
-      TTreeReaderArray<float> RPMomX(tree_reader, "ForwardRomanPotRecParticles.momentum.x");
-      TTreeReaderArray<float> RPMomY(tree_reader, "ForwardRomanPotRecParticles.momentum.y");
-      TTreeReaderArray<float> RPMomZ(tree_reader, "ForwardRomanPotRecParticles.momentum.z");
-
-      TTreeReaderArray<float> OffMEng(tree_reader, "ForwardOffMRecParticles.energy");
 
       // Ecal Information
-      TTreeReaderArray<int> simuAssocEcalBarrel(tree_reader, "_EcalEndcapPClusterAssociations_sim.index");
+      TTreeReaderArray<int> simuAssocEcalBarrel(tree_reader, "_EcalBarrelClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalBarrelEng(tree_reader, "EcalBarrelClusters.energy");
+      TTreeReaderArray<float> EcalBarrelx(tree_reader, "EcalBarrelClusters.position.x");
+      TTreeReaderArray<float> EcalBarrely(tree_reader, "EcalBarrelClusters.position.y");
+      TTreeReaderArray<float> EcalBarrelz(tree_reader, "EcalBarrelClusters.position.z");
       TTreeReaderArray<unsigned int> EcalBarrelShPB(tree_reader, "EcalBarrelClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> EcalBarrelShPE(tree_reader, "EcalBarrelClusters.shapeParameters_end");
       TTreeReaderArray<float> EcalBarrelShParameters(tree_reader, "_EcalBarrelClusters_shapeParameters");
@@ -178,24 +176,36 @@ void IDAnalysisNew()
 
       TTreeReaderArray<int> simuAssocEcalBarrelImaging(tree_reader, "_EcalBarrelImagingClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalBarrelImagingEng(tree_reader, "EcalBarrelImagingClusters.energy");
+      TTreeReaderArray<float> EcalBarrelImagingx(tree_reader, "EcalBarrelImagingClusters.position.x");
+      TTreeReaderArray<float> EcalBarrelImagingy(tree_reader, "EcalBarrelImagingClusters.position.y");
+      TTreeReaderArray<float> EcalBarrelImagingz(tree_reader, "EcalBarrelImagingClusters.position.z");
       TTreeReaderArray<unsigned int> EcalBarrelImagingShPB(tree_reader, "EcalBarrelImagingClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> EcalBarrelImagingShPE(tree_reader, "EcalBarrelImagingClusters.shapeParameters_end");
       TTreeReaderArray<float> EcalBarrelImagingShParameters(tree_reader, "_EcalBarrelImagingClusters_shapeParameters");
 
       TTreeReaderArray<int> simuAssocEcalBarrelScFi(tree_reader, "_EcalBarrelScFiClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalBarrelScFiEng(tree_reader, "EcalBarrelScFiClusters.energy");
+      TTreeReaderArray<float> EcalBarrelScFix(tree_reader, "EcalBarrelScFiClusters.position.x");
+      TTreeReaderArray<float> EcalBarrelScFiy(tree_reader, "EcalBarrelScFiClusters.position.y");
+      TTreeReaderArray<float> EcalBarrelScFiz(tree_reader, "EcalBarrelScFiClusters.position.z");
       TTreeReaderArray<unsigned int> EcalBarrelScFiShPB(tree_reader, "EcalBarrelScFiClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> EcalBarrelScFiShPE(tree_reader, "EcalBarrelScFiClusters.shapeParameters_end");
       TTreeReaderArray<float> EcalBarrelScFiShParameters(tree_reader, "_EcalBarrelScFiClusters_shapeParameters");
 
       TTreeReaderArray<int> simuAssocEcalEndcapP(tree_reader, "_EcalEndcapPClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalEndcapPEng(tree_reader, "EcalEndcapPClusters.energy");
+      TTreeReaderArray<float> EcalEndcapPx(tree_reader, "EcalEndcapPClusters.position.x");
+      TTreeReaderArray<float> EcalEndcapPy(tree_reader, "EcalEndcapPClusters.position.y");
+      TTreeReaderArray<float> EcalEndcapPz(tree_reader, "EcalEndcapPClusters.position.z");
       TTreeReaderArray<unsigned int> EcalEndcapPShPB(tree_reader, "EcalEndcapPClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> EcalEndcapPShPE(tree_reader, "EcalEndcapPClusters.shapeParameters_end");
       TTreeReaderArray<float> EcalEndcapPShParameters(tree_reader, "_EcalEndcapPClusters_shapeParameters");
 
       TTreeReaderArray<int> simuAssocEcalEndcapN(tree_reader, "_EcalEndcapNClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalEndcapNEng(tree_reader, "EcalEndcapNClusters.energy");
+      TTreeReaderArray<float> EcalEndcapNx(tree_reader, "EcalEndcapNClusters.position.x");
+      TTreeReaderArray<float> EcalEndcapNy(tree_reader, "EcalEndcapNClusters.position.y");
+      TTreeReaderArray<float> EcalEndcapNz(tree_reader, "EcalEndcapNClusters.position.z");
       TTreeReaderArray<unsigned int> EcalEndcapNShPB(tree_reader, "EcalEndcapNClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> EcalEndcapNShPE(tree_reader, "EcalEndcapNClusters.shapeParameters_end");
       TTreeReaderArray<float> EcalEndcapNShParameters(tree_reader, "_EcalEndcapNClusters_shapeParameters");
@@ -203,24 +213,36 @@ void IDAnalysisNew()
       // Hcal Information
       TTreeReaderArray<int> simuAssocHcalBarrel(tree_reader, "_HcalBarrelClusterAssociations_sim.index");
       TTreeReaderArray<float> HcalBarrelEng(tree_reader, "HcalBarrelClusters.energy");
+      TTreeReaderArray<float> HcalBarrelx(tree_reader, "HcalBarrelClusters.position.x");
+      TTreeReaderArray<float> HcalBarrely(tree_reader, "HcalBarrelClusters.position.y");
+      TTreeReaderArray<float> HcalBarrelz(tree_reader, "HcalBarrelClusters.position.z");
       TTreeReaderArray<unsigned int> HcalBarrelShPB(tree_reader, "HcalBarrelClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> HcalBarrelShPE(tree_reader, "HcalBarrelClusters.shapeParameters_end");
       TTreeReaderArray<float> HcalBarrelShParameters(tree_reader, "_HcalBarrelClusters_shapeParameters");
 
       TTreeReaderArray<int> simuAssocHcalEndcapP(tree_reader, "_HcalEndcapPInsertClusterAssociations_sim.index");
       TTreeReaderArray<float> HcalEndcapPEng(tree_reader, "HcalEndcapPInsertClusters.energy");
+      TTreeReaderArray<float> HcalEndcapPx(tree_reader, "HcalEndcapPInsertClusters.position.x");
+      TTreeReaderArray<float> HcalEndcapPy(tree_reader, "HcalEndcapPInsertClusters.position.y");
+      TTreeReaderArray<float> HcalEndcapPz(tree_reader, "HcalEndcapPInsertClusters.position.z");
       TTreeReaderArray<unsigned int> HcalEndcapPShPB(tree_reader, "HcalEndcapPInsertClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> HcalEndcapPShPE(tree_reader, "HcalEndcapPInsertClusters.shapeParameters_end");
       TTreeReaderArray<float> HcalEndcapPShParameters(tree_reader, "_HcalEndcapPInsertClusters_shapeParameters");
 
       TTreeReaderArray<int> simuAssocLFHcal(tree_reader, "_LFHCALClusterAssociations_sim.index");
       TTreeReaderArray<float> LFHcalEng(tree_reader, "LFHCALClusters.energy");
+      TTreeReaderArray<float> LFHcalx(tree_reader, "LFHCALClusters.position.x");
+      TTreeReaderArray<float> LFHcaly(tree_reader, "LFHCALClusters.position.y");
+      TTreeReaderArray<float> LFHcalz(tree_reader, "LFHCALClusters.position.z");
       TTreeReaderArray<unsigned int> LFHcalShPB(tree_reader, "LFHCALClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> LFHcalShPE(tree_reader, "LFHCALClusters.shapeParameters_end");
       TTreeReaderArray<float> LFHcalShParameters(tree_reader, "_LFHCALClusters_shapeParameters");
 
       TTreeReaderArray<int> simuAssocHcalEndcapN(tree_reader, "_HcalEndcapNClusterAssociations_sim.index");
       TTreeReaderArray<float> HcalEndcapNEng(tree_reader, "HcalEndcapNClusters.energy");
+      TTreeReaderArray<float> HcalEndcapNx(tree_reader, "HcalEndcapNClusters.position.x");
+      TTreeReaderArray<float> HcalEndcapNy(tree_reader, "HcalEndcapNClusters.position.y");
+      TTreeReaderArray<float> HcalEndcapNz(tree_reader, "HcalEndcapNClusters.position.z");
       TTreeReaderArray<unsigned int> HcalEndcapNShPB(tree_reader, "HcalEndcapNClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> HcalEndcapNShPE(tree_reader, "HcalEndcapNClusters.shapeParameters_end");
       TTreeReaderArray<float> HcalEndcapNShParameters(tree_reader, "_HcalEndcapNClusters_shapeParameters");
@@ -265,7 +287,7 @@ void IDAnalysisNew()
       HCalEnergyMomvsEtaHist[File]= new TH2D(Form("HCalEnergyMomvsEtaHist%s",name.c_str()),Form("HCalEnergyMomvsEtaist%s",name.c_str()),50,-3.5,3.5,50,0,2);
       simuasocHist[File]= new TH1D(Form("simuasocHist%s",name.c_str()),Form("simuasocHist%s",name.c_str()),21,-10000.5,2000.5);
 
-      vector<vector<float>> ParamsVector= {{100,10,40},{100,7,35},{100,-0.001,0.001},{100,-0.001,0.004},{100,-0.2,0.2},{100,-1.5,1.5},{50,-3.5,3.5}};
+      vector<vector<float>> ParamsVector= {{100,0,800},{100,0,200},{100,0,1e-3},{100,0,1e-3},{100,0,2200},{100,0,2200},{100,0,2200}};
       for(int i=0; i<7; i++){
          EcalShapeHist[i][File] = new TH1D(Form("EcalShape%d%s", i, name.c_str()), Form("EcalShape%d%s", i, name.c_str()), ParamsVector[i][0], ParamsVector[i][1], ParamsVector[i][2]);
          HcalShapeHist[i][File] = new TH1D(Form("HcalShape%d%s", i, name.c_str()), Form("HcalShape%d%s", i, name.c_str()), ParamsVector[i][0], ParamsVector[i][1], ParamsVector[i][2]);
@@ -282,13 +304,10 @@ void IDAnalysisNew()
 
       while(tree_reader.Next()){
          eventID++;
-         //if(eventID>10) break;
-         
-         //if(File==0) if(eventID>3800) break;
+         //if(eventID>10) break;   //if(File==0) continue; //if(eventID!=13) continue;
 
-         
-
-         if(eventID%20000==0) cout<<"File "<<name<<" and event number... "<<eventID<<endl;
+         //if(eventID>1300) break; 
+         if(eventID%100000==0) cout<<"File "<<name<<" and event number... "<<eventID<<endl;
 
 
          //////////////////////
@@ -346,68 +365,62 @@ void IDAnalysisNew()
             //////////////////////
             // Collect energies and shapes from all ECal detectors
             //////////////////////
+            vector<vector<float>> EcalAllShapes;
+            //cout<<"Tutaj EcalBarrel"<<endl;
+            
+            auto [EnergyEcalBarrel,NumberEcalBarrel,ShapeEcalBarrel] = Calorimeternew( simuID, EcalBarrelEng, simuAssocEcalBarrel, EcalBarrelx, EcalBarrely,
+                EcalBarrelz, EcalBarrelShPB, EcalBarrelShPE,EcalBarrelShParameters);
 
-            double maxEcalEnergy = 0;
-            vector<float> maxEcalShape;
+            ECalEnergy+=EnergyEcalBarrel;
+            ECalNumber+=NumberEcalBarrel;
+              // cout<<"Tutaj 2"<<endl;
             
-            auto [Energy,Number,Shape] = Calorimeternew( simuID, EcalBarrelEng, simuAssocEcalBarrel,  EcalBarrelShPB, EcalBarrelShPE,EcalBarrelShParameters);
-            ECalEnergy+=Energy;
-            ECalNumber+=Number;
+            if(!ShapeEcalBarrel.empty() && !ShapeEcalBarrel[0].empty() && ShapeEcalBarrel[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeEcalBarrel.begin(), ShapeEcalBarrel.end());
             
-            if(Energy > maxEcalEnergy && !Shape.empty() && Shape[0] != 0) {
-                maxEcalEnergy = Energy;
-                maxEcalShape = Shape;
-            }
             
          
             
-            auto [EnergyEndcapP,NumberEndcapP,ShapeEndcapP] = Calorimeternew( simuID, EcalEndcapPEng, simuAssocEcalEndcapP,  EcalEndcapPShPB, EcalEndcapPShPE,EcalEndcapPShParameters);
+            auto [EnergyEndcapP,NumberEndcapP,ShapeEndcapP] = Calorimeternew( simuID, EcalEndcapPEng, simuAssocEcalEndcapP, EcalEndcapPx, EcalEndcapPy,
+                EcalEndcapPz, EcalEndcapPShPB, EcalEndcapPShPE,EcalEndcapPShParameters);
             ECalEnergy+=EnergyEndcapP;
             ECalNumber+=NumberEndcapP;
 
-            if(EnergyEndcapP > maxEcalEnergy && !ShapeEndcapP.empty() && ShapeEndcapP[0] != 0) {
-                maxEcalEnergy = EnergyEndcapP;
-                maxEcalShape = ShapeEndcapP;
-            }
+            if(!ShapeEndcapP.empty() && !ShapeEndcapP[0].empty() && ShapeEndcapP[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeEndcapP.begin(), ShapeEndcapP.end());
 
-            auto [EnergyEndcapN,NumberEndcapN,ShapeEndcapN] = Calorimeternew( simuID, EcalEndcapNEng, simuAssocEcalEndcapN,  EcalEndcapNShPB, EcalEndcapNShPE,EcalEndcapNShParameters);
+            auto [EnergyEndcapN,NumberEndcapN,ShapeEndcapN] = Calorimeternew( simuID, EcalEndcapNEng, simuAssocEcalEndcapN, EcalEndcapNx, EcalEndcapNy,
+                EcalEndcapNz, EcalEndcapNShPB, EcalEndcapNShPE,EcalEndcapNShParameters);
+
             ECalEnergy+=EnergyEndcapN;
             ECalNumber+=NumberEndcapN;
 
-            if(EnergyEndcapN > maxEcalEnergy && !ShapeEndcapN.empty() && ShapeEndcapN[0] != 0) {
-                maxEcalEnergy = EnergyEndcapN;
-                maxEcalShape = ShapeEndcapN;
-            }
+            if(!ShapeEndcapN.empty() && !ShapeEndcapN[0].empty() && ShapeEndcapN[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeEndcapN.begin(), ShapeEndcapN.end());
             
-            auto [EnergyB0,NumberB0,ShapeB0] = Calorimeternew( simuID, B0Eng, simuAssocB0,  B0ShPB, B0ShPE,B0ShParameters);
+            auto [EnergyB0,NumberB0,ShapeB0] = Calorimeternew( simuID, B0Eng, simuAssocB0, B0x, B0y, B0z, B0ShPB, B0ShPE,B0ShParameters);
+               
             ECalEnergy+=EnergyB0;
             ECalNumber+=NumberB0;
 
-            if(EnergyB0 > maxEcalEnergy && !ShapeB0.empty() && ShapeB0[0] != 0) {
-                maxEcalEnergy = EnergyB0;
-                maxEcalShape = ShapeB0;
-            }
+            if(!ShapeB0.empty() && !ShapeB0[0].empty() && ShapeB0[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeB0.begin(), ShapeB0.end());
 
-            auto [EnergyImaging,NumberImaging,ShapeImaging] = Calorimeternew( simuID, EcalBarrelImagingEng, simuAssocEcalBarrelImaging,  EcalBarrelImagingShPB, EcalBarrelImagingShPE,EcalBarrelImagingShParameters);
+            auto [EnergyImaging,NumberImaging,ShapeImaging] = Calorimeternew( simuID, EcalBarrelImagingEng, simuAssocEcalBarrelImaging, EcalBarrelImagingx, EcalBarrelImagingy,
+                EcalBarrelImagingz, EcalBarrelImagingShPB, EcalBarrelImagingShPE,EcalBarrelImagingShParameters);
+
             ECalEnergy+=EnergyImaging;
             ECalNumber+=NumberImaging;
 
-            if(EnergyImaging > maxEcalEnergy && !ShapeImaging.empty() && ShapeImaging[0] != 0) {
-                maxEcalEnergy = EnergyImaging;
-                maxEcalShape = ShapeImaging;
-            }
+            if(!ShapeImaging.empty() && !ShapeImaging[0].empty() && ShapeImaging[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeImaging.begin(), ShapeImaging.end());
             
-            auto [EnergyScFi,NumberScFi,ShapeScFi] = Calorimeternew( simuID, EcalBarrelScFiEng, simuAssocEcalBarrelScFi,  EcalBarrelScFiShPB, EcalBarrelScFiShPE,EcalBarrelScFiShParameters);
+            auto [EnergyScFi,NumberScFi,ShapeScFi] = Calorimeternew( simuID, EcalBarrelScFiEng, simuAssocEcalBarrelScFi, EcalBarrelScFix, EcalBarrelScFiy,
+                EcalBarrelScFiz, EcalBarrelScFiShPB, EcalBarrelScFiShPE,EcalBarrelScFiShParameters);
+
             ECalEnergy+=EnergyScFi;
             ECalNumber+=NumberScFi;
 
-            if(EnergyScFi > maxEcalEnergy && !ShapeScFi.empty() && ShapeScFi[0] != 0) {
-                maxEcalEnergy = EnergyScFi;
-                maxEcalShape = ShapeScFi;
-            }
+            if(!ShapeScFi.empty() && !ShapeScFi[0].empty() && ShapeScFi[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeScFi.begin(), ShapeScFi.end());
+            //cout<<"ECAL"<<endl;
             
             // Assign shape from detector with highest energy
-            if(!maxEcalShape.empty()) EcalShape = maxEcalShape;
+            EcalShape = GreatCluster(EcalAllShapes);
 
 
             if(ECalEnergy!=0)
@@ -418,44 +431,42 @@ void IDAnalysisNew()
             //////////////////////           
             //Hcal Energy Search
             //////////////////////
-
-            double maxHcalEnergy = 0;
-            vector<float> maxHcalShape;
+            //cout<<"Tutaj ShapeHcalBarrel"<<endl;
+            vector<vector<float>> HcalAllShapes;
             
-            auto [EnergyHcalBarrel,NumberHcalBarrel,ShapeHcalBarrel] = Calorimeternew( simuID, HcalBarrelEng, simuAssocHcalBarrel,  HcalBarrelShPB, HcalBarrelShPE,HcalBarrelShParameters);
+            auto [EnergyHcalBarrel,NumberHcalBarrel,ShapeHcalBarrel] = Calorimeternew( simuID, HcalBarrelEng, simuAssocHcalBarrel, HcalBarrelx, HcalBarrely,
+                HcalBarrelz, HcalBarrelShPB, HcalBarrelShPE,HcalBarrelShParameters);
+
             HCalEnergy+=EnergyHcalBarrel;
             HCalNumber+=NumberHcalBarrel;
-            if(EnergyHcalBarrel > maxHcalEnergy && !ShapeHcalBarrel.empty() && ShapeHcalBarrel[0] != 0) {
-                maxHcalEnergy = EnergyHcalBarrel;
-                maxHcalShape = ShapeHcalBarrel;
-            }
+            if(!ShapeHcalBarrel.empty() && !ShapeHcalBarrel[0].empty() && ShapeHcalBarrel[0][0] != 0)  HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalBarrel.begin(), ShapeHcalBarrel.end());
             
-            auto [EnergyHcalEndcapP,NumberHcalEndcapP,ShapeHcalEndcapP] = Calorimeternew( simuID, HcalEndcapPEng, simuAssocHcalEndcapP,  HcalEndcapPShPB, HcalEndcapPShPE,HcalEndcapPShParameters);
+            auto [EnergyHcalEndcapP,NumberHcalEndcapP,ShapeHcalEndcapP] = Calorimeternew( simuID, HcalEndcapPEng, simuAssocHcalEndcapP, HcalEndcapPx, HcalEndcapPy,
+                HcalEndcapPz, HcalEndcapPShPB, HcalEndcapPShPE,HcalEndcapPShParameters);
+
             HCalEnergy+=EnergyHcalEndcapP;
             HCalNumber+=NumberHcalEndcapP;
-            if(EnergyHcalEndcapP > maxHcalEnergy && !ShapeHcalEndcapP.empty() && ShapeHcalEndcapP[0] != 0) {
-                maxHcalEnergy = EnergyHcalEndcapP;
-                maxHcalShape = ShapeHcalEndcapP;
-            }
+
+            if(!ShapeHcalEndcapP.empty() && !ShapeHcalEndcapP[0].empty() && ShapeHcalEndcapP[0][0] != 0)  HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalEndcapP.begin(), ShapeHcalEndcapP.end());
             
-            auto [EnergyLFHcal,NumberLFHcal,ShapeLFHcal] = Calorimeternew( simuID, LFHcalEng, simuAssocLFHcal,  LFHcalShPB, LFHcalShPE,LFHcalShParameters);
+            auto [EnergyLFHcal,NumberLFHcal,ShapeLFHcal] = Calorimeternew( simuID, LFHcalEng, simuAssocLFHcal, LFHcalx, LFHcaly, LFHcalz, LFHcalShPB, LFHcalShPE,LFHcalShParameters);
+
             HCalEnergy+=EnergyLFHcal;
             HCalNumber+=NumberLFHcal;
-            if(EnergyLFHcal > maxHcalEnergy && !ShapeLFHcal.empty() && ShapeLFHcal[0] != 0) {
-                maxHcalEnergy = EnergyLFHcal;
-                maxHcalShape = ShapeLFHcal;
-            }
+
+            if(!ShapeLFHcal.empty() && !ShapeLFHcal[0].empty() && ShapeLFHcal[0][0] != 0)  HcalAllShapes.insert(HcalAllShapes.end(), ShapeLFHcal.begin(), ShapeLFHcal.end());
             
-            auto [EnergyHcalEndcapN,NumberHcalEndcapN,ShapeHcalEndcapN] = Calorimeternew( simuID, HcalEndcapNEng, simuAssocHcalEndcapN,  HcalEndcapNShPB, HcalEndcapNShPE,HcalEndcapNShParameters);
+            auto [EnergyHcalEndcapN,NumberHcalEndcapN,ShapeHcalEndcapN] = Calorimeternew( simuID, HcalEndcapNEng, simuAssocHcalEndcapN, HcalEndcapNx, HcalEndcapNy,
+                HcalEndcapNz, HcalEndcapNShPB, HcalEndcapNShPE,HcalEndcapNShParameters);
+
             HCalEnergy+=EnergyHcalEndcapN;
             HCalNumber+=NumberHcalEndcapN;
-            if(EnergyHcalEndcapN > maxHcalEnergy && !ShapeHcalEndcapN.empty() && ShapeHcalEndcapN[0] != 0) {
-                maxHcalEnergy = EnergyHcalEndcapN;
-                maxHcalShape = ShapeHcalEndcapN;
-            }
+
+            if(!ShapeHcalEndcapN.empty() && !ShapeHcalEndcapN[0].empty() && ShapeHcalEndcapN[0][0] != 0)  HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalEndcapN.begin(), ShapeHcalEndcapN.end());
             
             // Assign shape from detector with highest energy
-            if(!maxHcalShape.empty()) HcalShape = maxHcalShape;
+            //cout<<"HCAL"<<endl;
+            HcalShape = GreatCluster(HcalAllShapes);
             //if(HCalNumber>=1) continue;
             
             if(HCalEnergy!=0)
@@ -470,7 +481,7 @@ void IDAnalysisNew()
 
             if(abs(Partic.Eta())<1.3 && abs(Partic.Eta())>1) continue;
             FoundParticles+=Found;
-            if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
+            //if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
             
             //Track properties 
             double FullEnergy=HCalEnergy+ECalEnergy;

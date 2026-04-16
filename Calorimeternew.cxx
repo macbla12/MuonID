@@ -1,47 +1,52 @@
 #include <TLorentzVector.h>
 #include <TRandom.h>
 struct CalResult {
-    double Energy;
-    double Number;
-    vector<float> Shape;
+    float Energy;
+    float Number;
+    vector<vector<float>> Shape;
 };
 
-CalResult Calorimeternew(int simuID,TTreeReaderArray<float>& Eng, TTreeReaderArray<int>&simuAssoc, TTreeReaderArray<unsigned int>&ShPB, TTreeReaderArray<unsigned int>& ShPE, TTreeReaderArray<float>& ShParameters)
+CalResult Calorimeternew(int simuID, TTreeReaderArray<float>& Eng, TTreeReaderArray<int>& simuAssoc, TTreeReaderArray<float>& posX, TTreeReaderArray<float>& posY, TTreeReaderArray<float>& posZ,
+                         TTreeReaderArray<unsigned int>& ShPB, TTreeReaderArray<unsigned int>& ShPE, TTreeReaderArray<float>& ShParameters)
 {
-    double Energy=0.0,Number=0.0;
-    vector<float> Shape;
-    Shape.resize(7,0);
-    if(Eng.GetSize()==simuAssoc.GetSize())
+    float Energy = 0.0, Number = 0.0;
+    vector<vector<float>> Shapes;
+    
+    if (Eng.GetSize() == simuAssoc.GetSize())
     {
-        double maxEnergy=0;
-        for(int cluster=0;cluster<Eng.GetSize();cluster++)
+        for (int cluster = 0; cluster < Eng.GetSize(); cluster++)
         {
-            //cout<<"Before   "<<simuID<<"     "<<simuAssoc[cluster]<<endl;
-            if(simuID==simuAssoc[cluster])
+            if (simuID == simuAssoc[cluster])
             {
-                //cout<<"After"<<simuID<<"     "<<simuAssoc[cluster]<<endl;
-
-
-                if(Eng[cluster]>maxEnergy) maxEnergy=Eng[cluster];
-
-                Energy+=Eng[cluster];
+                Energy += Eng[cluster];
                 Number++;
 
                 int start = ShPB[cluster];
                 int end   = ShPE[cluster];
-        
-                for(int i = start; i < end; i++) {
-                    if(Eng[cluster]<maxEnergy) break;
-                    if(ShParameters[0]==0) break;
-                    int j=i-start;
-                    Shape[j] = ShParameters[i]; 
+                //cout<<"Start: "<<start<<" End: "<<end<<" Size: "<<ShParameters.GetSize()<<endl;
 
+                vector<float> ShapeCluster(11, 0.0f);
+                if (ShParameters.GetSize() > 0 && start < (int)ShParameters.GetSize() && ShParameters[start] != 0)
+                if (ShParameters[start] != 0)
+                {
+                    for (int i = start; i < end; i++)
+                    {
+                        int j = i - start;
+                        
+                        if (j >= 7) break;
+                        ShapeCluster[j] = ShParameters[i];
+                    }
                 }
 
-                
-            } 
-        } 
-    }
+                ShapeCluster[7] = Eng[cluster]; 
+                ShapeCluster[8] = posX[cluster];
+                ShapeCluster[9] = posY[cluster];
+                ShapeCluster[10] = posZ[cluster]; 
 
-    return {Energy,Number,Shape};
+                Shapes.push_back(ShapeCluster);
+            }
+        }
+    }
+    
+    return {Energy, Number, Shapes};
 }

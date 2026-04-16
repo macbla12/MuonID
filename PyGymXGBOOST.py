@@ -64,7 +64,7 @@ def safe_divide(num, denom):
 
 def engineer_scalar_features(df):
     d = df[['ECalEnergy', 'HCalEnergy', 'ECalNumber', 'HCalNumber',
-            'ECalEoverP','HCalEoverP', 'Momentum']].copy()
+            'ECalEoverP','HCalEoverP']].copy()
     d['ECal_HCal_ratio'] = safe_divide(df['ECalEnergy'], df['HCalEnergy'])
     d['TotalCalEnergy']  = df['ECalEnergy'] + df['HCalEnergy']
     d['ECalDensity']     = safe_divide(df['ECalEnergy'], df['ECalNumber'])
@@ -612,12 +612,12 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
                 color=BKG_COLOR, label='Background', hatch='//', edgecolor=BKG_COLOR)
         ax.hist(sig_vals.clip(lo, hi), bins=bins, alpha=0.6, density=True,
                 color=SIG_COLOR, label='Signal')
-        ax.set_title(feat, color=SIG_COLOR, fontsize=9, pad=5)
-        ax.set_xlabel('Value', fontsize=7)
-        ax.set_ylabel('Norm.',  fontsize=7)
-        ax.tick_params(labelsize=7)
+        ax.set_title(feat, color=SIG_COLOR, fontsize=20, pad=5)
+        ax.set_xlabel('Value', fontsize=16)
+        ax.set_ylabel('Norm.',  fontsize=16)
+        ax.tick_params(labelsize=16)
         ax.grid(True, alpha=0.4)
-        ax.legend(fontsize=7)
+        ax.legend(fontsize=16)
 
     for ax in axes[len(phys_features):]:
         ax.set_visible(False)

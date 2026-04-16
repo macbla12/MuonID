@@ -83,7 +83,7 @@ void FinalClassification()
 
     gROOT->SetBatch(kTRUE);
     gROOT->ProcessLine("gErrorIgnoreLevel = 3000;");
-    //gStyle->SetOptStat(0);
+    gStyle->SetOptStat(0);
 
         double DEG=180/TMath::Pi();
 
@@ -103,9 +103,9 @@ void FinalClassification()
     //////////////////////
     static constexpr int NumOfFiles=2;
    
-    TH1D *AllParticEta[NumOfFiles], *AllParticPhi[NumOfFiles], *AllParticEnergy[NumOfFiles];
-    TH1D *CutParticEta[NumOfFiles], *CutParticPhi[NumOfFiles], *CutParticEnergy[NumOfFiles];
-    TH1D *FoundParticEta[NumOfFiles], *FoundParticPhi[NumOfFiles], *FoundParticEnergy[NumOfFiles];
+    TH1D *AllParticEta[NumOfFiles], *AllParticPhi[NumOfFiles], *AllParticEnergy[NumOfFiles], *AllParticPt[NumOfFiles];
+    TH1D *CutParticEta[NumOfFiles], *CutParticPhi[NumOfFiles], *CutParticEnergy[NumOfFiles], *CutParticPt[NumOfFiles];
+    TH1D *FoundParticEta[NumOfFiles], *FoundParticPhi[NumOfFiles], *FoundParticEnergy[NumOfFiles], *FoundParticPt[NumOfFiles];
     TH1D *ECalEnergyHist[NumOfFiles], *ECalEnergyMomHist[NumOfFiles],*HCalEnergyHist[NumOfFiles], *HCalEnergyMomHist[NumOfFiles];
     TH2D *ECalEnergyvsMomHist[NumOfFiles],*HCalEnergyvsMomHist[NumOfFiles];
     TH2D *ECalEnergyMomvsEtaHist[NumOfFiles],  *HCalEnergyMomvsEtaHist[NumOfFiles];
@@ -115,22 +115,22 @@ void FinalClassification()
     vector<TString> files(NumOfFiles);
 
 
-   files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
-   //files.at(0)="/run/media/epic/Data/Muons/Grape-10x275/Paper/RECO/*.root";
+   //files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
+   files.at(0)="/run/media/epic/Data/Muons/Grape-10x275/Paper/RECO/*.root";
    //files.at(0)="/run/media/epic/Data/Background/JPsi/OLD/*.root";
    //files.at(0)="/run/media/epic/Data/Background/JPsi/March/*.root";
 
 
-   files.at(1)="/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
-   //files.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
+   //files.at(1)="/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
+   files.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
 
 
 
-   TF1 *upperbondE = new TF1("upperbondE", "2/x+0.05", 0.001, 24.0);
+   TF1 *upperbondE = new TF1("upperbondE", "2/(x**2)+0.05", 0.001, 24.0);
    upperbondE->SetLineColor(kRed);
    upperbondE->SetLineWidth(1);
 
-   TF1 *upperbondH = new TF1("upperbondH", "3.5/x+0.1",  0.001, 24.0); 
+   TF1 *upperbondH = new TF1("upperbondH", "3.5/x",  0.001, 24.0); 
    upperbondH->SetLineColor(kRed);
    upperbondH->SetLineWidth(1);
       
@@ -255,17 +255,20 @@ void FinalClassification()
 
       //==================================//
 
-      AllParticEta[File] = new TH1D(Form("AllParticEta%s",name.c_str()),Form("AllParticEta%s",name.c_str()),50,-4,4);
+      AllParticEta[File] = new TH1D(Form("AllParticEta%s",name.c_str()),Form("AllParticEta%s",name.c_str()),30,-1.2,3.4);
       AllParticPhi[File]= new TH1D(Form("AllParticPhi%s",name.c_str()),Form("AllParticPhi%s",name.c_str()),30,-180,180);
       AllParticEnergy[File]= new TH1D(Form("AllParticEnergy%s",name.c_str()),Form("AllParticEnergy%s",name.c_str()),40,0,20);
+      AllParticPt[File]= new TH1D(Form("AllParticPt%s",name.c_str()),Form("AllParticPt%s",name.c_str()),30,0,20);
       
-      CutParticEta[File] = new TH1D(Form("CutParticEta%s",name.c_str()),Form("CutParticEta%s",name.c_str()),50,-4,4);
+      CutParticEta[File] = new TH1D(Form("CutParticEta%s",name.c_str()),Form("CutParticEta%s",name.c_str()),30,-1.2,3.4);
       CutParticPhi[File]= new TH1D(Form("CutParticPhi%s",name.c_str()),Form("CutParticPhi%s",name.c_str()),30,-180,180);
       CutParticEnergy[File]= new TH1D(Form("CutParticEnergy%s",name.c_str()),Form("CutParticEnergy%s",name.c_str()),40,0,20);
+      CutParticPt[File]= new TH1D(Form("CutParticPt%s",name.c_str()),Form("CutParticPt%s",name.c_str()),30,0,20);
 
-      FoundParticEta[File] = new TH1D(Form("FoundParticEta%s",name.c_str()),Form("FoundParticEta%s",name.c_str()),50,-4,4);
+      FoundParticEta[File] = new TH1D(Form("FoundParticEta%s",name.c_str()),Form("FoundParticEta%s",name.c_str()),30,-1.2,3.4);
       FoundParticPhi[File]= new TH1D(Form("FoundParticPhi%s",name.c_str()),Form("FoundParticPhi%s",name.c_str()),30,-180,180);
       FoundParticEnergy[File]= new TH1D(Form("FoundParticEnergy%s",name.c_str()),Form("FoundParticEnergy%s",name.c_str()),40,0,20);
+      FoundParticPt[File]= new TH1D(Form("FoundParticPt%s",name.c_str()),Form("FoundParticPt%s",name.c_str()),30,0,20);
       
       //==================================//
       ECalEnergyHist[File]= new TH1D(Form("ECalEnergyHist%s",name.c_str()),Form("ECalEnergyHist%s",name.c_str()),50,0,15);
@@ -321,9 +324,11 @@ void FinalClassification()
             if(Partic.E()<1) continue;
 
          
-            AllParticEnergy[File]->Fill(Partic.E());
+            AllParticEnergy[File]->Fill(Partic.P());
             AllParticEta[File]->Fill(Partic.Eta());
             AllParticPhi[File]->Fill(Partic.Phi()*DEG);
+            AllParticPt[File]->Fill(Partic.Perp());
+
            
            //Ecal Energy Search
             int simuID = simuAssoc[particle];
@@ -462,9 +467,7 @@ void FinalClassification()
 
             ECalEnergyvsMomHist[File]->Fill(Momentum,ECalEoverP);
             HCalEnergyvsMomHist[File]->Fill(Momentum,HCalEoverP);
-         
                 
-
             if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
             if(HCalEoverP>upperbondH->Eval(Momentum)) continue;
             if(HCalEoverP<lowerbondH->Eval(Momentum)) continue;
@@ -472,7 +475,9 @@ void FinalClassification()
 
             CutParticEta[File] ->Fill(Partic.Eta());
             CutParticPhi[File]->Fill(Partic.Phi()*DEG);
-            CutParticEnergy[File]->Fill(Partic.E());
+            CutParticEnergy[File]->Fill(Partic.P());
+            CutParticPt[File]->Fill(Partic.Perp());
+
 
 
              std::vector<float> feats = prepare_37_features(
@@ -502,8 +507,11 @@ void FinalClassification()
             secondcuts++;
             FoundParticEta[File] ->Fill(Partic.Eta());
             FoundParticPhi[File]->Fill(Partic.Phi()*DEG);
-            FoundParticEnergy[File]->Fill(Partic.E());
+            FoundParticEnergy[File]->Fill(Partic.P());
+            FoundParticPt[File]->Fill(Partic.Perp());
+
             
+
 
 
 
@@ -521,10 +529,10 @@ void FinalClassification()
       cout<<"Found Ratio: "<<FoundParticles*100/particscount<<'%'<<endl;
       cout<<"After First Cuts Ratio: "<<aftercuts*100/FoundParticles<<'%'<<endl;
       cout<<"   After first cut particles: "<<aftercuts<<endl;
+      
 
-      cout<<"After Second Cuts Ratio: "<<secondcuts*100/aftercuts<<'%'<<endl;
+      cout<<"After Second Cuts Ratio: "<<secondcuts*100/FoundParticles<<'%'<<endl;
       cout<<"   After second cuts particles: "<<secondcuts<<endl;
-
 
 
       cout<<"==========================="<<endl;
@@ -594,7 +602,17 @@ void FinalClassification()
       CutParticEnergy[0]->SetLineWidth(2);
       AllParticEnergy[0]->Draw();
       FoundParticEnergy[0]->Draw("same");
-      CutParticEnergy[0]->Draw("same");   
+      CutParticEnergy[0]->Draw("same");
+   c1.cd(4); 
+      gPad->SetLogy(1);
+      AllParticPt[0]->SetLineColor(kBlue);
+      FoundParticPt[0]->SetLineColor(kRed);
+      CutParticPt[0]->SetLineColor(kGreen+1);
+      CutParticPt[0]->SetLineWidth(2);
+      AllParticPt[0]->SetMinimum(0.1);
+      AllParticPt[0]->Draw();
+      FoundParticPt[0]->Draw("same");
+      CutParticPt[0]->Draw("same");    
    c1.SaveAs("Plots/FinalCalID.pdf");
    c1.Clear();
 
@@ -605,6 +623,8 @@ void FinalClassification()
       FoundParticEta[1]->SetLineColor(kRed);
       CutParticEta[1]->SetLineColor(kGreen+1);
       CutParticEta[1]->SetLineWidth(2);
+      AllParticEta[1]->SetMinimum(0.1);
+
       AllParticEta[1]->Draw();
       FoundParticEta[1]->Draw("same");
       CutParticEta[1]->Draw("same");
@@ -628,6 +648,17 @@ void FinalClassification()
       AllParticEnergy[1]->Draw();
       FoundParticEnergy[1]->Draw("same");
       CutParticEnergy[1]->Draw("same"); 
+   c1.cd(4); 
+      gPad->SetLogy(1);
+      AllParticPt[1]->SetLineColor(kBlue);
+      FoundParticPt[1]->SetLineColor(kRed);
+      CutParticPt[1]->SetLineColor(kGreen+1);
+      CutParticPt[1]->SetLineWidth(2);
+      AllParticPt[1]->SetMinimum(0.1);
+      AllParticPt[1]->Draw();
+      FoundParticPt[1]->Draw("same");
+      CutParticPt[1]->Draw("same"); 
+   
 
 
    c1.SaveAs("Plots/FinalCalID.pdf");
@@ -757,7 +788,7 @@ void FinalClassification()
    title.SetTextFont(42);
    title.SetTextSize(0.05);
    title.DrawLatex(0.32, 0.93, "HCal Response to Muons");
-   c1.SaveAs("Plots/HCalMuon.png");
+   c1.SaveAs("Plots/JPsiHCalMuon.png");
    c1.Clear();
 
    // --- Wykres ECal ---
@@ -873,117 +904,300 @@ void FinalClassification()
    c1.SaveAs("Plots/ResponseContinuous.png");
 
    // === Efficiency for Muon Candidates ===
-c1.Clear();
+   // =============================================
+   // === PLOT 1: Efficiency (E/p + XGBoost) ===
+   // =============================================
+   c1.Clear();
 
-TEfficiency *pEff1 = new TEfficiency(*CutParticEnergy[0], *AllParticEnergy[0]);
-pEff1->SetTitle("; Energy [GeV];Efficiency");
-pEff1->SetLineColor(kRed+1);
-pEff1->SetMarkerStyle(20);
-pEff1->SetMarkerSize(0.8);
-pEff1->SetMarkerColor(kRed+1);
+   TEfficiency *pEff1 = new TEfficiency(*CutParticEnergy[0], *AllParticEnergy[0]);
+   pEff1->SetTitle("; Momentum [GeV/c]; Efficiency");
+   pEff1->SetLineColor(kRed+1);
+   pEff1->SetMarkerStyle(20);
+   pEff1->SetMarkerSize(0.8);
+   pEff1->SetMarkerColor(kRed+1);
+   pEff1->SetStatisticOption(TEfficiency::kBUniform);
 
-pEff1->Draw("AP");
-gPad->Update();
+   TEfficiency *pEff2 = new TEfficiency(*FoundParticEnergy[0], *AllParticEnergy[0]);
+   pEff2->SetLineColor(kGreen+2);
+   pEff2->SetMarkerStyle(22);
+   pEff2->SetMarkerSize(0.8);
+   pEff2->SetMarkerColor(kGreen+2);
+   pEff2->SetStatisticOption(TEfficiency::kBUniform);
 
-pEff1->GetPaintedGraph()->SetMinimum(0.95);
-pEff1->GetPaintedGraph()->SetMaximum(1.02);
-gPad->Update();
+   pEff1->Draw("AP");
+   gPad->Update();
+   pEff1->GetPaintedGraph()->SetMinimum(0.75);
+   pEff1->GetPaintedGraph()->SetMaximum(1.05);
+   gPad->Update();
 
-tex.SetNDC();
-tex.DrawLatex(0.2, 0.92, "#bf{E/p cut efficiency for Muon Candidates}");
-c1.SaveAs("Plots/EfficiencyFirst.png");
+   pEff2->Draw("P SAME");
+   gPad->Update();
 
-// === Background Rejection for Pions ===
-c1.Clear();
+   TLegend *legEff = new TLegend(0.5, 0.75, 0.83, 0.92);
+   legEff->SetBorderSize(0);
+   legEff->SetFillStyle(0);
+   legEff->AddEntry(pEff1, "Previous efficiency (#mu)", "lp");
+   legEff->AddEntry(pEff2, "XGBoost efficiency (#mu)", "lp");
+   legEff->Draw();
 
-// Rejected = All - Passed
-TH1F *hRejected0 = (TH1F*)AllParticEnergy[1]->Clone("hRejected0");
-hRejected0->Add(CutParticEnergy[1], -1.0);
+   tex.SetNDC();
+   tex.DrawLatex(0.2, 0.92, "#bf{Muon Candidate Efficiency vs p}");
+   c1.SaveAs("Plots/EfficiencyBoth.png");
 
-// Sprawdzenie spójności histogramów
-if (!TEfficiency::CheckConsistency(*hRejected0, *AllParticEnergy[1])) {
-    std::cerr << "ERROR: Inconsistent histograms for pion rejection!" << std::endl;
-    return;
+   // =============================================
+   // === PLOT 2: Rejection (E/p + XGBoost) ===
+   // =============================================
+   c1.Clear();
+
+   TH1F *hRejected0 = (TH1F*)AllParticEnergy[1]->Clone("hRejected0");
+   hRejected0->Add(CutParticEnergy[1], -1.0);
+
+   TH1F *hRejected1 = (TH1F*)AllParticEnergy[1]->Clone("hRejected1");
+   hRejected1->Add(FoundParticEnergy[1], -1.0);
+
+   if (!TEfficiency::CheckConsistency(*hRejected0, *AllParticEnergy[1])) {
+      std::cerr << "ERROR: Inconsistent histograms for E/p pion rejection!" << std::endl;
+      return;
+   }
+   if (!TEfficiency::CheckConsistency(*hRejected1, *AllParticEnergy[1])) {
+      std::cerr << "ERROR: Inconsistent histograms for XGBoost pion rejection!" << std::endl;
+      return;
+   }
+
+   TEfficiency *pEff0 = new TEfficiency(*hRejected0, *AllParticEnergy[1]);
+   pEff0->SetTitle("; Momentum [GeV/c]; Rejection (1 - #varepsilon)");
+   pEff0->SetLineColor(kRed+1);
+   pEff0->SetMarkerStyle(21);
+   pEff0->SetMarkerSize(0.8);
+   pEff0->SetMarkerColor(kRed+1);
+   pEff0->SetStatisticOption(TEfficiency::kBUniform);
+
+   TEfficiency *pEff3 = new TEfficiency(*hRejected1, *AllParticEnergy[1]);
+   pEff3->SetLineColor(kGreen+1);
+   pEff3->SetMarkerStyle(23);
+   pEff3->SetMarkerSize(0.8);
+   pEff3->SetMarkerColor(kGreen+1);
+   pEff3->SetStatisticOption(TEfficiency::kBUniform);
+
+   pEff0->Draw("AP");
+   gPad->Update();
+   pEff0->GetPaintedGraph()->SetMinimum(0.9);
+   pEff0->GetPaintedGraph()->SetMaximum(1.05);
+   gPad->Update();
+
+   pEff3->Draw("P SAME");
+   gPad->Update();
+
+   TLegend *legRej = new TLegend(0.5, 0.75, 0.83, 0.92);
+   legRej->SetBorderSize(0);
+   legRej->SetFillStyle(0);
+   legRej->AddEntry(pEff0, "Previous rejection (#pi)", "lp");
+   legRej->AddEntry(pEff3, "XGBoost rejection (#pi)", "lp");
+   legRej->Draw();
+
+   tex.SetNDC();
+   tex.DrawLatex(0.2, 0.92, "#bf{Pion Rejection vs p}");
+   c1.SaveAs("Plots/RejectionBoth.png");
+
+   // Sprzątanie
+   delete hRejected0;
+   delete hRejected1;
+
+   c1.Clear();
+
+   // =============================================
+   // === PLOT: Eta Efficiency (E/p + XGBoost) ===
+   // =============================================
+   c1.Clear();
+
+   TEfficiency *pEffEta1 = new TEfficiency(*CutParticEta[0], *AllParticEta[0]);
+   pEffEta1->SetTitle("; #eta; Efficiency");
+   pEffEta1->SetLineColor(kRed+1);
+   pEffEta1->SetMarkerStyle(20);
+   pEffEta1->SetMarkerSize(0.8);
+   pEffEta1->SetMarkerColor(kRed+1);
+   pEffEta1->SetStatisticOption(TEfficiency::kBUniform);
+
+   TEfficiency *pEffEta2 = new TEfficiency(*FoundParticEta[0], *AllParticEta[0]);
+   pEffEta2->SetLineColor(kGreen+2);
+   pEffEta2->SetMarkerStyle(22);
+   pEffEta2->SetMarkerSize(0.8);
+   pEffEta2->SetMarkerColor(kGreen+2);
+   pEffEta2->SetStatisticOption(TEfficiency::kBUniform);
+
+   pEffEta1->Draw("AP");
+   gPad->Update();
+   pEffEta1->GetPaintedGraph()->SetMinimum(0.85);
+   pEffEta1->GetPaintedGraph()->SetMaximum(1.05);
+   gPad->Update();
+
+   pEffEta2->Draw("P SAME");
+   gPad->Update();
+
+   TLegend *legEffEta = new TLegend(0.5, 0.75, 0.83, 0.92);
+   legEffEta->SetBorderSize(0);
+   legEffEta->SetFillStyle(0);
+   legEffEta->AddEntry(pEffEta1, "E/p cut efficiency (#mu)", "lp");
+   legEffEta->AddEntry(pEffEta2, "XGBoost efficiency (#mu)", "lp");
+   legEffEta->Draw();
+
+   tex.SetNDC();
+   tex.DrawLatex(0.2, 0.92, "#bf{Muon Candidate Efficiency vs #eta}");
+   c1.SaveAs("Plots/EfficiencyBoth_Eta.png");
+
+   // =============================================
+   // === PLOT: Eta Rejection (E/p + XGBoost) ===
+   // =============================================
+   c1.Clear();
+
+   TH1D *hRejectedEta0 = (TH1D*)AllParticEta[1]->Clone("hRejectedEta0");
+   hRejectedEta0->Add(CutParticEta[1], -1.0);
+
+   TH1D *hRejectedEta1 = (TH1D*)AllParticEta[1]->Clone("hRejectedEta1");
+   hRejectedEta1->Add(FoundParticEta[1], -1.0);
+
+   if (!TEfficiency::CheckConsistency(*hRejectedEta0, *AllParticEta[1])) {
+      std::cerr << "ERROR: Inconsistent histograms for E/p pion rejection (Eta)!" << std::endl;
+      return;
+   }
+   if (!TEfficiency::CheckConsistency(*hRejectedEta1, *AllParticEta[1])) {
+      std::cerr << "ERROR: Inconsistent histograms for XGBoost pion rejection (Eta)!" << std::endl;
+      return;
+   }
+
+   TEfficiency *pEffEta0 = new TEfficiency(*hRejectedEta0, *AllParticEta[1]);
+   pEffEta0->SetTitle("; #eta; Rejection (1 - #varepsilon)");
+   pEffEta0->SetLineColor(kBlue+1);
+   pEffEta0->SetMarkerStyle(21);
+   pEffEta0->SetMarkerSize(0.8);
+   pEffEta0->SetMarkerColor(kBlue+1);
+   pEffEta0->SetStatisticOption(TEfficiency::kBUniform);
+
+   TEfficiency *pEffEta3 = new TEfficiency(*hRejectedEta1, *AllParticEta[1]);
+   pEffEta3->SetLineColor(kMagenta+1);
+   pEffEta3->SetMarkerStyle(23);
+   pEffEta3->SetMarkerSize(0.8);
+   pEffEta3->SetMarkerColor(kMagenta+1);
+   pEffEta3->SetStatisticOption(TEfficiency::kBUniform);
+
+   pEffEta0->Draw("AP");
+   gPad->Update();
+   pEffEta0->GetPaintedGraph()->SetMinimum(0.9);
+   pEffEta0->GetPaintedGraph()->SetMaximum(1.05);
+   gPad->Update();
+
+   pEffEta3->Draw("P SAME");
+   gPad->Update();
+
+   TLegend *legRejEta = new TLegend(0.5, 0.75, 0.83, 0.92);
+   legRejEta->SetBorderSize(0);
+   legRejEta->SetFillStyle(0);
+   legRejEta->AddEntry(pEffEta0, "E/p cut rejection (#pi)", "lp");
+   legRejEta->AddEntry(pEffEta3, "XGBoost rejection (#pi)", "lp");
+   legRejEta->Draw();
+
+   tex.SetNDC();
+   tex.DrawLatex(0.2, 0.92, "#bf{Pion Rejection vs #eta}");
+   c1.SaveAs("Plots/RejectionBoth_Eta.png");
+
+   delete hRejectedEta0;
+   delete hRejectedEta1;
+
+   // =============================================
+   // === PLOT: Pt Efficiency (E/p + XGBoost) ===
+   // =============================================
+   c1.Clear();
+
+   TEfficiency *pEffPt1 = new TEfficiency(*CutParticPt[0], *AllParticPt[0]);
+   pEffPt1->SetTitle("; p_{T} [GeV/c]; Efficiency");
+   pEffPt1->SetLineColor(kRed+1);
+   pEffPt1->SetMarkerStyle(20);
+   pEffPt1->SetMarkerSize(0.8);
+   pEffPt1->SetMarkerColor(kRed+1);
+   pEffPt1->SetStatisticOption(TEfficiency::kBUniform);
+
+   TEfficiency *pEffPt2 = new TEfficiency(*FoundParticPt[0], *AllParticPt[0]);
+   pEffPt2->SetLineColor(kGreen+2);
+   pEffPt2->SetMarkerStyle(22);
+   pEffPt2->SetMarkerSize(0.8);
+   pEffPt2->SetMarkerColor(kGreen+2);
+   pEffPt2->SetStatisticOption(TEfficiency::kBUniform);
+
+   pEffPt1->Draw("AP");
+   gPad->Update();
+   pEffPt1->GetPaintedGraph()->SetMinimum(0.85);
+   pEffPt1->GetPaintedGraph()->SetMaximum(1.05);
+   gPad->Update();
+
+   pEffPt2->Draw("P SAME");
+   gPad->Update();
+
+   TLegend *legEffPt = new TLegend(0.5, 0.75, 0.83, 0.92);
+   legEffPt->SetBorderSize(0);
+   legEffPt->SetFillStyle(0);
+   legEffPt->AddEntry(pEffPt1, "E/p cut efficiency (#mu)", "lp");
+   legEffPt->AddEntry(pEffPt2, "XGBoost efficiency (#mu)", "lp");
+   legEffPt->Draw();
+
+   tex.SetNDC();
+   tex.DrawLatex(0.2, 0.92, "#bf{Muon Candidate Efficiency vs p_{T}}");
+   c1.SaveAs("Plots/EfficiencyBoth_Pt.png");
+
+   // =============================================
+   // === PLOT: Pt Rejection (E/p + XGBoost) ===
+   // =============================================
+   c1.Clear();
+
+   TH1D *hRejectedPt0 = (TH1D*)AllParticPt[1]->Clone("hRejectedPt0");
+   hRejectedPt0->Add(CutParticPt[1], -1.0);
+
+   TH1D *hRejectedPt1 = (TH1D*)AllParticPt[1]->Clone("hRejectedPt1");
+   hRejectedPt1->Add(FoundParticPt[1], -1.0);
+
+   if (!TEfficiency::CheckConsistency(*hRejectedPt0, *AllParticPt[1])) {
+      std::cerr << "ERROR: Inconsistent histograms for E/p pion rejection (Pt)!" << std::endl;
+      return;
+   }
+   if (!TEfficiency::CheckConsistency(*hRejectedPt1, *AllParticPt[1])) {
+      std::cerr << "ERROR: Inconsistent histograms for XGBoost pion rejection (Pt)!" << std::endl;
+      return;
+   }
+
+   TEfficiency *pEffPt0 = new TEfficiency(*hRejectedPt0, *AllParticPt[1]);
+   pEffPt0->SetTitle("; p_{T} [GeV/c]; Rejection (1 - #varepsilon)");
+   pEffPt0->SetLineColor(kBlue+1);
+   pEffPt0->SetMarkerStyle(21);
+   pEffPt0->SetMarkerSize(0.8);
+   pEffPt0->SetMarkerColor(kBlue+1);
+   pEffPt0->SetStatisticOption(TEfficiency::kBUniform);
+
+   TEfficiency *pEffPt3 = new TEfficiency(*hRejectedPt1, *AllParticPt[1]);
+   pEffPt3->SetLineColor(kMagenta+1);
+   pEffPt3->SetMarkerStyle(23);
+   pEffPt3->SetMarkerSize(0.8);
+   pEffPt3->SetMarkerColor(kMagenta+1);
+   pEffPt3->SetStatisticOption(TEfficiency::kBUniform);
+
+   pEffPt0->Draw("AP");
+   gPad->Update();
+   pEffPt0->GetPaintedGraph()->SetMinimum(0.85);
+   pEffPt0->GetPaintedGraph()->SetMaximum(1.05);
+   gPad->Update();
+
+   pEffPt3->Draw("P SAME");
+   gPad->Update();
+
+   TLegend *legRejPt = new TLegend(0.5, 0.75, 0.83, 0.92);
+   legRejPt->SetBorderSize(0);
+   legRejPt->SetFillStyle(0);
+   legRejPt->AddEntry(pEffPt0, "E/p cut rejection (#pi)", "lp");
+   legRejPt->AddEntry(pEffPt3, "XGBoost rejection (#pi)", "lp");
+   legRejPt->Draw();
+
+   tex.SetNDC();
+   tex.DrawLatex(0.2, 0.92, "#bf{Pion Rejection vs p_{T}}");
+   c1.SaveAs("Plots/RejectionBoth_Pt.png");
+
+   delete hRejectedPt0;
+   delete hRejectedPt1;
 }
-
-TEfficiency *pEff0 = new TEfficiency(*hRejected0, *AllParticEnergy[1]);
-pEff0->SetTitle("; Energy [GeV];Rejection (1 - #varepsilon)");
-pEff0->SetLineColor(kBlue+1);
-pEff0->SetMarkerStyle(21);
-pEff0->SetMarkerSize(0.8);
-pEff0->SetMarkerColor(kBlue+1);
-pEff0->SetStatisticOption(TEfficiency::kBUniform); // Bayesian, dobra dla wartości bliskich 0/1
-
-pEff0->Draw("AP");
-gPad->Update();
-
-pEff0->GetPaintedGraph()->SetMinimum(0.85);
-pEff0->GetPaintedGraph()->SetMaximum(1.02);
-gPad->Update();
-
-tex.SetNDC();
-tex.DrawLatex(0.2, 0.92, "#bf{E/p cut efficiency of Pions Rejection}");
-c1.SaveAs("Plots/RejectionFirst.png");
-
-// Sprzątanie
-delete hRejected0;
-
-
-TEfficiency *pEff2 = new TEfficiency(*FoundParticEnergy[0], *CutParticEnergy[0]);
-pEff2->SetTitle("; Energy [GeV];Efficiency");
-pEff2->SetLineColor(kRed+1);
-pEff2->SetMarkerStyle(20);
-pEff2->SetMarkerSize(0.8);
-pEff2->SetMarkerColor(kRed+1);
-
-pEff2->Draw("AP");
-gPad->Update();
-
-pEff2->GetPaintedGraph()->SetMinimum(0.8);
-pEff2->GetPaintedGraph()->SetMaximum(1.05);
-gPad->Update();
-
-tex.SetNDC();
-tex.DrawLatex(0.2, 0.92, "#bf{XGBoost efficiency for Muon Candidates}");
-c1.SaveAs("Plots/EfficiencySecond.png");
-
-// === Background Rejection for Pions ===
-c1.Clear();
-
-// Rejected = All - Passed
-TH1F *hRejected1 = (TH1F*)CutParticEnergy[1]->Clone("hRejected1");
-hRejected1->Add(FoundParticEnergy[1], -1.0);
-
-// Sprawdzenie spójności histogramów
-if (!TEfficiency::CheckConsistency(*hRejected1, *CutParticEnergy[1])) {
-    std::cerr << "ERROR: Inconsistent histograms for pion rejection!" << std::endl;
-    return;
-}
-
-TEfficiency *pEff3 = new TEfficiency(*hRejected1, *CutParticEnergy[1]);
-pEff3->SetTitle("; Energy [GeV];Rejection (1 - #varepsilon)");
-pEff3->SetLineColor(kBlue+1);
-pEff3->SetMarkerStyle(21);
-pEff3->SetMarkerSize(0.8);
-pEff3->SetMarkerColor(kBlue+1);
-pEff3->SetStatisticOption(TEfficiency::kBUniform); // Bayesian, dobra dla wartości bliskich 0/1
-
-pEff3->Draw("AP");
-gPad->Update();
-
-pEff3->GetPaintedGraph()->SetMinimum(0.5);
-pEff3->GetPaintedGraph()->SetMaximum(1.05);
-gPad->Update();
-
-tex.SetNDC();
-tex.DrawLatex(0.2, 0.92, "#bf{XGBoost efficiency of Pions Rejection}");
-c1.SaveAs("Plots/RejectionSecond.png");
-
-// Sprzątanie
-delete hRejected1;
-
-
-
-
-}
-
