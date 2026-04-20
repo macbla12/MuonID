@@ -12,7 +12,6 @@
 #include <tuple>
 
 #include "ToFFastSim.cxx"
-//#include "Calorimeters.cxx"
 #include "Calorimeternew.cxx"
 #include "GreatCluster.cxx"
 
@@ -45,12 +44,13 @@ void IDAnalysisNew()
    float ECalEoverP;
    float Momentum;
    float IsMuon;
+   float FileIndex;
    vector<float> EcalShape;
    vector<float> HcalShape;
 
-   TFile *file = new TFile("MLDataGrape.root", "RECREATE");
+   TFile *file = new TFile("MLData.root", "RECREATE");
    TTree *MLDataTree = new TTree("MLDataTree", "MLDataTree");
-
+   /*
    MLDataTree->Branch("ECalEnergy", &ECalEnergy, "ECalEnergy/F");
    MLDataTree->Branch("HCalEnergy", &HCalEnergy, "HCalEnergy/F");
    MLDataTree->Branch("ECalNumber", &ECalNumber, "ECalNumber/F");
@@ -58,14 +58,16 @@ void IDAnalysisNew()
    MLDataTree->Branch("HCalEoverP", &HCalEoverP, "HCalEoverP/F");
    MLDataTree->Branch("ECalEoverP", &ECalEoverP, "ECalEoverP/F");
    MLDataTree->Branch("Momentum", &Momentum, "Momentum/F");
+   */
    MLDataTree->Branch("EcalShape", &EcalShape);
    MLDataTree->Branch("HcalShape", &HcalShape);
    MLDataTree->Branch("IsMuon", &IsMuon, "IsMuon/F");
+   MLDataTree->Branch("FileIndex", &FileIndex, "FileIndex/F");
 
    //////////////////////
    //Setting up histograms
    //////////////////////
-   static constexpr int NumOfFiles=2;
+   static constexpr int NumOfFiles=4;
    TH1D *EnergyEcal[NumOfFiles],*EnergyHcal[NumOfFiles],*NumberEcal[NumOfFiles],*NumberHcal[NumOfFiles];
    TH1D *NumberEcalBarrel[NumOfFiles],*NumberEcalEndcapP[NumOfFiles],*NumberEcalEndcapN[NumOfFiles],*NumberHcalBarrel[NumOfFiles],
       *NumberHcalEndcapP[NumOfFiles],*NumberHcalEndcapN[NumOfFiles],*NumberLFHcal[NumOfFiles],*NumberB0Barrel[NumOfFiles];
@@ -82,14 +84,13 @@ void IDAnalysisNew()
 
    
    vector<TString> files(NumOfFiles);
-   
-   files.at(0)="/run/media/epic/Data/Muons/Grape-10x275/Paper/RECO/*.root";
-   //files.at(0)="/run/media/epic/Data/Background/JPsi/March/*.root";
-   //files.at(0)="/run/media/epic/Data/Background/JPsi/OLD/*.root";
-   //files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
-   //files.at(1)="/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
-   files.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
+
+   files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
+   files.at(1)="/run/media/epic/Data/Muons/Grape-10x275/Paper/RECO/*.root";
+   files.at(2)="/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
+   files.at(3)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
    //files.at(1)="/run/media/epic/Data/Background/SingleParticles/SingleFiles/Pions.root";
+   //files.at(2)="/run/media/epic/Data/Background/JPsi/March/*.root";
 
 
 
@@ -101,7 +102,12 @@ void IDAnalysisNew()
    files.at(1)="/Data/Muons/Epic-10x275/recoEL0S.root";
    files.at(2)="/Data/Tau/EpIC/tcs/tau_tcs_hist.root";
    */
-   TF1 *upperbondE = new TF1("upperbondE", "2/x+0.05", 0.01, 24.0);
+
+
+
+   TF1 *upperbondE = new TF1("upperbondE", "2/(x**2)+0.05", 0.001, 24.0);
+
+   //TF1 *upperbondE = new TF1("upperbondE", "2/x+0.05", 0.01, 24.0);
    upperbondE->SetLineColor(kRed);
    upperbondE->SetLineWidth(1);
 
@@ -116,15 +122,17 @@ void IDAnalysisNew()
    for(int File=0; File<NumOfFiles;File++)
    {
       string name;
-      if(File==0) name="Muons";
-      if(File==1) name="Pions";
-
+      if(File==3 || File==2) name="Pions";
+      else name="Muons";
       // Set up input file chain
       TChain *mychain = new TChain("events");
+      
       mychain->Add(files.at(File));
 
       // Initialize reader
       TTreeReader tree_reader(mychain);
+      Long64_t nEvents = mychain->GetEntries();
+      cout<<nEvents<<endl;
 
       // Get Particle Information
       TTreeReaderArray<int> partGenStat(tree_reader, "MCParticles.generatorStatus");
@@ -306,7 +314,10 @@ void IDAnalysisNew()
          eventID++;
          //if(eventID>10) break;   //if(File==0) continue; //if(eventID!=13) continue;
 
-         //if(eventID>1300) break; 
+         //if(eventID>40000) break; 
+         if(eventID>0.9*nEvents) break; 
+
+         
          if(eventID%100000==0) cout<<"File "<<name<<" and event number... "<<eventID<<endl;
 
 
@@ -372,60 +383,69 @@ void IDAnalysisNew()
                 EcalBarrelz, EcalBarrelShPB, EcalBarrelShPE,EcalBarrelShParameters);
 
             ECalEnergy+=EnergyEcalBarrel;
-            ECalNumber+=NumberEcalBarrel;
-              // cout<<"Tutaj 2"<<endl;
             
-            if(!ShapeEcalBarrel.empty() && !ShapeEcalBarrel[0].empty() && ShapeEcalBarrel[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeEcalBarrel.begin(), ShapeEcalBarrel.end());
-            
-            
+            if(!ShapeEcalBarrel.empty() && !ShapeEcalBarrel[0].empty() && ShapeEcalBarrel[0][0] != 0){
+               ECalNumber+=NumberEcalBarrel;
+               EcalAllShapes.insert(EcalAllShapes.end(), ShapeEcalBarrel.begin(), ShapeEcalBarrel.end());
+            }  
          
             
             auto [EnergyEndcapP,NumberEndcapP,ShapeEndcapP] = Calorimeternew( simuID, EcalEndcapPEng, simuAssocEcalEndcapP, EcalEndcapPx, EcalEndcapPy,
                 EcalEndcapPz, EcalEndcapPShPB, EcalEndcapPShPE,EcalEndcapPShParameters);
             ECalEnergy+=EnergyEndcapP;
-            ECalNumber+=NumberEndcapP;
-
-            if(!ShapeEndcapP.empty() && !ShapeEndcapP[0].empty() && ShapeEndcapP[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeEndcapP.begin(), ShapeEndcapP.end());
+            
+            if(!ShapeEndcapP.empty() && !ShapeEndcapP[0].empty() && ShapeEndcapP[0][0] != 0){
+               ECalNumber+=NumberEndcapP;
+               EcalAllShapes.insert(EcalAllShapes.end(), ShapeEndcapP.begin(), ShapeEndcapP.end());
+            }
 
             auto [EnergyEndcapN,NumberEndcapN,ShapeEndcapN] = Calorimeternew( simuID, EcalEndcapNEng, simuAssocEcalEndcapN, EcalEndcapNx, EcalEndcapNy,
                 EcalEndcapNz, EcalEndcapNShPB, EcalEndcapNShPE,EcalEndcapNShParameters);
 
             ECalEnergy+=EnergyEndcapN;
-            ECalNumber+=NumberEndcapN;
-
-            if(!ShapeEndcapN.empty() && !ShapeEndcapN[0].empty() && ShapeEndcapN[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeEndcapN.begin(), ShapeEndcapN.end());
+            
+            if(!ShapeEndcapN.empty() && !ShapeEndcapN[0].empty() && ShapeEndcapN[0][0] != 0){
+               ECalNumber+=NumberEndcapN;
+               EcalAllShapes.insert(EcalAllShapes.end(), ShapeEndcapN.begin(), ShapeEndcapN.end());
+            }
             
             auto [EnergyB0,NumberB0,ShapeB0] = Calorimeternew( simuID, B0Eng, simuAssocB0, B0x, B0y, B0z, B0ShPB, B0ShPE,B0ShParameters);
                
             ECalEnergy+=EnergyB0;
-            ECalNumber+=NumberB0;
-
-            if(!ShapeB0.empty() && !ShapeB0[0].empty() && ShapeB0[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeB0.begin(), ShapeB0.end());
+            
+            if(!ShapeB0.empty() && !ShapeB0[0].empty() && ShapeB0[0][0] != 0){
+               ECalNumber+=NumberB0;
+               EcalAllShapes.insert(EcalAllShapes.end(), ShapeB0.begin(), ShapeB0.end());
+            }
 
             auto [EnergyImaging,NumberImaging,ShapeImaging] = Calorimeternew( simuID, EcalBarrelImagingEng, simuAssocEcalBarrelImaging, EcalBarrelImagingx, EcalBarrelImagingy,
                 EcalBarrelImagingz, EcalBarrelImagingShPB, EcalBarrelImagingShPE,EcalBarrelImagingShParameters);
 
             ECalEnergy+=EnergyImaging;
-            ECalNumber+=NumberImaging;
-
-            if(!ShapeImaging.empty() && !ShapeImaging[0].empty() && ShapeImaging[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeImaging.begin(), ShapeImaging.end());
+            
+            if(!ShapeImaging.empty() && !ShapeImaging[0].empty() && ShapeImaging[0][0] != 0){
+               ECalNumber+=NumberImaging;
+               EcalAllShapes.insert(EcalAllShapes.end(), ShapeImaging.begin(), ShapeImaging.end());
+            }
             
             auto [EnergyScFi,NumberScFi,ShapeScFi] = Calorimeternew( simuID, EcalBarrelScFiEng, simuAssocEcalBarrelScFi, EcalBarrelScFix, EcalBarrelScFiy,
                 EcalBarrelScFiz, EcalBarrelScFiShPB, EcalBarrelScFiShPE,EcalBarrelScFiShParameters);
 
             ECalEnergy+=EnergyScFi;
-            ECalNumber+=NumberScFi;
-
-            if(!ShapeScFi.empty() && !ShapeScFi[0].empty() && ShapeScFi[0][0] != 0)  EcalAllShapes.insert(EcalAllShapes.end(), ShapeScFi.begin(), ShapeScFi.end());
+            
+            if(!ShapeScFi.empty() && !ShapeScFi[0].empty() && ShapeScFi[0][0] != 0){
+               ECalNumber+=NumberScFi;
+               EcalAllShapes.insert(EcalAllShapes.end(), ShapeScFi.begin(), ShapeScFi.end());
+            }
             //cout<<"ECAL"<<endl;
             
             // Assign shape from detector with highest energy
-            EcalShape = GreatCluster(EcalAllShapes);
 
 
-            if(ECalEnergy!=0)
+            if(ECalEnergy!=0 && ECalNumber!=0)
             {
                EnergyEcal[File]->Fill(ECalEnergy);
+               EcalShape = GreatCluster(EcalAllShapes);
                Found=1;
             }
             //////////////////////           
@@ -438,39 +458,48 @@ void IDAnalysisNew()
                 HcalBarrelz, HcalBarrelShPB, HcalBarrelShPE,HcalBarrelShParameters);
 
             HCalEnergy+=EnergyHcalBarrel;
-            HCalNumber+=NumberHcalBarrel;
-            if(!ShapeHcalBarrel.empty() && !ShapeHcalBarrel[0].empty() && ShapeHcalBarrel[0][0] != 0)  HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalBarrel.begin(), ShapeHcalBarrel.end());
+            
+            if(!ShapeHcalBarrel.empty() && !ShapeHcalBarrel[0].empty() && ShapeHcalBarrel[0][0] != 0){
+               HCalNumber+=NumberHcalBarrel;
+               HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalBarrel.begin(), ShapeHcalBarrel.end());
+            }
             
             auto [EnergyHcalEndcapP,NumberHcalEndcapP,ShapeHcalEndcapP] = Calorimeternew( simuID, HcalEndcapPEng, simuAssocHcalEndcapP, HcalEndcapPx, HcalEndcapPy,
                 HcalEndcapPz, HcalEndcapPShPB, HcalEndcapPShPE,HcalEndcapPShParameters);
 
             HCalEnergy+=EnergyHcalEndcapP;
-            HCalNumber+=NumberHcalEndcapP;
-
-            if(!ShapeHcalEndcapP.empty() && !ShapeHcalEndcapP[0].empty() && ShapeHcalEndcapP[0][0] != 0)  HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalEndcapP.begin(), ShapeHcalEndcapP.end());
+            
+            if(!ShapeHcalEndcapP.empty() && !ShapeHcalEndcapP[0].empty() && ShapeHcalEndcapP[0][0] != 0){
+               HCalNumber+=NumberHcalEndcapP;
+               HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalEndcapP.begin(), ShapeHcalEndcapP.end());
+            }
             
             auto [EnergyLFHcal,NumberLFHcal,ShapeLFHcal] = Calorimeternew( simuID, LFHcalEng, simuAssocLFHcal, LFHcalx, LFHcaly, LFHcalz, LFHcalShPB, LFHcalShPE,LFHcalShParameters);
 
             HCalEnergy+=EnergyLFHcal;
-            HCalNumber+=NumberLFHcal;
-
-            if(!ShapeLFHcal.empty() && !ShapeLFHcal[0].empty() && ShapeLFHcal[0][0] != 0)  HcalAllShapes.insert(HcalAllShapes.end(), ShapeLFHcal.begin(), ShapeLFHcal.end());
+            
+            if(!ShapeLFHcal.empty() && !ShapeLFHcal[0].empty() && ShapeLFHcal[0][0] != 0){
+               HCalNumber+=NumberLFHcal;
+               HcalAllShapes.insert(HcalAllShapes.end(), ShapeLFHcal.begin(), ShapeLFHcal.end());
+            }
             
             auto [EnergyHcalEndcapN,NumberHcalEndcapN,ShapeHcalEndcapN] = Calorimeternew( simuID, HcalEndcapNEng, simuAssocHcalEndcapN, HcalEndcapNx, HcalEndcapNy,
                 HcalEndcapNz, HcalEndcapNShPB, HcalEndcapNShPE,HcalEndcapNShParameters);
 
             HCalEnergy+=EnergyHcalEndcapN;
-            HCalNumber+=NumberHcalEndcapN;
-
-            if(!ShapeHcalEndcapN.empty() && !ShapeHcalEndcapN[0].empty() && ShapeHcalEndcapN[0][0] != 0)  HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalEndcapN.begin(), ShapeHcalEndcapN.end());
+            
+            if(!ShapeHcalEndcapN.empty() && !ShapeHcalEndcapN[0].empty() && ShapeHcalEndcapN[0][0] != 0){
+               HCalNumber+=NumberHcalEndcapN;
+               HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalEndcapN.begin(), ShapeHcalEndcapN.end());
+            }
             
             // Assign shape from detector with highest energy
             //cout<<"HCAL"<<endl;
-            HcalShape = GreatCluster(HcalAllShapes);
             //if(HCalNumber>=1) continue;
             
-            if(HCalEnergy!=0)
+            if(HCalEnergy!=0 && HCalNumber!=0)
             {
+               HcalShape = GreatCluster(HcalAllShapes);
                EnergyHcal[File]->Fill(HCalEnergy);
                Found=1;
             }
@@ -481,6 +510,7 @@ void IDAnalysisNew()
 
             if(abs(Partic.Eta())<1.3 && abs(Partic.Eta())>1) continue;
             FoundParticles+=Found;
+            if(Found==0) continue;
             //if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
             
             //Track properties 
@@ -509,8 +539,9 @@ void IDAnalysisNew()
                if(!HcalShape.empty()) HcalShapeHist[i][File]->Fill(HcalShape[i]);
             }
             
-            if(File==0) IsMuon=1;  
-            else IsMuon=0; 
+            if(File==3 || File==2) IsMuon=0;  
+            else IsMuon=1; 
+            FileIndex=File;
             
             if(HCalEoverP>upperbondH->Eval(Momentum)) continue;
             if(HCalEoverP<lowerbondH->Eval(Momentum)) continue;
@@ -566,7 +597,7 @@ void IDAnalysisNew()
     leg1->SetTextFont(42);
     leg1->SetTextSize(0.05);
     leg1->AddEntry(EnergyEcal[0],"Muons ","l");
-    leg1->AddEntry(EnergyEcal[1],"Pions","l");
+    leg1->AddEntry(EnergyEcal[3],"Pions","l");
 
     TLegend* leg2 = new TLegend(0.58, 0.2, 0.85, 0.45);
     leg2->SetBorderSize(0);
@@ -577,7 +608,7 @@ void IDAnalysisNew()
     leg2->SetTextFont(42);
     leg2->SetTextSize(0.05);
     leg2->AddEntry(EnergyEcal[0],"Muons","l");
-    leg2->AddEntry(EnergyEcal[1],"Pions","l");
+    leg2->AddEntry(EnergyEcal[3],"Pions","l");
 
     TLegend* leg3 = new TLegend(0.58, 0.6, 0.85, 0.85);
     leg3->SetBorderSize(0);
@@ -588,7 +619,7 @@ void IDAnalysisNew()
     leg3->SetTextFont(42);
     leg3->SetTextSize(0.05);
     leg3->AddEntry(EnergyEcal[0],"Muons","l");
-    leg3->AddEntry(EnergyEcal[1],"Pions","l");
+    leg3->AddEntry(EnergyEcal[3],"Pions","l");
 
    
 
@@ -599,12 +630,12 @@ void IDAnalysisNew()
 
    c1.Clear();
       EnergyEcal[0]->Scale(1./EnergyEcal[0]->Integral());
-      EnergyEcal[1]->Scale(1./EnergyEcal[1]->Integral());
+      EnergyEcal[2]->Scale(1./EnergyEcal[2]->Integral());
 
       EnergyEcal[0]->SetLineColor(kRed);
-      EnergyEcal[1]->SetLineColor(kBlue);
+      EnergyEcal[2]->SetLineColor(kBlue);
 
-      EnergyEcal[1]->Draw("HIST");
+      EnergyEcal[2]->Draw("HIST");
       EnergyEcal[0]->Draw("HIST SAME");
       leg->Draw();
    c1.SaveAs("Plots/CalID.pdf");
@@ -614,11 +645,11 @@ void IDAnalysisNew()
 
    c1.Clear();
       EnergyHcal[0]->Scale(1./EnergyHcal[0]->Integral());
-      EnergyHcal[1]->Scale(1./EnergyHcal[1]->Integral());
+      EnergyHcal[2]->Scale(1./EnergyHcal[2]->Integral());
       EnergyHcal[0]->SetLineColor(kRed);
-      EnergyHcal[1]->SetLineColor(kBlue);
+      EnergyHcal[2]->SetLineColor(kBlue);
       EnergyHcal[0]->Draw("HIST");
-      EnergyHcal[1]->Draw("HIST SAME");
+      EnergyHcal[2]->Draw("HIST SAME");
       leg->Draw();
 
    c1.SaveAs("Plots/CalID.pdf");
@@ -626,20 +657,20 @@ void IDAnalysisNew()
    
    c1.Clear();
       NumberEcal[0]->Scale(1./NumberEcal[0]->Integral());
-      NumberEcal[1]->Scale(1./NumberEcal[1]->Integral());
+      NumberEcal[2]->Scale(1./NumberEcal[2]->Integral());
       NumberEcal[0]->SetLineColor(kRed);
-      NumberEcal[1]->SetLineColor(kBlue);
-      NumberEcal[1]->Draw("HIST");
+      NumberEcal[2]->SetLineColor(kBlue);
+      NumberEcal[2]->Draw("HIST");
       NumberEcal[0]->Draw("HIST SAME");
       leg->Draw();
    c1.SaveAs("Plots/CalID.pdf");
 
    c1.Clear();
       NumberHcal[0]->Scale(1./NumberHcal[0]->Integral());
-      NumberHcal[1]->Scale(1./NumberHcal[1]->Integral());
+      NumberHcal[2]->Scale(1./NumberHcal[2]->Integral());
       NumberHcal[0]->SetLineColor(kRed);
-      NumberHcal[1]->SetLineColor(kBlue);
-      NumberHcal[1]->Draw("HIST");
+      NumberHcal[2]->SetLineColor(kBlue);
+      NumberHcal[2]->Draw("HIST");
       NumberHcal[0]->Draw("HIST SAME");
       leg->Draw();
    c1.SaveAs("Plots/CalID.pdf");
@@ -647,9 +678,9 @@ void IDAnalysisNew()
    c1.Clear();
 
       simuasocHist[0]->SetLineColor(kRed);
-      simuasocHist[1]->SetLineColor(kBlue);
+      simuasocHist[2]->SetLineColor(kBlue);
 
-      simuasocHist[1]->Draw("HIST");
+      simuasocHist[2]->Draw("HIST");
       simuasocHist[0]->Draw("HIST SAME");
    c1.SaveAs("Plots/CalID.pdf");
 
@@ -658,7 +689,7 @@ void IDAnalysisNew()
    c1.cd(1);
       ECalEnergyMomvsEtaHist[0]->Draw("colz");
    c1.cd(2);
-      ECalEnergyMomvsEtaHist[1]->Draw("colz");
+      ECalEnergyMomvsEtaHist[2]->Draw("colz");
    c1.SaveAs("Plots/CalID.pdf");
 
    c1.Clear();
@@ -666,7 +697,7 @@ void IDAnalysisNew()
    c1.cd(1);
       HCalEnergyMomvsEtaHist[0]->Draw("colz");
    c1.cd(2);
-      HCalEnergyMomvsEtaHist[1]->Draw("colz");
+      HCalEnergyMomvsEtaHist[2]->Draw("colz");
    c1.SaveAs("Plots/CalID.pdf");
 
    c1.Clear();
@@ -674,11 +705,11 @@ void IDAnalysisNew()
    
    c1.cd(1);
       gPad->SetLogz(1);
-      ECalEnergyvsMomHist[0]->Draw("HIST");
+      ECalEnergyvsMomHist[1]->Draw("HIST");
       upperbondE->Draw("same");
    c1.cd(2);
       gPad->SetLogz(1);
-      ECalEnergyvsMomHist[1]->Draw("HIST");
+      ECalEnergyvsMomHist[3]->Draw("HIST");
       upperbondE->Draw("same");
    c1.SaveAs("Plots/CalID.pdf");
    gPad->SetLogz(0);
@@ -687,22 +718,22 @@ void IDAnalysisNew()
    c1.Divide(2,1);
    c1.cd(1);
       ECalEnergyHist[0]->Scale(1./ECalEnergyHist[0]->Integral());
-      ECalEnergyHist[1]->Scale(1./ECalEnergyHist[1]->Integral());
+      ECalEnergyHist[2]->Scale(1./ECalEnergyHist[2]->Integral());
 
       ECalEnergyHist[0]->SetLineColor(kRed);
-      ECalEnergyHist[1]->SetLineColor(kBlue);
+      ECalEnergyHist[2]->SetLineColor(kBlue);
 
-      ECalEnergyHist[1]->Draw("HIST");
+      ECalEnergyHist[2]->Draw("HIST");
       ECalEnergyHist[0]->Draw("HIST SAME");
       leg->Draw();
    c1.cd(2);
       ECalEnergyMomHist[0]->Scale(1./ECalEnergyMomHist[0]->Integral());
-      ECalEnergyMomHist[1]->Scale(1./ECalEnergyMomHist[1]->Integral());
+      ECalEnergyMomHist[2]->Scale(1./ECalEnergyMomHist[2 ]->Integral());
 
       ECalEnergyMomHist[0]->SetLineColor(kRed);
-      ECalEnergyMomHist[1]->SetLineColor(kBlue);
+      ECalEnergyMomHist[2]->SetLineColor(kBlue);
 
-      ECalEnergyMomHist[1]->Draw("HIST");
+      ECalEnergyMomHist[2  ]->Draw("HIST");
       ECalEnergyMomHist[0]->Draw("HIST SAME");
       leg->Draw();
    c1.SaveAs("Plots/CalID.pdf");
@@ -711,13 +742,13 @@ void IDAnalysisNew()
    
    c1.cd(1);
       gPad->SetLogz(1);
-      HCalEnergyvsMomHist[0]->Draw("HIST");
+      HCalEnergyvsMomHist[1]->Draw("HIST");
       upperbondH->Draw("same");
       lowerbondH->Draw("same");
 
    c1.cd(2);
       gPad->SetLogz(1);
-      HCalEnergyvsMomHist[1]->Draw("HIST");
+      HCalEnergyvsMomHist[3]->Draw("HIST");
       upperbondH->Draw("same");
       lowerbondH->Draw("same");
    c1.SaveAs("Plots/CalID.pdf");
@@ -727,22 +758,22 @@ void IDAnalysisNew()
    c1.Divide(2,1);
    c1.cd(1);
       HCalEnergyHist[0]->Scale(1./HCalEnergyHist[0]->Integral());
-      HCalEnergyHist[1]->Scale(1./HCalEnergyHist[1]->Integral());
+      HCalEnergyHist[2]->Scale(1./HCalEnergyHist[2]->Integral());
 
       HCalEnergyHist[0]->SetLineColor(kRed);
-      HCalEnergyHist[1]->SetLineColor(kBlue);
+      HCalEnergyHist[2]->SetLineColor(kBlue);
 
-      HCalEnergyHist[1]->Draw("HIST");
+      HCalEnergyHist[2]->Draw("HIST");
       HCalEnergyHist[0]->Draw("HIST SAME");
       leg->Draw();
    c1.cd(2);
       HCalEnergyMomHist[0]->Scale(1./HCalEnergyMomHist[0]->Integral());
-      HCalEnergyMomHist[1]->Scale(1./HCalEnergyMomHist[1]->Integral());
+      HCalEnergyMomHist[2]->Scale(1./HCalEnergyMomHist[2 ]->Integral());
 
       HCalEnergyMomHist[0]->SetLineColor(kRed);
-      HCalEnergyMomHist[1]->SetLineColor(kBlue);
+      HCalEnergyMomHist[2]->SetLineColor(kBlue);
 
-      HCalEnergyMomHist[1]->Draw("HIST");
+      HCalEnergyMomHist[2  ]->Draw("HIST");
       HCalEnergyMomHist[0]->Draw("HIST SAME");
       leg->Draw();
    c1.SaveAs("Plots/CalID.pdf");
@@ -771,22 +802,22 @@ void IDAnalysisNew()
    c1.Clear();
    c1.Divide(2,2);
    c1.cd(1);
-      AllParticEta[1]->SetLineColor(kBlue);
-      NotFoundParticEta[1]->SetLineColor(kRed);
-      AllParticEta[1]->Draw();
-      NotFoundParticEta[1]->Draw("colz");
+      AllParticEta[2]->SetLineColor(kBlue);
+      NotFoundParticEta[2]->SetLineColor(kRed);
+      AllParticEta[2]->Draw();
+      NotFoundParticEta[2]->Draw("colz");
    c1.cd(2);
-      AllParticPhi[1]->SetLineColor(kBlue);
-      NotFoundParticPhi[1]->SetLineColor(kRed);
-      AllParticPhi[1]->SetMinimum(0);
+      AllParticPhi[2]->SetLineColor(kBlue);
+      NotFoundParticPhi[2]->SetLineColor(kRed);
+      AllParticPhi[2]->SetMinimum(0);
 
-      AllParticPhi[1]->Draw();
-      NotFoundParticPhi[1]->Draw("colz");
+      AllParticPhi[2]->Draw();
+      NotFoundParticPhi[2]->Draw("colz");
    c1.cd(3); 
-      AllParticEnergy[1]->SetLineColor(kBlue);
-      NotFoundParticEnergy[1]->SetLineColor(kRed);
-      AllParticEnergy[1]->Draw();
-      NotFoundParticEnergy[1]->Draw("colz");   
+      AllParticEnergy[2]->SetLineColor(kBlue);
+      NotFoundParticEnergy[2]->SetLineColor(kRed);
+      AllParticEnergy[2]->Draw();
+      NotFoundParticEnergy[2]->Draw("colz");   
    c1.SaveAs("Plots/CalID.pdf");
 
 
@@ -794,34 +825,34 @@ void IDAnalysisNew()
    c1.Divide(2,2);
    c1.cd(1);
       NumberEcalBarrel[0]->Scale(1./NumberEcalBarrel[0]->Integral());
-      NumberEcalBarrel[1]->Scale(1./NumberEcalBarrel[1]->Integral());
+      NumberEcalBarrel[2]->Scale(1./NumberEcalBarrel[2]->Integral());
       NumberEcalBarrel[0]->SetLineColor(kRed);
-      NumberEcalBarrel[1]->SetLineColor(kBlue);
+      NumberEcalBarrel[2]->SetLineColor(kBlue);
       NumberEcalBarrel[0]->Draw("HIST");
-      NumberEcalBarrel[1]->Draw("HIST SAME");
+      NumberEcalBarrel[2   ]->Draw("HIST SAME");
       leg->Draw();
    c1.cd(2);
       NumberB0Barrel[0]->Scale(1./NumberB0Barrel[0]->Integral());
-      NumberB0Barrel[1]->Scale(1./NumberB0Barrel[1]->Integral());
+      NumberB0Barrel[2]->Scale(1./NumberB0Barrel[2]->Integral());
       NumberB0Barrel[0]->SetLineColor(kRed);
-      NumberB0Barrel[1]->SetLineColor(kBlue);
+      NumberB0Barrel[2]->SetLineColor(kBlue);
       NumberB0Barrel[0]->Draw("HIST");
-      NumberB0Barrel[1]->Draw("HIST SAME");
+      NumberB0Barrel[2]->Draw("HIST SAME");
    c1.cd(3);
       NumberEcalEndcapP[0]->Scale(1./NumberEcalEndcapP[0]->Integral());
-      NumberEcalEndcapP[1]->Scale(1./NumberEcalEndcapP[1]->Integral());
+      NumberEcalEndcapP[2]->Scale(1./NumberEcalEndcapP[2]->Integral());
       NumberEcalEndcapP[0]->SetLineColor(kRed);
-      NumberEcalEndcapP[1]->SetLineColor(kBlue);
+      NumberEcalEndcapP[2]->SetLineColor(kBlue);
       NumberEcalEndcapP[0]->Draw("HIST");
-      NumberEcalEndcapP[1]->Draw("HIST SAME");
+      NumberEcalEndcapP[2]->Draw("HIST SAME");
       leg->Draw();
    c1.cd(4);
       NumberEcalEndcapN[0]->Scale(1./NumberEcalEndcapN[0]->Integral());
-      NumberEcalEndcapN[1]->Scale(1./NumberEcalEndcapN[1]->Integral());
+      NumberEcalEndcapN[2]->Scale(1./NumberEcalEndcapN[2]->Integral());
       NumberEcalEndcapN[0]->SetLineColor(kRed);
-      NumberEcalEndcapN[1]->SetLineColor(kBlue);
+      NumberEcalEndcapN[2]->SetLineColor(kBlue);
       NumberEcalEndcapN[0]->Draw("HIST");
-      NumberEcalEndcapN[1]->Draw("HIST SAME");
+      NumberEcalEndcapN[2]->Draw("HIST SAME");
       leg->Draw();      
    c1.SaveAs("Plots/CalID.pdf");
 
@@ -829,55 +860,55 @@ void IDAnalysisNew()
    c1.Divide(2,2);
    c1.cd(1);
       NumberHcalBarrel[0]->Scale(1./NumberHcalBarrel[0]->Integral());
-      NumberHcalBarrel[1]->Scale(1./NumberHcalBarrel[1]->Integral());
+      NumberHcalBarrel[2]->Scale(1./NumberHcalBarrel[2]->Integral());
       NumberHcalBarrel[0]->SetLineColor(kRed);
-      NumberHcalBarrel[1]->SetLineColor(kBlue);
+      NumberHcalBarrel[2   ]->SetLineColor(kBlue);
       NumberHcalBarrel[0]->Draw("HIST");
-      NumberHcalBarrel[1]->Draw("HIST SAME");
+      NumberHcalBarrel[2]->Draw("HIST SAME");
       leg->Draw();
    c1.cd(2);
       NumberLFHcal[0]->Scale(1./NumberLFHcal[0]->Integral());
-      NumberLFHcal[1]->Scale(1./NumberLFHcal[1]->Integral());
+      NumberLFHcal[2]->Scale(1./NumberLFHcal[2]->Integral());
       NumberLFHcal[0]->SetLineColor(kRed);
-      NumberLFHcal[1]->SetLineColor(kBlue);
+      NumberLFHcal[2]->SetLineColor(kBlue);
       NumberLFHcal[0]->Draw("HIST");
-      NumberLFHcal[1]->Draw("HIST SAME");
+      NumberLFHcal[2]->Draw("HIST SAME");
       leg->Draw();
    c1.cd(3);
       NumberHcalEndcapP[0]->Scale(1./NumberHcalEndcapP[0]->Integral());
-      NumberHcalEndcapP[1]->Scale(1./NumberHcalEndcapP[1]->Integral());
+      NumberHcalEndcapP[2]->Scale(1./NumberHcalEndcapP[2]->Integral());
       NumberHcalEndcapP[0]->SetLineColor(kRed);
-      NumberHcalEndcapP[1]->SetLineColor(kBlue);
+      NumberHcalEndcapP[2]->SetLineColor(kBlue);
       NumberHcalEndcapP[0]->Draw("HIST");
-      NumberHcalEndcapP[1]->Draw("HIST SAME");
+      NumberHcalEndcapP[2]->Draw("HIST SAME");
       leg->Draw();
    c1.cd(4);
       NumberHcalEndcapN[0]->Scale(1./NumberHcalEndcapN[0]->Integral());
-      NumberHcalEndcapN[1]->Scale(1./NumberHcalEndcapN[1]->Integral());
+      NumberHcalEndcapN[2]->Scale(1./NumberHcalEndcapN[2]->Integral());
       NumberHcalEndcapN[0]->SetLineColor(kRed);
-      NumberHcalEndcapN[1]->SetLineColor(kBlue);
+      NumberHcalEndcapN[2]->SetLineColor(kBlue);
       NumberHcalEndcapN[0]->Draw("HIST");
-      NumberHcalEndcapN[1]->Draw("HIST SAME");
+      NumberHcalEndcapN[2]->Draw("HIST SAME");
       leg->Draw();
    c1.SaveAs("Plots/CalID.pdf");
 
 
    c1.Clear();
       PDG[0]->Scale(1./PDG[0]->Integral());
-      PDG[1]->Scale(1./PDG[1]->Integral());
+      PDG[2]->Scale(1./PDG[2]->Integral());
       PDG[0]->SetLineColor(kRed);
-      PDG[1]->SetLineColor(kBlue);
-      PDG[1]->Draw("HIST");
+      PDG[2]->SetLineColor(kBlue);
+      PDG[2 ]->Draw("HIST");
       PDG[0]->Draw("HIST SAME");
       leg->Draw();
    c1.SaveAs("Plots/CalID.pdf");
 
    c1.Clear();
       NumberParticles[0]->Scale(1./NumberParticles[0]->Integral());
-      NumberParticles[1]->Scale(1./NumberParticles[1]->Integral());
+      NumberParticles[2]->Scale(1./NumberParticles[2]->Integral());
       NumberParticles[0]->SetLineColor(kRed);
-      NumberParticles[1]->SetLineColor(kBlue);
-      NumberParticles[1]->Draw("HIST");
+      NumberParticles[2]->SetLineColor(kBlue);
+      NumberParticles[2]->Draw("HIST");
       NumberParticles[0]->Draw("HIST SAME");
       leg->Draw();
    c1.SaveAs("Plots/CalID.pdf");
@@ -888,9 +919,9 @@ void IDAnalysisNew()
    for(int i=0; i<7; i++){
       c1.cd(i+1);
       EcalShapeHist[i][0]->SetLineColor(kRed);
-      EcalShapeHist[i][1]->SetLineColor(kBlue);
+      EcalShapeHist[i][2]->SetLineColor(kBlue);
       EcalShapeHist[i][0]->Draw("HIST");
-      EcalShapeHist[i][1]->Draw("HIST SAME");
+      EcalShapeHist[i][2]->Draw("HIST SAME");
    }
    c1.SaveAs("Plots/CalID.pdf");
    
@@ -899,9 +930,9 @@ void IDAnalysisNew()
    for(int i=0; i<7; i++){
       c1.cd(i+1);
       HcalShapeHist[i][0]->SetLineColor(kRed);
-      HcalShapeHist[i][1]->SetLineColor(kBlue);
+      HcalShapeHist[i][2]->SetLineColor(kBlue);
       HcalShapeHist[i][0]->Draw("HIST");
-      HcalShapeHist[i][1]->Draw("HIST SAME");
+      HcalShapeHist[i][2]->Draw("HIST SAME");
    }
    c1.SaveAs("Plots/CalID.pdf");
 

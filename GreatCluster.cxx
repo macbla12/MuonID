@@ -1,5 +1,6 @@
 vector<float> GreatCluster(const vector<vector<float>>& Shapes)
 {
+    //cout<<"NEW GREAT CLUSTER"<<endl;
     const int IN_PARAMS = 11;
     const int OUT_PARAMS = 7;
 
@@ -10,17 +11,20 @@ vector<float> GreatCluster(const vector<vector<float>>& Shapes)
 
     vector<float> out(OUT_PARAMS, 0.0f);
     if (Shapes.empty()) return out;
+    //cout<<"NOT EMPTY"<<endl;
 
     for (auto& s : Shapes)
         if ((int)s.size() < IN_PARAMS) return out;
+    //cout<<"GOOD NUMBER"<<endl;
 
     float w_sum = 0.0f;
     for (auto& s : Shapes) w_sum += s[ENERGY];
     if (w_sum == 0) return out;
+    //cout<<"GOOD ENERGY"<<endl;
+
 
     int n = Shapes.size();
     //cout<<"Number of Shapes: "<<n<<endl;
-
     // ============================================================
     // SPECIAL CASE: only one cluster → return its local parameters
     // ============================================================
@@ -28,23 +32,31 @@ vector<float> GreatCluster(const vector<vector<float>>& Shapes)
 
         const auto& s = Shapes[0];
 
-        // out[0] radius (local)
-        out[0] = s[0];
+        out[0] = s[0];   // radius
+        out[1] = s[1];   // dispersion
 
-        // out[1] dispersion (local)
-        out[1] = s[1];
+        // 2D eigenvalues — SORT
+        {
+            std::vector<float> e2 = { s[2], s[3] };
+            std::sort(e2.begin(), e2.end());
+            out[2] = e2[0];
+            out[3] = e2[1];
+        }
 
-        // out[2], out[3] = 2D eigenvalues (local)
-        out[2] = s[2];
-        out[3] = s[3];
+        // 3D eigenvalues — SORT
+        {
+            std::vector<float> e3 = { s[4], s[5], s[6] };
+            std::sort(e3.begin(), e3.end());
+            out[4] = e3[0];
+            out[5] = e3[1];
+            out[6] = e3[2];
+        }
 
-        // out[4], out[5], out[6] = 3D eigenvalues (local)
-        out[4] = s[4];
-        out[5] = s[5];
-        out[6] = s[6];
-        //cout<<"0: "<<out[0]<<" i 1: "<<out[1]<<endl;
+       // cout<<"0: "<<out[0]<<" i 1: "<<out[1]<<endl;
         //cout<<"2: "<<out[2]<<" i 3: "<<out[3]<<endl;
         //cout<<"4: "<<out[4]<<" i 5: "<<out[5]<<" i 6: "<<out[6]<<endl;
+        //cout<<"============================"<<endl;
+
 
         return out;
     }
@@ -68,11 +80,6 @@ vector<float> GreatCluster(const vector<vector<float>>& Shapes)
     // ============================================================
     float sum_r2_unw = 0.0f;
     float sum_r2_w   = 0.0f;
-    float max_dist   = 0.0f;
-
-    
-    float sum_local_disp_w = 0.0f;
-    float max_local_eigen3D = 0.0f;
 
     for (auto& s : Shapes) {
         float w = s[ENERGY];
@@ -84,25 +91,15 @@ vector<float> GreatCluster(const vector<vector<float>>& Shapes)
 
         sum_r2_unw += r2;
         sum_r2_w   += r2 * w;
-
-        float dist = sqrt(r2);
-        if (dist > max_dist) max_dist = dist;
-
-        // lokalne shape’y
-        float local_disp = s[1];
-        sum_local_disp_w += w * local_disp;
-
-        float local_e3 = s[6]; // największa 3D eigenvalue
-        if (local_e3 > max_local_eigen3D) max_local_eigen3D = local_e3;
     }
-    
 
-    out[0] = sqrt(sum_r2_unw / max(1, n - 1));
-    out[1] = sqrt(sum_r2_w / w_sum);
+    out[0] = sqrt(sum_r2_unw / max(1, n - 1)); // radius
+    out[1] = sqrt(sum_r2_w / w_sum);           // dispersion
+
     // ============================================================
     // 3) Macierz kowariancji 3D
     // ============================================================
-    float Cxx=0, Cyy=0, Czz=0, Cxy=0, Cxz=0, Cyz=0;
+    double Cxx3=0, Cyy3=0, Czz3=0, Cxy3=0, Cxz3=0, Cyz3=0;
 
     for (auto& s : Shapes) {
         float w = s[ENERGY];
@@ -110,102 +107,86 @@ vector<float> GreatCluster(const vector<vector<float>>& Shapes)
         float dy = s[POS_Y] - cy;
         float dz = s[POS_Z] - cz;
 
-        Cxx += w * dx * dx;
-        Cyy += w * dy * dy;
-        Czz += w * dz * dz;
-        Cxy += w * dx * dy;
-        Cxz += w * dx * dz;
-        Cyz += w * dy * dz;
+        Cxx3 += w * dx * dx;
+        Cyy3 += w * dy * dy;
+        Czz3 += w * dz * dz;
+        Cxy3 += w * dx * dy;
+        Cxz3 += w * dx * dz;
+        Cyz3 += w * dy * dz;
     }
 
-    Cxx /= w_sum; Cyy /= w_sum; Czz /= w_sum;
-    Cxy /= w_sum; Cxz /= w_sum; Cyz /= w_sum;
+    Cxx3 /= w_sum; Cyy3 /= w_sum; Czz3 /= w_sum;
+    Cxy3 /= w_sum; Cxz3 /= w_sum; Cyz3 /= w_sum;
 
     // ============================================================
-    // 4) Eigenvalues 3D (tu wstawiasz swoją diagonalizację)
+    // 4) Eigenvalues 3D
     // ============================================================
-    // zbuduj macierz symetryczną 3×3
     TMatrixDSym cov3sym(3);
-    cov3sym(0,0) = Cxx;  cov3sym(0,1) = Cxy;  cov3sym(0,2) = Cxz;
-    cov3sym(1,0) = Cxy;  cov3sym(1,1) = Cyy;  cov3sym(1,2) = Cyz;
-    cov3sym(2,0) = Cxz;  cov3sym(2,1) = Cyz;  cov3sym(2,2) = Czz;
+    cov3sym(0,0) = Cxx3;  cov3sym(0,1) = Cxy3;  cov3sym(0,2) = Cxz3;
+    cov3sym(1,0) = Cxy3;  cov3sym(1,1) = Cyy3;  cov3sym(1,2) = Cyz3;
+    cov3sym(2,0) = Cxz3;  cov3sym(2,1) = Cyz3;  cov3sym(2,2) = Czz3;
 
-    // diagonalizacja
     TMatrixDSymEigen eig3(cov3sym);
-
-    // wartości własne (REAL)
     TVectorD evals3 = eig3.GetEigenValues();
 
-    // posortuj rosnąco
     std::vector<double> e3_sorted = { evals3[0], evals3[1], evals3[2] };
     std::sort(e3_sorted.begin(), e3_sorted.end());
 
-    // zapisz
     out[4] = e3_sorted[0];
     out[5] = e3_sorted[1];
     out[6] = e3_sorted[2];
 
-   // ============================================================
-    // 5) Eigenvalues 2D (theta-phi) — EXACT EIC LOGIC
     // ============================================================
-
-    // Suma wag
+    // 5) Eigenvalues 2D (theta-phi)
+    // ============================================================
+    double Sx=0, Sy=0, Sxx=0, Sxy=0, Syy=0;
     double wsum2D = 0;
 
-    // sumy pierwsze i drugie
-    double Sxx2 = 0, Sxy2 = 0, Syy2 = 0;
-    double Sx2 = 0, Sy2 = 0;
-
     for (auto& s : Shapes) {
-
         double w = s[ENERGY];
-
-        // konwersja pozycji 3D → theta, phi
         TVector3 pos(s[POS_X], s[POS_Y], s[POS_Z]);
 
-        double theta = pos.Theta();   // = anglePolar
-        double phi   = pos.Phi();     // = angleAzimuthal
+        double theta = pos.Theta();
+        double phi   = pos.Phi();
 
-        // sumy pierwsze
-        Sx2 += w * theta;
-        Sy2 += w * phi;
-
-        // sumy drugie
-        Sxx2 += w * theta * theta;
-        Sxy2 += w * theta * phi;
-        Syy2 += w * phi * phi;
+        Sx  += w * theta;
+        Sy  += w * phi;
+        Sxx += w * theta * theta;
+        Sxy += w * theta * phi;
+        Syy += w * phi   * phi;
 
         wsum2D += w;
     }
 
-    // normalizacja
-    Sx2  /= wsum2D;
-    Sy2  /= wsum2D;
-    Sxx2 /= wsum2D;
-    Sxy2 /= wsum2D;
-    Syy2 /= wsum2D;
+    Sx  /= wsum2D;
+    Sy  /= wsum2D;
+    Sxx /= wsum2D;
+    Sxy /= wsum2D;
+    Syy /= wsum2D;
 
-    // macierz kowariancji
-    double Cxx2 = Sxx2 - Sx2 * Sx2;
-    double Cxy2 = Sxy2 - Sx2 * Sy2;
-    double Cyy2 = Syy2 - Sy2 * Sy2;
+    double Cxx2 = Sxx - Sx * Sx;
+    double Cxy2 = Sxy - Sx * Sy;
+    double Cyy2 = Syy - Sy * Sy;
 
-    // policz wartości własne 2×2
-    double T = Cxx2 + Cyy2;
-    double D = Cxx2 * Cyy2 - Cxy2 * Cxy2;
-    double disc = std::sqrt(std::max(0.0, T*T/4 - D));
+    TMatrixDSym cov2(2);
+    cov2(0,0) = Cxx2;
+    cov2(0,1) = Cxy2;
+    cov2(1,0) = Cxy2;
+    cov2(1,1) = Cyy2;
 
-    double lambda1 = T/2 + disc;
-    double lambda2 = T/2 - disc;
+    TMatrixDSymEigen eig2(cov2);
+    TVectorD evals2 = eig2.GetEigenValues();
 
-    // zapis
-    out[2] = lambda1;
-    out[3] = lambda2;   
+    std::vector<double> e2_sorted = { evals2[0], evals2[1] };
+    std::sort(e2_sorted.begin(), e2_sorted.end());
+
+    out[2] = e2_sorted[0];
+    out[3] = e2_sorted[1];
+
     //cout<<"0: "<<out[0]<<" i 1: "<<out[1]<<endl;
     //cout<<"2: "<<out[2]<<" i 3: "<<out[3]<<endl;
     //cout<<"4: "<<out[4]<<" i 5: "<<out[5]<<" i 6: "<<out[6]<<endl;
-    
-
+    //cout<<"============================"<<endl;
 
     return out;
 }

@@ -12,20 +12,26 @@ from sklearn.metrics import (classification_report, confusion_matrix,
 from xgboost import XGBClassifier
 import seaborn as sns
 import os
-from skl2onnx import convert_sklearn
-from skl2onnx.common.data_types import FloatTensorType
+import shap
+
+from sklearn.base import BaseEstimator, TransformerMixin
 from skl2onnx import update_registered_converter
+from skl2onnx.common.data_types import FloatTensorType
+from skl2onnx.common._apply_operation import (
+    apply_sub, apply_div, apply_mul, apply_add, apply_sqrt
+)
+
 from onnxmltools import convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType as OnnxFloat
 
 os.makedirs("Plots", exist_ok=True)
 
-# =============================================================================
-# 1. WCZYTYWANIE DANYCH
-# =============================================================================
-#file_path = "MLDataContinuous.root"
-file_path = "MLDataGrape.root"
 
+
+# =============================================================================
+# 1. WCZYTYWANIE DANYCH (WSZYSTKIE PLIKI JUŻ ZŁĄCZONE W MLDataGrape.root)
+# =============================================================================
+file_path = "MLData.root"
 
 with uproot.open(file_path) as f:
     df = f["MLDataTree"].arrays(library="pd")
@@ -41,7 +47,7 @@ print(f"  Stosunek S/B   : 1 : {n_bkg_total/n_sig_total:.1f}")
 # 2. ROZWIJANIE WEKTORÓW Z SEMANTYCZNYMI NAZWAMI
 # =============================================================================
 SHAPE_COLS = ['radius', 'dispersion', 'theta_width', 'phi_width',
-              'x_width', 'y_width', 'z_width']
+              'lambda1', 'lambda2', 'lambda3']
 
 def expand_vector_column(df, col_name, col_labels=SHAPE_COLS):
     expanded = pd.DataFrame(df[col_name].to_list(), index=df.index)
@@ -61,82 +67,98 @@ def safe_divide(num, denom):
     result[denom_nonzero] = num[denom_nonzero] / denom[denom_nonzero]
     return result
 
-
-def engineer_scalar_features(df):
-    d = df[['ECalEnergy', 'HCalEnergy', 'ECalNumber', 'HCalNumber',
-            'ECalEoverP','HCalEoverP']].copy()
-    d['ECal_HCal_ratio'] = safe_divide(df['ECalEnergy'], df['HCalEnergy'])
-    d['TotalCalEnergy']  = df['ECalEnergy'] + df['HCalEnergy']
-    d['ECalDensity']     = safe_divide(df['ECalEnergy'], df['ECalNumber'])
-    d['HCalDensity']     = safe_divide(df['HCalEnergy'], df['HCalNumber'])
-    d['HCalFraction']    = safe_divide(df['HCalEnergy'], d['TotalCalEnergy'])
-    return d
-
-
 def engineer_shape_features(df_ecal, df_hcal):
     s = pd.DataFrame(index=df_ecal.index)
-    s['radius_ratio']  = safe_divide(df_ecal['EcalShape_radius'], df_hcal['HcalShape_radius'])
-    s['disp_ratio']    = safe_divide(df_ecal['EcalShape_dispersion'], df_hcal['HcalShape_dispersion'])
-    s['z_width_ratio'] = safe_divide(df_ecal['EcalShape_z_width'], df_hcal['HcalShape_z_width'])
-    s['Ecal_transverse']  = np.sqrt(df_ecal['EcalShape_x_width']**2 +
-                                    df_ecal['EcalShape_y_width']**2)
-    s['Hcal_transverse']  = np.sqrt(df_hcal['HcalShape_x_width']**2 +
-                                    df_hcal['HcalShape_y_width']**2)
-    s['transverse_ratio'] = safe_divide(s['Ecal_transverse'], s['Hcal_transverse'])
-    s['Ecal_long_trans_ratio'] = safe_divide(df_ecal['EcalShape_z_width'], s['Ecal_transverse'])
-    s['Hcal_long_trans_ratio'] = safe_divide(df_hcal['HcalShape_z_width'], s['Hcal_transverse'])
+
+    λ1e = df_ecal['EcalShape_lambda1']
+    λ2e = df_ecal['EcalShape_lambda2']
+    λ3e = df_ecal['EcalShape_lambda3']
+
+    λ1h = df_hcal['HcalShape_lambda1']
+    λ2h = df_hcal['HcalShape_lambda2']
+    λ3h = df_hcal['HcalShape_lambda3']
+
+    s['Ecal_trans'] = np.sqrt(np.clip(λ1e * λ2e, 0, None))
+    s['Hcal_trans'] = np.sqrt(np.clip(λ1h * λ2h, 0, None))
+
+    s['Ecal_long'] = λ3e
+    s['Hcal_long'] = λ3h
+
+    s['Ecal_LoverT'] = safe_divide(λ3e, s['Ecal_trans'])
+    s['Hcal_LoverT'] = safe_divide(λ3h, s['Hcal_trans'])
+
+    s['Ecal_sphericity'] = safe_divide(λ1e, λ3e)
+    s['Hcal_sphericity'] = safe_divide(λ1h, λ3h)
+
     s['Ecal_angular_asym'] = safe_divide(
-        (df_ecal['EcalShape_theta_width'] - df_ecal['EcalShape_phi_width']),
-        (df_ecal['EcalShape_theta_width'] + df_ecal['EcalShape_phi_width'])
+        df_ecal['EcalShape_theta_width'] - df_ecal['EcalShape_phi_width'],
+        df_ecal['EcalShape_theta_width'] + df_ecal['EcalShape_phi_width']
     )
     s['Hcal_angular_asym'] = safe_divide(
-        (df_hcal['HcalShape_theta_width'] - df_hcal['HcalShape_phi_width']),
-        (df_hcal['HcalShape_theta_width'] + df_hcal['HcalShape_phi_width'])
+        df_hcal['HcalShape_theta_width'] - df_hcal['HcalShape_phi_width'],
+        df_hcal['HcalShape_theta_width'] + df_hcal['HcalShape_phi_width']
     )
+
+    s['radius_ratio'] = safe_divide(df_ecal['EcalShape_radius'],
+                                    df_hcal['HcalShape_radius'])
+    s['disp_ratio'] = safe_divide(df_ecal['EcalShape_dispersion'],
+                                  df_hcal['HcalShape_dispersion'])
+    s['trans_ratio'] = safe_divide(s['Ecal_trans'], s['Hcal_trans'])
+    s['long_ratio']  = safe_divide(s['Ecal_long'],  s['Hcal_long'])
+
+    s['LoverT_mismatch'] = abs(s['Ecal_LoverT'] - s['Hcal_LoverT'])
+    s['sphericity_mismatch'] = abs(s['Ecal_sphericity'] - s['Hcal_sphericity'])
+
     s['Radial_HCal_Fraction'] = safe_divide(
         df_hcal['HcalShape_radius'],
-        (df_ecal['EcalShape_radius'] + df_hcal['HcalShape_radius'])
+        df_ecal['EcalShape_radius'] + df_hcal['HcalShape_radius']
     )
+
     s = pd.concat([s, df_ecal, df_hcal], axis=1)
     return s
 
-
-X_scalar = engineer_scalar_features(df)
-X_shape  = engineer_shape_features(df_ecal, df_hcal)
-X        = pd.concat([X_scalar, X_shape], axis=1)
+#X_scalar = engineer_scalar_features(df)
+X = engineer_shape_features(df_ecal, df_hcal)
+#X        = pd.concat([X_scalar, X_shape], axis=1)
 y        = (df['IsMuon'] == 1).astype(int)
+file_idx = df['FileIndex'].astype(int)
 
 print(f"\nŁączna liczba cech: {X.shape[1]}")
-print(f"  Skalarne + pochodne : {X_scalar.shape[1]}")
-print(f"  Shape pochodne      : {X_shape.shape[1]}")
+#print(f"  Skalarne + pochodne : {X_scalar.shape[1]}")
+print(f"  Shape pochodne      : {X.shape[1]}")
 all_features = X.columns.tolist()
 
 # =============================================================================
-# 4. PODZIAŁ DANYCH
+# 4. PODZIAŁ DANYCH — STRATYFIKACJA PO KLASIE I FileIndex
 # =============================================================================
 rng = np.random.RandomState(42)
 
-idx_sig = np.where(y == 1)[0]
-idx_bkg = np.where(y == 0)[0]
+train_idx_list = []
+test_idx_list  = []
 
-n_sig_test_pool = int(len(idx_sig) * 0.20)
-n_bkg_test_pool = int(len(idx_bkg) * 0.20)
+for fidx in sorted(file_idx.unique()):
+    mask_f = (file_idx == fidx)
+    idx_f  = np.where(mask_f)[0]
+    y_f    = y.iloc[idx_f].values
 
-idx_sig_test_pool = rng.choice(idx_sig, size=n_sig_test_pool, replace=False)
-idx_bkg_test_pool = rng.choice(idx_bkg, size=n_bkg_test_pool, replace=False)
+    idx_sig_f = idx_f[y_f == 1]
+    idx_bkg_f = idx_f[y_f == 0]
 
-idx_sig_train = np.setdiff1d(idx_sig, idx_sig_test_pool)
-idx_bkg_train = np.setdiff1d(idx_bkg, idx_bkg_test_pool)
+    n_sig_test_f = max(1, int(len(idx_sig_f) * 0.20))
+    n_bkg_test_f = max(1, int(len(idx_bkg_f) * 0.20))
 
-n_bkg_test_available = len(idx_bkg_test_pool)
-n_sig_test_target    = max(1, n_bkg_test_available //1)
+    idx_sig_test_f = rng.choice(idx_sig_f, size=n_sig_test_f, replace=False) if len(idx_sig_f) > 0 else np.array([], dtype=int)
+    idx_bkg_test_f = rng.choice(idx_bkg_f, size=n_bkg_test_f, replace=False) if len(idx_bkg_f) > 0 else np.array([], dtype=int)
 
-n_sig_test   = min(n_sig_test_target, len(idx_sig_test_pool))
-idx_sig_test = rng.choice(idx_sig_test_pool, size=n_sig_test, replace=False)
-idx_bkg_test = idx_bkg_test_pool
+    idx_test_f  = np.concatenate([idx_sig_test_f, idx_bkg_test_f])
+    idx_train_f = np.setdiff1d(idx_f, idx_test_f)
 
-idx_train = np.concatenate([idx_sig_train, idx_bkg_train])
-idx_test  = np.concatenate([idx_sig_test,  idx_bkg_test])
+    train_idx_list.append(idx_train_f)
+    test_idx_list.append(idx_test_f)
+
+idx_train = np.concatenate(train_idx_list)
+idx_test  = np.concatenate(test_idx_list)
+
 rng.shuffle(idx_train)
 rng.shuffle(idx_test)
 
@@ -217,15 +239,6 @@ with open(onnx_path, "wb") as f:
     f.write(onnx_model.SerializeToString())
 print(f"Model ONNX zapisany: {onnx_path}")
 
-import onnxruntime as rt
-sess    = rt.InferenceSession(onnx_path)
-inp     = sess.get_inputs()[0].name
-onnx_probs = sess.run(None, {inp: X_test_sc.astype(np.float32)})[1]
-onnx_probs = np.array([p[1] for p in onnx_probs])
-max_diff = np.max(np.abs(onnx_probs - y_probs))
-print(f"Max różnica XGB vs ONNX: {max_diff:.2e}  {'✓ OK' if max_diff < 1e-4 else '⚠ SPRAWDŹ'}")
-
-
 # =============================================================================
 # 6. METRYKI I PROGI CIĘCIA
 # =============================================================================
@@ -257,31 +270,24 @@ train_auc_hist = evals['validation_0']['auc']
 val_auc_hist   = evals['validation_1']['auc']
 
 # =============================================================================
-# 7. PRZYGOTOWANIE DANYCH DO MACIERZY KORELACJI
-#    Obliczamy korelację Spearmana (odporna na outliery, lepsza dla danych
-#    fizycznych z długimi ogonami) + korelację z etykietą y.
+# 7. KORELACJE (Spearman) + korelacja z etykietą
 # =============================================================================
-# Dodaj etykietę jako ostatnią kolumnę do wizualizacji korelacji z y
 X_corr = X.copy()
-
-# Korelacja Spearmana – rankingowa, lepsza dla danych z ogonami
 corr_matrix = X_corr.corr(method='spearman')
-
-# Korelacja każdej cechy z etykietą (sygnał/tło)
 y_float = y.astype(float)
 feature_label_corr = X_corr.corrwith(y_float, method='spearman').sort_values(
     key=lambda x: x.abs(), ascending=False
 )
 
 # =============================================================================
-# 8. GENEROWANIE PDF
+# 8. PDF — BEZ DUPLIKATÓW PNG, Z DODANYM SHAP
 # =============================================================================
 plt.rcParams.update({
     'figure.facecolor': 'white',
     'axes.facecolor':   'white',
     'font.family':      'sans-serif',
     'axes.spines.top':  False,
-    'axes.spines.right':    False,
+    'axes.spines.right':False,
 })
 
 SIG_COLOR = '#1f77b4'
@@ -291,42 +297,31 @@ PUR_COLOR = '#9467bd'
 
 with PdfPages("Plots/XGB_Output.pdf") as pdf:
 
-# =========================================================================
-    # STRONA 1: METRYKI PODSTAWOWE (Poprawione na F1)
-    # =========================================================================
+    # STRONA 1: METRYKI PODSTAWOWE
     fig = plt.figure(figsize=(18, 14))
     fig.suptitle('Muon Identification — XGBoost Analysis\n'
                   f'[Train S/B=1:{n_bkg_train/n_sig_train:.0f}  |  '
-                  f'Test S/B=1:{n_bkg_test/n_sig_test:.0f} (realistic)]',
+                  f'Test S/B=1:{n_bkg_test/n_sig_test:.0f} (realistic, all files)]',
                   fontsize=16, y=0.98, fontweight='bold')
     gs = gridspec.GridSpec(2, 3, figure=fig, hspace=0.4, wspace=0.35)
 
     ax_cm = fig.add_subplot(gs[0, 0])
-    
-    # Używamy progu F1 do binarnej klasyfikacji
     y_pred_f1 = (y_probs >= best_f1_thresh).astype(int)
     cm_mat = confusion_matrix(y_test, y_pred_f1)
-    
-    # Normalizacja dla heatmapy (wiersze sumują się do 100%)
     cm_norm = cm_mat.astype(float) / cm_mat.sum(axis=1)[:, np.newaxis]
-    
     sns.heatmap(cm_norm, annot=True, fmt='.2%', ax=ax_cm,
                 cmap='Blues', linewidths=0.5,
                 xticklabels=['Background', 'Muon'],
                 yticklabels=['Background', 'Muon'],
                 cbar_kws={'label': 'Fraction'})
-    
-    # Aktualizacja tytułu na F1
     ax_cm.set_title(f'Confusion Matrix\n@ Max F1-Score (thr={best_f1_thresh:.2f})',
                     color=SIG_COLOR, pad=10)
     ax_cm.set_xlabel('Predicted')
     ax_cm.set_ylabel('True')
-    
-    # Dodanie surowych liczb w nawiasach
     for i in range(2):
         for j in range(2):
             ax_cm.text(j+0.5, i+0.72, f'({cm_mat[i,j]})',
-                        ha='center', va='center', fontsize=9)
+                       ha='center', va='center', fontsize=9)
 
     ax_roc = fig.add_subplot(gs[0, 1])
     ax_roc.plot(fpr_arr, tpr_arr, color=SIG_COLOR, lw=2,
@@ -390,82 +385,10 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     ax_eff.legend(fontsize=9)
     ax_eff.grid(True)
 
-
-    plots = {
-        "01_confusion_matrix": ax_cm,
-        "02_roc_curve": ax_roc,
-        "03_precision_recall": ax_pr,
-        "04_distribution": ax_resp,
-        "05_efficiency": ax_eff
-    }
-
-    import matplotlib.transforms as mtransforms # Potrzebne do obliczeń
-    
-
-
     pdf.savefig(fig, bbox_inches='tight')
-    
     plt.close()
 
-    # 1. CONFUSION MATRIX
-    fig_cm = plt.figure(figsize=(10, 10))
-    ax_cm_single = fig_cm.add_subplot(111)
-    sns.heatmap(cm_norm, annot=True, fmt='.2%', ax=ax_cm_single,
-                cmap='Blues', linewidths=0.5, cbar=False,
-                xticklabels=['Background', 'Muon'],
-                yticklabels=['Background', 'Muon'],
-                annot_kws={"size": 14})
-    ax_cm_single.tick_params(axis='both', labelsize=16)
-    ax_cm_single.set_title(f'Confusion Matrix\n(threshold={best_f1_thresh:.2f})', fontsize=20)
-    ax_cm_single.set_xlabel('Predicted', fontsize=16)
-    ax_cm_single.set_ylabel('True', fontsize=16)
-    # Dodanie surowych liczb
-    for i in range(2):
-        for j in range(2):
-            ax_cm_single.text(j+0.5, i+0.72, f'({cm_mat[i,j]})', 
-                            ha='center', va='center', fontsize=11)
-
-    fig_cm.savefig('Plots/confusion_matrix.png', dpi=300, bbox_inches='tight')
-    plt.close(fig_cm)
-
-    # 2. ROC CURVE
-    fig_roc = plt.figure(figsize=(10, 10))
-    ax_roc_single = fig_roc.add_subplot(111)
-    ax_roc_single.plot(fpr_arr, tpr_arr, color=SIG_COLOR, lw=3, label=f'AUC = {roc_auc:.4f}')
-    ax_roc_single.plot([0,1], [0,1], linestyle='--', color='gray', lw=1.5)
-    ax_roc_single.set_title('ROC Curve', fontsize=20)
-    ax_roc_single.set_xlabel('False Positive Rate', fontsize=16)
-    ax_roc_single.set_ylabel('True Positive Rate', fontsize=16)
-    ax_roc_single.tick_params(axis='both', labelsize=12)
-    ax_roc_single.legend(fontsize=16)
-    ax_roc_single.grid(True, alpha=0.3)
-    fig_roc.savefig('Plots/roc_curve.png', dpi=300, bbox_inches='tight')
-    plt.close(fig_roc)
-
-    # 3. CLASSIFIER RESPONSE
-    fig_resp = plt.figure(figsize=(10, 10))
-    ax_resp_single = fig_resp.add_subplot(111)
-    bins = np.linspace(0, 1, 50)
-    ax_resp_single.hist(y_probs[y_test==0], bins=bins, alpha=0.6, density=True,
-                        color=BKG_COLOR, label='Background', hatch='//', edgecolor=BKG_COLOR)
-    ax_resp_single.hist(y_probs[y_test==1], bins=bins, alpha=0.6, density=True,
-                        color=SIG_COLOR, label='Muon/Signal')
-    ax_resp_single.axvline(best_f1_thresh, color=ACC_COLOR, linestyle='--', lw=2.5, 
-                        label=f'Cut (max-F1): {best_f1_thresh:.2f}')
-    ax_resp_single.set_yscale('log')
-    ax_resp_single.set_title('Response Distribution', fontsize=20)
-    ax_resp_single.set_xlabel('Probability of Muon)', fontsize=16)
-    ax_resp_single.set_ylabel('Normalized counts (log)', fontsize=16)
-    ax_resp_single.legend(fontsize=16)
-    ax_resp_single.tick_params(axis='both', labelsize=12)
-
-    ax_resp_single.grid(True, alpha=0.3)
-    fig_resp.savefig('Plots/response.png', dpi=300, bbox_inches='tight')
-    plt.close(fig_resp)
-
-    # =========================================================================
-    # STRONA 2: HISTORIA TRENINGU + OVERTRAINING CHECK
-    # =========================================================================
+    # STRONA 2: TRAINING DIAGNOSTICS
     fig, axes = plt.subplots(1, 2, figsize=(18, 7))
     fig.suptitle('XGBoost Training Diagnostics',
                  fontsize=16, y=1.01, fontweight='bold')
@@ -504,9 +427,7 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # =========================================================================
-    # STRONA 3: WAŻNOŚĆ CECH
-    # =========================================================================
+    # STRONA 3: FEATURE IMPORTANCE
     fig, axes = plt.subplots(1, 2, figsize=(18, 10))
     fig.suptitle('Feature Importances — XGBoost',
                  fontsize=16, y=1.01, fontweight='bold')
@@ -552,47 +473,8 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     plt.tight_layout()
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
-    # --- DODATKOWY ZAPIS: FEATURE IMPORTANCE (Estetyczny prostokąt) ---
 
-    # Ustawiamy proporcje 10x12, aby 20 cech miało odpowiednio dużo miejsca w pionie
-    fig_feat = plt.figure(figsize=(10, 12))
-    ax_feat = fig_feat.add_subplot(111)
-
-    # Rysowanie słupków z nieco większym zaokrągleniem/wyrazistością
-    bars = ax_feat.barh(range(top_n), importances[idx_top], color=colors,
-                        align='center', edgecolor='#2c3e50', linewidth=0.8)
-
-    # 1. NAZWY CECH - Większe i wyraźne
-    ax_feat.set_yticks(range(top_n))
-    ax_feat.set_yticklabels([all_features[i] for i in idx_top], fontsize=16)
-
-    # 2. OŚ X - Powiększone cyfry i opis
-    ax_feat.tick_params(axis='x', labelsize=12)
-    ax_feat.set_xlabel('Importance (Gain)', fontsize=16, labelpad=15, fontweight='bold')
-
-    # 3. TYTUŁ - Bardziej elegancki i odsunięty
-    ax_feat.set_title(f'Top {top_n} Feature Importances', 
-                    fontsize=20, pad=30, fontweight='bold',x=0.0, ha='left')
-
-    # 4. LEGENDA - Przeniesiona na zewnątrz lub w wolne miejsce, by nie zasłaniać
-    ax_feat.legend(handles=legend_elements, fontsize=16, loc='lower right', 
-                frameon=True, shadow=True, borderpad=1)
-
-    # 5. DOPRACOWANIE WYGLĄDU
-    ax_feat.grid(True, axis='x', linestyle=':', alpha=0.7, color='gray') # Subtelna siatka
-    ax_feat.set_axisbelow(True) # Siatka pod słupkami
-
-    # Usuwamy zbędne ramki (górną i prawą), żeby wykres był "lżejszy"
-    ax_feat.spines['top'].set_visible(False)
-    ax_feat.spines['right'].set_visible(False)
-
-    # Zapis z automatycznym dopasowaniem marginesów
-    fig_feat.savefig('Plots/feature_importance.png', dpi=300, bbox_inches='tight')
-    plt.close(fig_feat)
-
-    # =========================================================================
-    # STRONA 4: ROZKŁADY FIZYCZNE KLUCZOWYCH CECH
-    # =========================================================================
+    # STRONA 4: ROZKŁADY KLUCZOWYCH CECH
     imp_series = pd.Series(importances, index=all_features)
     phys_features = imp_series.nlargest(12).index.tolist()
 
@@ -612,12 +494,12 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
                 color=BKG_COLOR, label='Background', hatch='//', edgecolor=BKG_COLOR)
         ax.hist(sig_vals.clip(lo, hi), bins=bins, alpha=0.6, density=True,
                 color=SIG_COLOR, label='Signal')
-        ax.set_title(feat, color=SIG_COLOR, fontsize=20, pad=5)
-        ax.set_xlabel('Value', fontsize=16)
-        ax.set_ylabel('Norm.',  fontsize=16)
-        ax.tick_params(labelsize=16)
+        ax.set_title(feat, color=SIG_COLOR, fontsize=12, pad=5)
+        ax.set_xlabel('Value', fontsize=10)
+        ax.set_ylabel('Norm.',  fontsize=10)
+        ax.tick_params(labelsize=9)
         ax.grid(True, alpha=0.4)
-        ax.legend(fontsize=16)
+        ax.legend(fontsize=9)
 
     for ax in axes[len(phys_features):]:
         ax.set_visible(False)
@@ -626,18 +508,14 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # =========================================================================
-    # STRONA 5: MACIERZ KORELACJI SPEARMANA – pełna
-    # =========================================================================
+    # STRONA 5: MACIERZ KORELACJI SPEARMANA
     fig, ax = plt.subplots(figsize=(20, 17))
     fig.suptitle('Spearman Correlation Matrix — All Features\n'
                  '(wartości z całego datasetu)',
                  fontsize=14, fontweight='bold', y=1.005)
 
-    # Maska górnego trójkąta (symetria – wystarczy dolny)
     mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
-
-    cmap = sns.diverging_palette(220, 10, as_cmap=True)   # niebieski-biały-czerwony
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(
         corr_matrix,
         mask=mask,
@@ -645,16 +523,14 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
         cmap=cmap,
         vmin=-1, vmax=1,
         center=0,
-        annot=True,
-        fmt='.2f',
-        annot_kws={'size': 6},
+        annot=False,
         linewidths=0.3,
         linecolor='#cccccc',
         square=True,
         cbar_kws={'label': 'Spearman ρ', 'shrink': 0.6},
     )
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', fontsize=7)
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=0,  fontsize=7)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', fontsize=6)
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0,  fontsize=6)
     ax.set_title('Wyższe |ρ| → silniejsza monotonna zależność między cechami',
                  fontsize=9, color='gray', pad=8)
 
@@ -662,277 +538,119 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # =========================================================================
-    # STRONA 6: KORELACJA CECH Z ETYKIETĄ + MACIERZ KORELACJI – CLUSTERED
-    # =========================================================================
-    fig, axes = plt.subplots(1, 2, figsize=(20, 12))
-    fig.suptitle('Feature–Label Correlations & Clustered Heatmap',
-                 fontsize=14, fontweight='bold', y=1.01)
-
-    # --- Lewy panel: korelacja każdej cechy z etykietą ---
+    # STRONA 6: KORELACJA CECH Z ETYKIETĄ
+    fig, ax = plt.subplots(figsize=(12, 16))
     colors_bar = [SIG_COLOR if v > 0 else BKG_COLOR for v in feature_label_corr.values]
     y_pos = range(len(feature_label_corr))
-    axes[0].barh(list(y_pos), feature_label_corr.values, color=colors_bar,
-                 edgecolor='#333333', linewidth=0.4)
-    axes[0].set_yticks(list(y_pos))
-    axes[0].set_yticklabels(feature_label_corr.index, fontsize=8)
-    axes[0].axvline(0, color='black', lw=0.8)
-    axes[0].set_xlabel('Spearman ρ z etykietą (IsMuon)', fontsize=10)
-    axes[0].set_title('Korelacja cech z klasą sygnał/tło\n'
-                      'Niebieski = pozytywna (→muon), Czerwony = negatywna (→tło)',
-                      color=SIG_COLOR, pad=8, fontsize=9)
-    axes[0].grid(True, axis='x', alpha=0.4)
-    # Adnotuj wartości
-    for i, (val, name) in enumerate(zip(feature_label_corr.values,
-                                        feature_label_corr.index)):
-        axes[0].text(val + (0.005 if val >= 0 else -0.005), i,
-                     f'{val:+.3f}', va='center',
-                     ha='left' if val >= 0 else 'right',
-                     fontsize=6.5, color='#222222')
-
-    # --- Prawy panel: klasterowana macierz korelacji (mniejsza, top 15 cech) ---
-    top15_by_label = feature_label_corr.abs().nlargest(15).index.tolist()
-    corr_top15 = corr_matrix.loc[top15_by_label, top15_by_label]
-    sns.heatmap(
-        corr_top15,
-        ax=axes[1],
-        cmap=cmap,
-        vmin=-1, vmax=1,
-        center=0,
-        annot=True,
-        fmt='.2f',
-        annot_kws={'size': 8},
-        linewidths=0.5,
-        linecolor='#cccccc',
-        square=True,
-        cbar_kws={'label': 'Spearman ρ', 'shrink': 0.7},
-    )
-    axes[1].set_xticklabels(axes[1].get_xticklabels(),
-                             rotation=45, ha='right', fontsize=8)
-    axes[1].set_yticklabels(axes[1].get_yticklabels(), rotation=0, fontsize=8)
-    axes[1].set_title('Top 15 cech (wg |ρ| z etykietą)\n— korelacje wzajemne',
-                      color=SIG_COLOR, pad=8)
-
+    ax.barh(list(y_pos), feature_label_corr.values, color=colors_bar,
+            edgecolor='#333333', linewidth=0.4)
+    ax.set_yticks(list(y_pos))
+    ax.set_yticklabels(feature_label_corr.index, fontsize=7)
+    ax.axvline(0, color='black', lw=0.8)
+    ax.set_xlabel('Spearman ρ z etykietą (IsMuon)', fontsize=10)
+    ax.set_title('Korelacja cech z klasą sygnał/tło\n'
+                 'Niebieski = pozytywna (→muon), Czerwony = negatywna (→tło)',
+                 color=SIG_COLOR, pad=8, fontsize=9)
     plt.tight_layout()
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # =============================================================================
-# 6a. OPTYMALIZACJA PUNKTU ODCIĘCIA (PHYSICS-BASED)
-# =============================================================================
+    # STRONA 7: SHAP — WYJAŚNIENIE MODELU
+    explainer = shap.TreeExplainer(xgb)
+    # Bierzemy próbkę, żeby nie zabić pamięci
+    sample_idx = np.random.choice(len(X_test_sc), size=min(5000, len(X_test_sc)), replace=False)
+    X_shap = X_test_sc[sample_idx]
+    shap_values = explainer.shap_values(X_shap)
 
-    # Zakładamy, że chcemy zoptymalizować punkt odcięcia dla konkretnej skali danych 
-    # (np. spodziewanej liczby zdarzeń w eksperymencie)
-    expected_S = n_sig_test  # Możesz tu wpisać realną oczekiwaną liczbę sygnału
-    expected_B = n_bkg_test  # Możesz tu wpisać realną oczekiwaną liczbę tła
+    # Summary plot
+    fig = plt.figure(figsize=(12, 10))
+    shap.summary_plot(shap_values, X_shap, feature_names=all_features, show=False)
+    plt.title('SHAP Summary Plot — Feature Impact on P(Muon)', fontsize=14)
+    pdf.savefig(fig, bbox_inches='tight')
+    plt.close()
 
-    def calculate_significance(threshold, y_true, y_prob, S_norm, B_norm):
-        # Wybieramy zdarzenia powyżej progu
-        selected = (y_prob >= threshold)
-        s = (y_true[selected] == 1).sum()
-        b = (y_true[selected] == 0).sum()
-        
-        # Skalujemy do oczekiwanych wartości (jeśli test nie jest reprezentatywny ilościowo)
-        # Jeśli test jest reprezentatywny, mnożniki to 1
-        if (s + b) == 0: return 0
-        return s / np.sqrt(s + b)
+    # Dependence plot dla najważniejszej cechy
+    top_feat = imp_series.nlargest(1).index[0]
+    fig = plt.figure(figsize=(8, 6))
+    shap.dependence_plot(top_feat, shap_values, X_shap,
+                         feature_names=all_features, show=False)
+    plt.title(f'SHAP Dependence: {top_feat}', fontsize=14)
+    
+    # STRONY 8+: SHAP PER FILEINDEX — DIAGNOSTYKA DOMAIN SHIFT
+    
+    unique_files = sorted(file_idx.unique())
 
-    # Przeszukujemy progi (używamy tych z krzywej ROC dla wydajności)
-    significances = []
-    for thr in roc_thresholds:
-        # Pomijamy progi > 1 lub < 0
-        if thr > 1 or thr < 0: 
-            significances.append(0)
+    for fidx in unique_files:
+        mask_f = (file_idx.iloc[idx_test] == fidx)
+        if mask_f.sum() < 50:
+            continue  # za mało zdarzeń, pomijamy
+
+        X_f = X_test_sc[mask_f]
+        y_f = y_test[mask_f]
+
+        # Bierzemy próbkę, żeby nie zabić pamięci
+        sample_idx_f = np.random.choice(len(X_f), size=min(3000, len(X_f)), replace=False)
+        X_shap_f = X_f[sample_idx_f]
+
+        shap_values_f = explainer.shap_values(X_shap_f)
+
+        # --- STRONA: SHAP SUMMARY ---
+        fig = plt.figure(figsize=(12, 10))
+        shap.summary_plot(shap_values_f, X_shap_f, feature_names=all_features, show=False)
+        plt.title(f'SHAP Summary — FileIndex={fidx}', fontsize=14)
+        pdf.savefig(fig, bbox_inches='tight')
+        plt.close()
+
+        # --- STRONA: SHAP DEPENDENCE (najważniejsza cecha) ---
+        top_feat = imp_series.nlargest(1).index[0]
+        fig = plt.figure(figsize=(8, 6))
+        shap.dependence_plot(top_feat, shap_values_f, X_shap_f,
+                             feature_names=all_features, show=False)
+        plt.title(f'SHAP Dependence: {top_feat}  (FileIndex={fidx})', fontsize=14)
+
+    # =========================================================================
+    # STRONA: SHAP SIMILARITY MATRIX (FileIndex vs FileIndex)
+    # =========================================================================
+
+    # 1. Liczymy SHAP importance per FileIndex
+    shap_importances = {}
+
+    for fidx in unique_files:
+        mask_f = (file_idx.iloc[idx_test] == fidx)
+        if mask_f.sum() < 50:
             continue
-        sig = calculate_significance(thr, y_test.values, y_probs, expected_S, expected_B)
-        significances.append(sig)
 
-    best_sig_idx = np.argmax(significances)
-    best_sig_thresh = roc_thresholds[best_sig_idx]
-    max_sig = significances[best_sig_idx]
+        X_f = X_test_sc[mask_f]
+        sample_idx_f = np.random.choice(len(X_f), size=min(3000, len(X_f)), replace=False)
+        X_shap_f = X_f[sample_idx_f]
 
-    print(f"Optymalny próg (max S/√S+B): {best_sig_thresh:.3f}")
-    print(f"Maksymalna istotność: {max_sig:.2f}")
+        shap_values_f = explainer.shap_values(X_shap_f)
 
-    # =========================================================================
-    # STRONA 7: RAPORT TEKSTOWY + PEŁNA NUMERYCZNA TABELA WAŻNOŚCI CECH
-    # =========================================================================
+        # średnia absolutna wartość SHAP dla każdej cechy
+        shap_importances[fidx] = np.mean(np.abs(shap_values_f), axis=0)
 
-    # Przygotuj pełną posortowaną tabelę ważności
-    feat_imp_df = pd.DataFrame({
-        'Feature'           : all_features,
-        'XGB_Importance'    : importances,
-        'Spearman_vs_Label' : [feature_label_corr.get(f, np.nan) for f in all_features],
-    }).sort_values('XGB_Importance', ascending=False).reset_index(drop=True)
-    feat_imp_df['Rank']       = feat_imp_df.index + 1
-    feat_imp_df['Cumul_Imp']  = feat_imp_df['XGB_Importance'].cumsum()
-    feat_imp_df['Group'] = feat_imp_df['Feature'].apply(
-        lambda f: 'ECal' if ('Ecal' in f or 'ECal' in f)
-        else ('HCal' if ('Hcal' in f or 'HCal' in f)
-        else 'Scalar/Combined')
-    )
+    # 2. Tworzymy macierz (n_files × n_features)
+    file_ids = sorted(shap_importances.keys())
+    shap_matrix = np.vstack([shap_importances[f] for f in file_ids])
 
-    report_95 = classification_report(y_test, y_pred_f1,
-                                      target_names=['Background', 'Muon'])
+    # 3. Korelacja między FileIndex
+    similarity = np.corrcoef(shap_matrix)
 
-    text_content = f"""
-╔══════════════════════════════════════════════════════════════════╗
-║           Physics Analysis — Muon Identification Report          ║
-║                        [ XGBoost ]                               ║
-╚══════════════════════════════════════════════════════════════════╝
+    # 4. Rysujemy heatmapę
+    fig, ax = plt.subplots(figsize=(10, 8))
+    sns.heatmap(similarity, annot=True, fmt=".2f",
+                xticklabels=file_ids, yticklabels=file_ids,
+                cmap="coolwarm", vmin=-1, vmax=1,
+                cbar_kws={'label': 'Correlation'})
+    ax.set_title("SHAP Similarity Matrix — FileIndex vs FileIndex\n"
+                 "(korelacja między wektorami ważności SHAP)", fontsize=14)
+    ax.set_xlabel("FileIndex")
+    ax.set_ylabel("FileIndex")
 
-  Input file      : {file_path}
-  Total events    : {len(df)}
-  Signal (muons)  : {n_sig_total}  ({100*n_sig_total/len(df):.1f}%)
-  Background      : {n_bkg_total}  ({100*n_bkg_total/len(df):.1f}%)
-  Features used   : {len(all_features)}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  STRATEGIA PODZIAŁU:
-    Trening  : 80% sygnału + 80% tła   →  S/B = 1:{n_bkg_train/n_sig_train:.1f}
-               Sygnał={n_sig_train}  Tło={n_bkg_train}
-    Test     : 10% puli syg. + 100% puli tła  →  S/B = 1:{n_bkg_test/n_sig_test:.1f}
-               Sygnał={n_sig_test}   Tło={n_bkg_test}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  MODEL: XGBoost
-    n_estimators      = 3000  (best iter: {best_iteration})
-    learning_rate     = 0.05     max_depth         = 4
-    min_child_weight  = 5        subsample         = 0.8
-    colsample_bytree  = 0.8      gamma             = 1.0
-    reg_alpha         = 0.1      reg_lambda        = 1.0
-    scale_pos_weight  = {scale_pos_weight:.2f}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  ROC AUC             : {roc_auc:.4f}
-  Average Precision   : {ap:.4f}
-
-  Cut @ max-F1        : {best_f1_thresh:.3f}   (F1 = {f1_arr[best_f1_idx]:.3f})
-  Cut @ 95% bkg rej.  : {thresh_95bkg:.3f}   →  signal eff. = {sig_eff_at_95:.3f}
-  Cut @ 99% bkg rej.  : {thresh_99bkg:.3f}   →  signal eff. = {sig_eff_at_99:.3f}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  Classification report @ 95% bkg rejection threshold:
-
-{report_95}
-"""
-
-    fig = plt.figure(figsize=(14, 10))
-    plt.text(0.03, 0.97, text_content, transform=fig.transFigure,
-             fontsize=9.5, family='monospace', color='#1a1d27',
-             verticalalignment='top',
-             bbox=dict(boxstyle='round', facecolor='#f0f4ff', alpha=0.85,
-                       edgecolor='#444466'))
-    plt.axis('off')
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # =========================================================================
-    # STRONA 8: PEŁNA TABELA NUMERYCZNYCH WAŻNOŚCI CECH
-    #   Dwie kolumny: lewa = ranki 1..N/2, prawa = N/2+1..N
-    #   Kolory wierszy według grupy (ECal / HCal / Scalar)
-    # =========================================================================
-    GROUP_COLORS = {
-        'ECal'            : '#d6eaff',   # jasnoniebieski
-        'HCal'            : '#ffe0e0',   # jasnoczerwony
-        'Scalar/Combined' : '#e6ffe6',   # jasnozielony
-    }
-    HEADER_COLOR = '#2c3e50'
-    TEXT_COLOR   = '#111111'
 
-    n_total   = len(feat_imp_df)
-    n_half    = (n_total + 1) // 2
-    left_df   = feat_imp_df.iloc[:n_half]
-    right_df  = feat_imp_df.iloc[n_half:]
-
-    col_labels = ['#', 'Feature', 'XGB Imp.', 'Cumul.', 'ρ(label)', 'Group']
-    col_widths = [0.04, 0.22, 0.09, 0.09, 0.09, 0.13]   # suma ≈ 0.66 per panel
-
-    def draw_half_table(ax, df_half, x_start, title):
-        """Rysuje połowę tabeli na osi ax, zaczynając od x_start."""
-        ax.axis('off')
-        y_top    = 0.96
-        row_h    = 0.88 / (n_half + 1)   # +1 na nagłówek
-        col_x    = [x_start + sum(col_widths[:i]) for i in range(len(col_labels))]
-
-        # Nagłówek
-        for cx, cw, cl in zip(col_x, col_widths, col_labels):
-            ax.add_patch(plt.Rectangle((cx, y_top - row_h),
-                                       cw - 0.002, row_h * 0.95,
-                                       transform=ax.transAxes,
-                                       color=HEADER_COLOR, zorder=2))
-            ax.text(cx + cw/2, y_top - row_h/2, cl,
-                    transform=ax.transAxes,
-                    ha='center', va='center',
-                    fontsize=7.5, fontweight='bold', color='white', zorder=3)
-
-        # Wiersze danych
-        for row_i, (_, row) in enumerate(df_half.iterrows()):
-            y_row   = y_top - row_h * (row_i + 2)
-            bg_col  = GROUP_COLORS.get(row['Group'], '#ffffff')
-            # Tło wiersza
-            ax.add_patch(plt.Rectangle((x_start, y_row),
-                                       sum(col_widths) - 0.002, row_h * 0.95,
-                                       transform=ax.transAxes,
-                                       color=bg_col, zorder=1, alpha=0.6))
-            # Dane
-            values = [
-                str(int(row['Rank'])),
-                row['Feature'],
-                f"{row['XGB_Importance']:.5f}",
-                f"{row['Cumul_Imp']:.3f}",
-                f"{row['Spearman_vs_Label']:+.3f}",
-                row['Group'],
-            ]
-            aligns = ['center', 'left', 'right', 'right', 'right', 'center']
-            offsets= [cw/2, 0.005, cw-0.004, cw-0.004, cw-0.004, cw/2]
-            for cx, cw, val, ha, off in zip(col_x, col_widths, values, aligns, offsets):
-                ax.text(cx + off, y_row + row_h * 0.45, val,
-                        transform=ax.transAxes,
-                        ha=ha, va='center',
-                        fontsize=6.8, color=TEXT_COLOR, zorder=4)
-
-        ax.set_title(title, fontsize=9, color=SIG_COLOR, pad=4)
-
-    fig, axes = plt.subplots(1, 2, figsize=(20, max(12, n_half * 0.38 + 2)))
-    fig.suptitle(
-        'Pełna numeryczna tabela ważności cech (XGBoost gain)\n'
-        f'Wszystkie {n_total} cech posortowane malejąco  |  '
-        f'ρ(label) = korelacja Spearmana z etykietą (IsMuon)',
-        fontsize=12, fontweight='bold', y=1.01
-    )
-
-    draw_half_table(axes[0], left_df,  x_start=0.01,
-                    title=f'Ranki 1 – {n_half}')
-    draw_half_table(axes[1], right_df, x_start=0.01,
-                    title=f'Ranki {n_half+1} – {n_total}')
-
-    # Legenda grup
-    legend_patches = [
-        Patch(color=GROUP_COLORS['ECal'],            label='ECal features'),
-        Patch(color=GROUP_COLORS['HCal'],            label='HCal features'),
-        Patch(color=GROUP_COLORS['Scalar/Combined'], label='Scalar / Combined'),
-    ]
-    fig.legend(handles=legend_patches, loc='lower center',
-               ncol=3, fontsize=9, frameon=True,
-               bbox_to_anchor=(0.5, -0.01))
-
-    plt.tight_layout()
-    pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-plt.rcdefaults()
-print("\nAnaliza zakończona. PDF zapisany jako 'Plots/XGB_Output.pdf'.")
-print("  Strony:")
-print("    1 = Metryki podstawowe (ROC, PR, confusion matrix, response)")
-print("    2 = Historia treningu + overtraining check")
-print("    3 = Feature importances (wykres)")
-print("    4 = Rozkłady fizyczne")
-print("    5 = Macierz korelacji Spearmana – pełna (dolny trójkąt)")
-print("    6 = Korelacja cech z etykietą + clustered heatmap top-15")
-print("    7 = Raport tekstowy + classification report")
-print("    8 = Pełna numeryczna tabela ważności cech")
+print("Gotowe: trening na wszystkich plikach, podział per FileIndex, PDF + SHAP.")
