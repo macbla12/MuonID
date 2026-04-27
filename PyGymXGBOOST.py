@@ -31,7 +31,7 @@ os.makedirs("Plots", exist_ok=True)
 # =============================================================================
 # 1. WCZYTYWANIE DANYCH (WSZYSTKIE PLIKI JUŻ ZŁĄCZONE W MLDataGrape.root)
 # =============================================================================
-file_path = "MLData.root"
+file_path = "ONNX/MLData.root"
 
 with uproot.open(file_path) as f:
     df = f["MLDataTree"].arrays(library="pd")
@@ -42,6 +42,25 @@ print(f"Wczytano {len(df)} zdarzeń.")
 print(f"  Sygnał (miony) : {n_sig_total}")
 print(f"  Tło            : {n_bkg_total}")
 print(f"  Stosunek S/B   : 1 : {n_bkg_total/n_sig_total:.1f}")
+
+file_idx = df["FileIndex"].values
+is_mu    = df["IsMuon"].values
+
+weights = np.ones(len(df))
+
+for label in [0, 1]:  # 0 = piony, 1 = miony
+    mask_all = (is_mu == label)
+    total = mask_all.sum()
+
+    for f in sorted(df["FileIndex"].unique()):
+        mask_f = (file_idx == f) & (is_mu == label)
+        count_f = mask_f.sum()
+
+        if count_f == 0:
+            continue
+
+        w = total / count_f
+        weights[mask_f] = w
 
 # =============================================================================
 # 2. ROZWIJANIE WEKTORÓW Z SEMANTYCZNYMI NAZWAMI
@@ -66,6 +85,35 @@ def safe_divide(num, denom):
     result = np.zeros_like(num, dtype=float)
     result[denom_nonzero] = num[denom_nonzero] / denom[denom_nonzero]
     return result
+
+def engineer_scalar_features(df):
+    s = pd.DataFrame(index=df.index)
+
+    s['ECalEnergy']  = df['ECalEnergy']
+    s['HCalEnergy']  = df['HCalEnergy']
+    s['ECalNumber']  = df['ECalNumber']
+    s['HCalNumber']  = df['HCalNumber']
+    s['ECalEoverP']  = df['ECalEoverP']
+
+
+    s['HCalEoverP']  = df['HCalEoverP']
+
+
+    totalE = df['ECalEnergy'] + df['HCalEnergy']
+    s['ECalFrac'] = safe_divide(df['ECalEnergy'], totalE)
+    s['HCalFrac'] = safe_divide(df['HCalEnergy'], totalE)
+
+    s['HitRatio'] = safe_divide(df['ECalNumber'], df['HCalNumber'])
+
+    s['ECalDensity'] = safe_divide(df['ECalEnergy'], df['ECalNumber'])
+    s['HCalDensity'] = safe_divide(df['HCalEnergy'], df['HCalNumber'])
+
+    s['EoverP_ratio'] = safe_divide(df['ECalEoverP'], df['HCalEoverP'])
+
+    s['logECal'] = np.log1p(df['ECalEnergy'])
+    s['logHCal'] = np.log1p(df['HCalEnergy'])
+
+    return s
 
 def engineer_shape_features(df_ecal, df_hcal):
     s = pd.DataFrame(index=df_ecal.index)
@@ -117,9 +165,9 @@ def engineer_shape_features(df_ecal, df_hcal):
     s = pd.concat([s, df_ecal, df_hcal], axis=1)
     return s
 
-#X_scalar = engineer_scalar_features(df)
-X = engineer_shape_features(df_ecal, df_hcal)
-#X        = pd.concat([X_scalar, X_shape], axis=1)
+X_scalar = engineer_scalar_features(df)
+X_shape = engineer_shape_features(df_ecal, df_hcal)
+X        = pd.concat([X_scalar, X_shape], axis=1)
 y        = (df['IsMuon'] == 1).astype(int)
 file_idx = df['FileIndex'].astype(int)
 
@@ -183,11 +231,9 @@ X_test_sc  = scaler.transform(X_test)
 means = scaler.mean_
 scales = scaler.scale_
 
-print("Wklej to do C++ jako scaler_mean:")
-print("{" + ", ".join([f"{x:.8f}f" for x in means]) + "};")
-
-print("\nWklej to do C++ jako scaler_scale:")
-print("{" + ", ".join([f"{x:.8f}f" for x in scales]) + "};")
+with open("ONNX/scalars.txt", "w") as f:
+    f.write(",".join([f"{x:.8f}" for x in means]) + "\n")
+    f.write(",".join([f"{x:.8f}" for x in scales]) + "\n")
 
 # =============================================================================
 # 5. XGBOOST – TRENING
@@ -197,11 +243,11 @@ scale_pos_weight = n_bkg_train / n_sig_train
 xgb = XGBClassifier(
     n_estimators          = 2000,
     learning_rate         = 0.05,
-    max_depth             = 4,
-    min_child_weight      = 5,
-    subsample             = 0.8,
-    colsample_bytree      = 0.8,
-    gamma                 = 1.0,
+    max_depth             = 3,
+    min_child_weight      = 10,
+    subsample             = 0.6,
+    colsample_bytree      = 0.6,
+    gamma                 = 2.0,
     reg_alpha             = 0.1,
     reg_lambda            = 1.0,
     scale_pos_weight      = scale_pos_weight,
@@ -213,8 +259,14 @@ xgb = XGBClassifier(
     verbosity             = 1,
 )
 
-fp_penalty = 3.0
+# 1. policz fp_penalty na CAŁYM df
+fp_penalty = 3
+# 3. klasyczne ważenie FP
 sample_weights = np.where(y_train == 0, fp_penalty, 1.0)
+
+# 4. reweighting po FileIndex
+sample_weights = sample_weights * weights[idx_train]
+
 
 xgb.fit(
     X_train_sc, y_train,
@@ -234,7 +286,7 @@ onnx_model = convert_xgboost(
     xgb,
     initial_types=[('input', OnnxFloat([None, n_features]))]
 )
-onnx_path = "Plots/xgb_muonID.onnx"
+onnx_path = "ONNX/xgb_muonID.onnx"
 with open(onnx_path, "wb") as f:
     f.write(onnx_model.SerializeToString())
 print(f"Model ONNX zapisany: {onnx_path}")
@@ -306,36 +358,51 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     gs = gridspec.GridSpec(2, 3, figure=fig, hspace=0.4, wspace=0.35)
 
     ax_cm = fig.add_subplot(gs[0, 0])
-    y_pred_f1 = (y_probs >= best_f1_thresh).astype(int)
+    y_pred_f1 = (y_probs >=0.86).astype(int)
     cm_mat = confusion_matrix(y_test, y_pred_f1)
     cm_norm = cm_mat.astype(float) / cm_mat.sum(axis=1)[:, np.newaxis]
+
+    # 1. Zmiana rozmiaru wartości wewnątrz heatmapy przez annot_kws
     sns.heatmap(cm_norm, annot=True, fmt='.2%', ax=ax_cm,
                 cmap='Blues', linewidths=0.5,
+                annot_kws={"size": 16}, 
                 xticklabels=['Background', 'Muon'],
                 yticklabels=['Background', 'Muon'],
                 cbar_kws={'label': 'Fraction'})
-    ax_cm.set_title(f'Confusion Matrix\n@ Max F1-Score (thr={best_f1_thresh:.2f})',
-                    color=SIG_COLOR, pad=10)
-    ax_cm.set_xlabel('Predicted')
-    ax_cm.set_ylabel('True')
+
+    # 2. Zmiana tytułu i etykiet osi
+    ax_cm.set_title(f'Confusion Matrix\n@ Max F1-Score (thr={0.86})',
+                    color=SIG_COLOR, pad=10, fontsize=16)
+    ax_cm.set_xlabel('Predicted', fontsize=16)
+    ax_cm.set_ylabel('True', fontsize=16)
+
+    # 3. Zmiana rozmiaru napisów na osiach (Ticks)
+    ax_cm.tick_params(axis='both', labelsize=16)
+
+    # 4. Zmiana rozmiaru ręcznie dodanego tekstu (wartości bezwzględne)
     for i in range(2):
         for j in range(2):
             ax_cm.text(j+0.5, i+0.72, f'({cm_mat[i,j]})',
-                       ha='center', va='center', fontsize=9)
+                    ha='center', va='center', fontsize=16)
 
     ax_roc = fig.add_subplot(gs[0, 1])
+
     ax_roc.plot(fpr_arr, tpr_arr, color=SIG_COLOR, lw=2,
                 label=f'AUC = {roc_auc:.4f}')
     ax_roc.fill_between(fpr_arr, tpr_arr, alpha=0.1, color=SIG_COLOR)
-    ax_roc.plot([0,1],[0,1],linestyle='--', lw=1)
-    ax_roc.axvline(0.05, color=ACC_COLOR, linestyle=':', lw=1.5,
-                   label=f'FPR=5%  (TPR={sig_eff_at_95:.2f})')
-    ax_roc.axvline(0.01, color=PUR_COLOR, linestyle=':', lw=1.5,
-                   label=f'FPR=1%  (TPR={sig_eff_at_99:.2f})')
-    ax_roc.set_title('ROC Curve', color=SIG_COLOR, pad=10)
-    ax_roc.set_xlabel('False Positive Rate')
-    ax_roc.set_ylabel('True Positive Rate')
-    ax_roc.legend(fontsize=9)
+    ax_roc.plot([0, 1], [0, 1], linestyle='--', lw=1)
+
+    # Zmiana ustawień czcionek
+    ax_roc.set_title('ROC Curve', color=SIG_COLOR, pad=10, fontsize=16)
+    ax_roc.set_xlabel('False Positive Rate', fontsize=16)
+    ax_roc.set_ylabel('True Positive Rate', fontsize=16)
+
+    # Zmiana rozmiaru legendy
+    ax_roc.legend(fontsize=16)
+
+    # Zmiana rozmiaru liczb na osiach (tick labels)
+    ax_roc.tick_params(axis='both', labelsize=16)
+
     ax_roc.grid(True)
 
     ax_pr = fig.add_subplot(gs[0, 2])
@@ -353,22 +420,24 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
 
     ax_resp = fig.add_subplot(gs[1, 0:2])
     bins = np.linspace(0, 1, 50)
+
     ax_resp.hist(y_probs[y_test==0], bins=bins, alpha=0.6, density=True,
-                 color=BKG_COLOR, label=f'Background (N={n_bkg_test})',
-                 hatch='//', edgecolor=BKG_COLOR)
+                color=BKG_COLOR, label=f'Background (N={n_bkg_test})',
+                hatch='//', edgecolor=BKG_COLOR)
     ax_resp.hist(y_probs[y_test==1], bins=bins, alpha=0.6, density=True,
-                 color=SIG_COLOR, label=f'Muon/Signal (N={n_sig_test})')
-    ax_resp.axvline(best_f1_thresh, color=ACC_COLOR, linestyle='--', lw=2,
-                    label=f'Cut (max-F1): {best_f1_thresh:.2f}')
-    ax_resp.axvline(thresh_95bkg, color=PUR_COLOR, linestyle=':', lw=2,
-                    label=f'Cut (95% bkg rej.): {thresh_95bkg:.2f}')
-    ax_resp.axvline(thresh_99bkg, linestyle=':', lw=1.5,
-                    label=f'Cut (99% bkg rej.): {thresh_99bkg:.2f}')
-    ax_resp.set_title('Classifier Response Distribution  [Test: realistic S/B]',
-                      color=SIG_COLOR, pad=10)
-    ax_resp.set_xlabel('P(Muon)')
-    ax_resp.set_ylabel('Normalized counts (log)')
-    ax_resp.legend(fontsize=8)
+                color=SIG_COLOR, label=f'Muon/Signal (N={n_sig_test})')
+
+
+
+    # Tytuł i etykiety osi
+    ax_resp.set_title('Classifier Response Distribution [Test: realistic S/B]', 
+                    color=SIG_COLOR, pad=10, fontsize=16)
+    ax_resp.set_xlabel('P(Muon)', fontsize=16)
+    ax_resp.set_ylabel('Normalized counts (log)', fontsize=16)
+
+    # Skala osi i legenda
+    ax_resp.tick_params(axis='both', labelsize=16)
+    ax_resp.legend(fontsize=16)
     ax_resp.grid(True)
     ax_resp.set_yscale('log')
 
@@ -430,44 +499,51 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     # STRONA 3: FEATURE IMPORTANCE
     fig, axes = plt.subplots(1, 2, figsize=(18, 10))
     fig.suptitle('Feature Importances — XGBoost',
-                 fontsize=16, y=1.01, fontweight='bold')
+                fontsize=20, y=1.02, fontweight='bold') # Tytuł główny nieco większy dla czytelności
 
     importances = xgb.feature_importances_
     indices_all = np.argsort(importances)
-    top_n       = min(20, len(all_features))
-    idx_top     = indices_all[-top_n:]
+    top_n = min(20, len(all_features))
+    idx_top = indices_all[-top_n:]
 
     colors = [SIG_COLOR if 'Ecal' in all_features[i] or 'ECal' in all_features[i]
-              else BKG_COLOR if 'Hcal' in all_features[i] or 'HCal' in all_features[i]
-              else ACC_COLOR
-              for i in idx_top]
+            else BKG_COLOR if 'Hcal' in all_features[i] or 'HCal' in all_features[i]
+            else ACC_COLOR
+            for i in idx_top]
 
+    # Subplot 0: Horizontal Bar Chart
     axes[0].barh(range(top_n), importances[idx_top], color=colors,
-                 align='center', edgecolor='#0f1117', linewidth=0.5)
+                align='center', edgecolor='#0f1117', linewidth=0.5)
     axes[0].set_yticks(range(top_n))
-    axes[0].set_yticklabels([all_features[i] for i in idx_top], fontsize=9)
-    axes[0].set_title(f'Top {top_n} Features', color=SIG_COLOR, pad=10)
-    axes[0].set_xlabel('Importance (gain)')
+    axes[0].set_yticklabels([all_features[i] for i in idx_top], fontsize=16) # Zmieniono na 16
+    axes[0].tick_params(axis='x', labelsize=16) # Powiększenie liczb na osi x
+    axes[0].set_title(f'Top {top_n} Features', color=SIG_COLOR, pad=10, fontsize=16)
+    axes[0].set_xlabel('Importance (gain)', fontsize=16)
     axes[0].grid(True, axis='x')
-    legend_elements = [Patch(facecolor=SIG_COLOR, label='ECal features'),
-                       Patch(facecolor=BKG_COLOR, label='HCal features'),
-                       Patch(facecolor=ACC_COLOR, label='Combined/scalar')]
-    axes[0].legend(handles=legend_elements, fontsize=9, loc='lower right')
 
+    legend_elements = [Patch(facecolor=SIG_COLOR, label='ECal features'),
+                    Patch(facecolor=BKG_COLOR, label='HCal features'),
+                    Patch(facecolor=ACC_COLOR, label='Combined/scalar')]
+    axes[0].legend(handles=legend_elements, fontsize=16, loc='lower right')
+
+    # Subplot 1: Cumulative Importance
     sorted_imp = np.sort(importances)[::-1]
-    cum_imp    = np.cumsum(sorted_imp)
+    cum_imp = np.cumsum(sorted_imp)
     n_feats_90 = np.argmax(cum_imp >= 0.90) + 1
+
     axes[1].plot(range(1, len(sorted_imp)+1), cum_imp, color=SIG_COLOR, lw=2)
     axes[1].axhline(0.90, color=ACC_COLOR, linestyle='--', lw=1.5,
                     label=f'90% importance ({n_feats_90} features)')
     axes[1].axhline(0.95, color=PUR_COLOR, linestyle=':', lw=1.5,
                     label='95% importance')
     axes[1].fill_between(range(1, len(sorted_imp)+1), cum_imp,
-                         alpha=0.15, color=SIG_COLOR)
-    axes[1].set_title('Cumulative Feature Importance', color=SIG_COLOR, pad=10)
-    axes[1].set_xlabel('Number of features')
-    axes[1].set_ylabel('Cumulative importance')
-    axes[1].legend(fontsize=10)
+                        alpha=0.15, color=SIG_COLOR)
+
+    axes[1].set_title('Cumulative Feature Importance', color=SIG_COLOR, pad=10, fontsize=16)
+    axes[1].set_xlabel('Number of features', fontsize=16)
+    axes[1].set_ylabel('Cumulative importance', fontsize=16)
+    axes[1].tick_params(axis='both', labelsize=16) # Powiększenie liczb na obu osiach
+    axes[1].legend(fontsize=16)
     axes[1].grid(True)
 
     plt.tight_layout()
@@ -476,9 +552,9 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
 
     # STRONA 4: ROZKŁADY KLUCZOWYCH CECH
     imp_series = pd.Series(importances, index=all_features)
-    phys_features = imp_series.nlargest(12).index.tolist()
+    phys_features = imp_series.nlargest(15).index.tolist()
 
-    fig, axes = plt.subplots(3, 4, figsize=(20, 14))
+    fig, axes = plt.subplots(3, 5, figsize=(20, 14))
     fig.suptitle('Key Physics Variable Distributions: Signal vs Background\n'
                  '[rozkłady z całego datasetu przed podziałem]',
                  fontsize=14, y=1.01, fontweight='bold')
@@ -494,12 +570,12 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
                 color=BKG_COLOR, label='Background', hatch='//', edgecolor=BKG_COLOR)
         ax.hist(sig_vals.clip(lo, hi), bins=bins, alpha=0.6, density=True,
                 color=SIG_COLOR, label='Signal')
-        ax.set_title(feat, color=SIG_COLOR, fontsize=12, pad=5)
-        ax.set_xlabel('Value', fontsize=10)
-        ax.set_ylabel('Norm.',  fontsize=10)
+        ax.set_title(feat, color=SIG_COLOR, fontsize=16, pad=5)
+        ax.set_xlabel('Value', fontsize=16)
+        ax.set_ylabel('Norm.',  fontsize=16)
         ax.tick_params(labelsize=9)
         ax.grid(True, alpha=0.4)
-        ax.legend(fontsize=9)
+        ax.legend(fontsize=12)
 
     for ax in axes[len(phys_features):]:
         ax.set_visible(False)
