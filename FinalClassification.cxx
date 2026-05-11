@@ -13,7 +13,6 @@
 #include <onnxruntime_cxx_api.h>
 #include <numeric>
 
-#include "ToFFastSim.cxx"
 #include "Calorimeternew.cxx"
 #include "GreatCluster.cxx"
 
@@ -190,13 +189,13 @@ void FinalClassification()
     vector<TString> files(NumOfFiles);
 
 
-   //files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
+   files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
    //files.at(0)="/run/media/epic/Data/Muons/Grape-10x275/Paper/RECO/*.root";
-   files.at(0)="/run/media/epic/Data/Background/JPsi/March/*.root";
+   //files.at(0)="/run/media/epic/Data/Background/JPsi/March/*.root";
 
 
-   //files.at(1)="/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
-   files.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
+   files.at(1)="/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
+   //files.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
 
    //files.at(1)="/run/media/epic/Data/Background/SingleParticles/SingleFiles/Electrons.root";
    //files.at(1)="/run/media/epic/Data/Background/SingleParticles/SingleFiles/Kaons.root";
@@ -385,10 +384,10 @@ void FinalClassification()
       //==============================//
       XGBResponse[File] = new TH1D(Form("XGBResponse%s",name.c_str()),Form("XGBResponse%s",name.c_str()),100,0,1); 
 
-      Long64_t startEvent = 0.9 * nEvents;
+      //Long64_t startEvent = 0.9 * nEvents;
       //tree_reader.SetEntry(startEvent);
 
-      int eventID=startEvent;
+      int eventID=0;
       double FoundParticles=0;
       double particscount=0;
       double BadPDG=0;
@@ -399,7 +398,7 @@ void FinalClassification()
 
       while(tree_reader.Next()){
          eventID++;
-         //if(particscount>10) break;
+         //if(eventID>200000) break;
          
 
          int id=0;
@@ -573,7 +572,7 @@ void FinalClassification()
  
             
                 
-            if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
+            //if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
 
             if(HCalEoverP<upperbondH->Eval(Momentum) && HCalEoverP>lowerbondH->Eval(Momentum) && ECalEoverP<upperbondE->Eval(Momentum)){
      
@@ -723,7 +722,7 @@ void FinalClassification()
     leg2->AddEntry(XGBResponse[1],"Pions","l");
    c1.SaveAs("Plots/FinalCalID.pdf[");
    c1.Clear();
-   gPad->SetLogy(1);
+   //gPad->SetLogy(1);
    XGBResponse[0]->Scale(1/XGBResponse[0]->Integral());
    XGBResponse[1]->Scale(1/XGBResponse[1]->Integral());
    XGBResponse[0]->SetLineColor(kBlue);
@@ -731,7 +730,7 @@ void FinalClassification()
    XGBResponse[0]->Draw("HIST");
    XGBResponse[1]->Draw("HIST SAME");
    c1.SaveAs("Plots/FinalCalID.pdf");
-   gPad->SetLogy(0);
+   //gPad->SetLogy(0);
 
 
    c1.Clear();

@@ -76,6 +76,7 @@ void IDAnalysis()
    TH1D *ToFTimeHist[NumOfFiles], *ToFMassHist[NumOfFiles], *ToFMassHist2[NumOfFiles], *ToFMassHist10[NumOfFiles], *ToFMassHist40[NumOfFiles];
    TH1D *DoubleToFMassHist[NumOfFiles], *DoubleToFMassHist2[NumOfFiles], *DoubleToFMassHist10[NumOfFiles], *DoubleToFMassHist40[NumOfFiles];
    TH1D *EcalShapeHist[7][NumOfFiles], *HcalShapeHist[7][NumOfFiles];
+   TH1D *EcalShapeHist2[7][NumOfFiles], *HcalShapeHist2[7][NumOfFiles];
    TH1D *simuasocHist[NumOfFiles];
 
    
@@ -118,7 +119,7 @@ void IDAnalysis()
    for(int File=0; File<NumOfFiles;File++)
    {
       string name;
-      if(File==3 || File==2) name="Pions";
+      if(File==1) name="Pions";
       else name="Muons";
       // Set up input file chain
       TChain *mychain = new TChain("events");
@@ -295,6 +296,8 @@ void IDAnalysis()
       for(int i=0; i<7; i++){
          EcalShapeHist[i][File] = new TH1D(Form("EcalShape%d%s", i, name.c_str()), Form("EcalShape%d%s", i, name.c_str()), ParamsVector[i][0], ParamsVector[i][1], ParamsVector[i][2]);
          HcalShapeHist[i][File] = new TH1D(Form("HcalShape%d%s", i, name.c_str()), Form("HcalShape%d%s", i, name.c_str()), ParamsVector[i][0], ParamsVector[i][1], ParamsVector[i][2]);
+         EcalShapeHist2[i][File] = new TH1D(Form("EcalShape2%d%s", i, name.c_str()), Form("EcalShape%d%s", i, name.c_str()), ParamsVector[i][0], ParamsVector[i][1], ParamsVector[i][2]);
+         HcalShapeHist2[i][File] = new TH1D(Form("HcalShape2%d%s", i, name.c_str()), Form("HcalShape%d%s", i, name.c_str()), ParamsVector[i][0], ParamsVector[i][1], ParamsVector[i][2]);
       }
 
 
@@ -527,10 +530,14 @@ void IDAnalysis()
             HCalEnergyHist[File]->Fill(HCalEnergy);
             HCalEnergyMomHist[File]->Fill(HCalEoverP);
             HCalEnergyvsMomHist[File]->Fill(Momentum,HCalEoverP);
-            
+            //cout<<EcalAllShapes.size()<<" "<<HcalAllShapes.size()<<endl;
+
             for(int i=0; i<7; i++){
-               if(!EcalShape.empty()) EcalShapeHist[i][File]->Fill(EcalShape[i]);
-               if(!HcalShape.empty()) HcalShapeHist[i][File]->Fill(HcalShape[i]);
+               if(EcalAllShapes.size()==1) {if(!EcalShape.empty()) EcalShapeHist[i][File]->Fill(EcalShape[i]);}
+               else {if(!EcalShape.empty()) EcalShapeHist2[i][File]->Fill(EcalShape[i]);}
+               if(HcalAllShapes.size()==1) {if(!HcalShape.empty()) HcalShapeHist[i][File]->Fill(HcalShape[i]);}
+               else {if(!HcalShape.empty()) HcalShapeHist2[i][File]->Fill(HcalShape[i]);}
+
             }
             
             if(File==3 || File==1) IsMuon=0;  
@@ -905,8 +912,12 @@ void IDAnalysis()
       c1.cd(i+1);
       EcalShapeHist[i][0]->SetLineColor(kRed);
       EcalShapeHist[i][1]->SetLineColor(kBlue);
+      EcalShapeHist2[i][0]->SetLineColor(kOrange);
+      EcalShapeHist2[i][1]->SetLineColor(kViolet);
       EcalShapeHist[i][0]->Draw("HIST");
       EcalShapeHist[i][1]->Draw("HIST SAME");
+      EcalShapeHist2[i][0]->Draw("HIST SAME");
+      EcalShapeHist2[i][1]->Draw("HIST SAME");
    }
    c1.SaveAs("Plots/CalID.pdf");
    
@@ -916,8 +927,12 @@ void IDAnalysis()
       c1.cd(i+1);
       HcalShapeHist[i][0]->SetLineColor(kRed);
       HcalShapeHist[i][1]->SetLineColor(kBlue);
+      HcalShapeHist2[i][0]->SetLineColor(kOrange);
+      HcalShapeHist2[i][1]->SetLineColor(kViolet);
       HcalShapeHist[i][0]->Draw("HIST");
       HcalShapeHist[i][1]->Draw("HIST SAME");
+      HcalShapeHist2[i][0]->Draw("HIST SAME");
+      HcalShapeHist2[i][1]->Draw("HIST SAME");
    }
    c1.SaveAs("Plots/CalID.pdf");
 
