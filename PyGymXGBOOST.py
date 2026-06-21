@@ -292,6 +292,105 @@ with open(onnx_path, "wb") as f:
 print(f"Model ONNX zapisany: {onnx_path}")
 
 # =============================================================================
+# 6. ANALIZA SHAP DLA TRUDNYCH PRZYPADKÓW (RESPONSE > 0.7) ORAZ DRUGI XGBOOST
+# =============================================================================
+
+THRESHOLD = 0.7
+
+# 1. Filtrowanie zbioru testowego pod kątem wysokiego response
+mask_hard_test = y_probs > THRESHOLD
+X_test_hard = X_test.assert_all_finite()[mask_hard_test] if hasattr(X_test, 'assert_all_finite') else X_test[mask_hard_test]
+X_test_hard_sc = X_test_sc[mask_hard_test]
+y_test_hard = y_test.iloc[mask_hard_test]
+
+print(f"\n--- Analiza SHAP dla response > {THRESHOLD} ---")
+print(f"Liczba trudnych przypadków w zbiorze testowym: {len(X_test_hard)}")
+print(f" W tym miony (sygnał): {(y_test_hard == 1).sum()}")
+print(f" W tym piony (tło):    {(y_test_hard == 0).sum()}")
+
+if len(X_test_hard) > 0:
+    # Obliczanie wartości SHAP przy użyciu TreeExplainer dla pierwszego modelu
+    explainer = shap.TreeExplainer(xgb)
+    shap_values = explainer(X_test_hard_sc)
+
+    # SHAP wymaga nazw cech do ładnych wykresów, przypisujemy je do obiektu
+    shap_values.feature_names = all_features
+
+    # Generowanie i zapisywanie wykresu Summary Plot
+    plt.figure(figsize=(12, 8))
+    shap.summary_plot(shap_values, X_test_hard, show=False)
+    plt.title(f"SHAP Importance dla przypadków z Response > {THRESHOLD}", fontsize=14, pad=20)
+    plt.tight_layout()
+    plt.savefig("Plots/shap_summary_hard_cases.png", dpi=150)
+    plt.close()
+    print("Zapisano wykres SHAP: Plots/shap_summary_hard_cases.png")
+else:
+    print("Brak przypadków spełniających kryterium do analizy SHAP.")
+
+
+print(f"\n--- Przygotowanie danych do DRUGIEGO XGBoosta ---")
+# 2. Musimy przefiltrować również zbiór TRENINGOWY na podstawie pierwszego modelu
+y_train_probs = xgb.predict_proba(X_train_sc)[:, 1]
+mask_hard_train = y_train_probs > THRESHOLD
+
+X_train_hard_sc = X_train_sc[mask_hard_train]
+y_train_hard = y_train.iloc[mask_hard_train]
+weights_hard_train = sample_weights[mask_hard_train]
+
+n_sig_hard = int(y_train_hard.sum())
+n_bkg_hard = int((y_train_hard == 0).sum())
+
+print(f"Trening 2: Sygnał (miony) = {n_sig_hard}, Tło (piony) = {n_bkg_hard}")
+
+if n_sig_hard > 10 and n_bkg_hard > 10:
+    # Obliczamy nową wagę klas dla trudnego podzbioru
+    scale_pos_weight_2 = n_bkg_hard / n_sig_hard
+
+    # Definiujemy drugi model (płtszy max_depth, by uniknąć overfittingu na mniejszej próbie)
+    xgb_stage2 = XGBClassifier(
+        n_estimators=1000,
+        learning_rate=0.03,
+        max_depth=3,
+        min_child_weight=5,
+        subsample=0.7,
+        colsample_bytree=0.7,
+        scale_pos_weight=scale_pos_weight_2,
+        eval_metric='auc',
+        early_stopping_rounds=20,
+        tree_method='hist',
+        random_state=1337, # Inny seed dla różnorodności
+        n_jobs=-1
+    )
+
+    # Trening drugiego stopnia
+    xgb_stage2.fit(
+        X_train_hard_sc, y_train_hard,
+        sample_weight=weights_hard_train,
+        eval_set=[(X_train_hard_sc, y_train_hard), (X_test_hard_sc, y_test_hard)],
+        verbose=50
+    )
+
+    # Predykcje kaskadowe (Finalny scoring)
+    y_probs_stage2 = xgb_stage2.predict_proba(X_test_sc)[:, 1]
+    
+    # Łączymy decyzje: jeśli pierwszy model mówi < THRESHOLD -> zostaje wynik z 1. 
+    # Jeśli > THRESHOLD -> ostateczną decyzję podejmuje model 2.
+    final_probs = np.where(y_probs > THRESHOLD, y_probs_stage2, y_probs)
+
+    # Zapisujemy nowy model do ONNX
+    onnx_model_2 = convert_xgboost(
+        xgb_stage2,
+        initial_types=[('input', OnnxFloat([None, n_features]))]
+    )
+    onnx_path_2 = "ONNX/xgb_muonID_stage2.onnx"
+    with open(onnx_path_2, "wb") as f:
+        f.write(onnx_model_2.SerializeToString())
+    print(f"Drugi model ONNX zapisany: {onnx_path_2}")
+
+else:
+    print("Zbyt mała liczba trudnych przypadków w treningu, by odpalić drugi model.")
+
+# =============================================================================
 # 6. METRYKI I PROGI CIĘCIA
 # =============================================================================
 fpr_arr, tpr_arr, roc_thresholds = roc_curve(y_test, y_probs)

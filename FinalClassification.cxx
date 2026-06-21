@@ -171,6 +171,13 @@ void FinalClassification()
     const char* input_names[] = {"input"};
     const char* output_names[] = {"probabilities"};
 
+    // --- INICJALIZACJA ONNX (Dodaj tutaj) ---
+    Ort::Session session2(env, "ONNX/xgb_muonID_stage2.onnx", session_options);
+
+    // Nazwy wejść/wyjść (zależą od konwertera, zazwyczaj "input" i "probabilities")
+    const char* input_names2[] = {"input"};
+    const char* output_names2[] = {"probabilities"};
+
 
     //////////////////////
     //Setting up histograms
@@ -183,7 +190,7 @@ void FinalClassification()
     TH1D *ECalEnergyHist[NumOfFiles], *ECalEnergyMomHist[NumOfFiles],*HCalEnergyHist[NumOfFiles], *HCalEnergyMomHist[NumOfFiles];
     TH2D *ECalEnergyvsMomHist[NumOfFiles],*HCalEnergyvsMomHist[NumOfFiles];
     TH2D *ECalEnergyMomvsEtaHist[NumOfFiles],  *HCalEnergyMomvsEtaHist[NumOfFiles];
-    TH1D *XGBResponse[NumOfFiles];
+    TH1D *XGBResponse[NumOfFiles], *XGBResponse_Stage2[NumOfFiles];
  
     
     vector<TString> files(NumOfFiles);
@@ -383,6 +390,8 @@ void FinalClassification()
 
       //==============================//
       XGBResponse[File] = new TH1D(Form("XGBResponse%s",name.c_str()),Form("XGBResponse%s",name.c_str()),100,0,1); 
+      XGBResponse_Stage2[File] = new TH1D(Form("XGBResponse_Stage2%s",name.c_str()),Form("XGBResponse_Stage2%s",name.c_str()),100,0,1); 
+
 
       //Long64_t startEvent = 0.9 * nEvents;
       //tree_reader.SetEntry(startEvent);
@@ -644,6 +653,17 @@ void FinalClassification()
 
                if(muon_prob>0.86){ 
 
+                  // 3. Uruchom model
+                  auto output_tensors2 = session2.Run(Ort::RunOptions{nullptr}, 
+                                                   input_names, &input_tensor, 1, 
+                                                   output_names, 1);
+
+                  // 4. Pobierz wynik (prawdopodobieństwo miona)
+                  float* probs2 = output_tensors2[0].GetTensorMutableData<float>();
+                  float muon_prob2 = probs2[1]; 
+                  XGBResponse_Stage2[File]->Fill(muon_prob2);
+         
+
                   secondcuts++;
                   if(File==0){
                      FoundParticEta[File] ->Fill(Partic.Eta());
@@ -687,8 +707,6 @@ void FinalClassification()
       if(File==1)    cout<<"After Second Cuts Ratio: "<<100-(secondcuts*100/FoundParticles)<<'%'<<endl;
 
       cout<<"   After second cuts particles: "<<secondcuts<<endl;
-
-
       cout<<"==========================="<<endl;
    }
    
@@ -729,6 +747,16 @@ void FinalClassification()
    XGBResponse[1]->SetLineColor(kRed);
    XGBResponse[0]->Draw("HIST");
    XGBResponse[1]->Draw("HIST SAME");
+   c1.SaveAs("Plots/FinalCalID.pdf");
+
+   c1.Clear();
+   //gPad->SetLogy(1);
+   XGBResponse_Stage2[0]->Scale(1/XGBResponse_Stage2[0]->Integral());
+   XGBResponse_Stage2[1]->Scale(1/XGBResponse_Stage2[1]->Integral());
+   XGBResponse_Stage2[0]->SetLineColor(kBlue);
+   XGBResponse_Stage2[1]->SetLineColor(kRed);
+   XGBResponse_Stage2[0]->Draw("HIST");
+   XGBResponse_Stage2[1]->Draw("HIST SAME");
    c1.SaveAs("Plots/FinalCalID.pdf");
    //gPad->SetLogy(0);
 
@@ -1303,4 +1331,148 @@ void FinalClassification()
    tex.DrawLatex(0.4, 0.94, "#bf{Pion Rejection vs p_{T}}");
    c1.SaveAs("Plots/Rejection//RejectionBoth_Pt.png");
 
+   // =========================================================================
+   // 1. ZINTEGROWANY WYKRES DLA PT (XGBoost Efficiency + Rejection)
+   // =========================================================================
+   c1.Clear();
+
+   // Tworzymy główny pad dla Efficiency (lewa oś Y)
+   TPad *padPt1 = new TPad("padPt1", "", 0, 0, 1, 1);
+   padPt1->SetGrid();
+   padPt1->Draw();
+   padPt1->cd();
+
+   // Pomiary XGBoost dla mionów (Efficiency) -> indeks [0]
+   TEfficiency *pXGB_EffPt = new TEfficiency(*FoundParticPt[0], *AllParticPt[0]);
+   pXGB_EffPt->SetLineColor(kGreen+2);
+   pXGB_EffPt->SetMarkerStyle(22);
+   pXGB_EffPt->SetMarkerSize(1.0);
+   pXGB_EffPt->SetMarkerColor(kGreen+2);
+   pXGB_EffPt->SetStatisticOption(TEfficiency::kBUniform);
+   
+   pXGB_EffPt->Draw("AP");
+   gPad->Update();
+   
+   // Formatowanie lewej osi Y (Efficiency)
+   TGraphAsymmErrors *gPt1 = pXGB_EffPt->GetPaintedGraph();
+   gPt1->SetTitle(";p_{T} [GeV/c];");
+   gPt1->GetYaxis()->SetTitleColor(kGreen+2);
+   gPt1->GetYaxis()->SetLabelColor(kGreen+2);
+   gPt1->SetMinimum(0.80); // Dopasowane pod wydajność mionów
+   gPt1->SetMaximum(1.02);
+   gPad->Update();
+
+   // Tworzymy drugi, nakładający się transparentny pad dla Rejection (prawa oś Y)
+   c1.cd();
+   TPad *padPt2 = new TPad("padPt2", "", 0, 0, 1, 1);
+   padPt2->SetFillStyle(4000); // Transparentny
+   padPt2->SetFrameFillStyle(4000);
+   padPt2->Draw();
+   padPt2->cd();
+
+   // Pomiary XGBoost dla pionów (Rejection) -> indeks [1]
+   TEfficiency *pXGB_RejPt = new TEfficiency(*FoundParticPt[1], *AllParticPt[1]);
+   pXGB_RejPt->SetLineColor(kRed+1);
+   pXGB_RejPt->SetMarkerStyle(23);
+   pXGB_RejPt->SetMarkerSize(1.0);
+   pXGB_RejPt->SetMarkerColor(kRed+1);
+   pXGB_RejPt->SetStatisticOption(TEfficiency::kBUniform);
+   
+   // Rysujemy z opcją "Y+", aby oś znalazła się po prawej stronie
+   pXGB_RejPt->Draw("APY+"); 
+   gPad->Update();
+
+   // Formatowanie prawej osi Y (Rejection)
+   TGraphAsymmErrors *gPt2 = pXGB_RejPt->GetPaintedGraph();
+   gPt2->SetTitle(";p_{T} [GeV/c];"); // Czyścimy tytuł X, żeby się nie nałożył
+   gPt2->GetYaxis()->SetTitleColor(kRed+1);
+   gPt2->GetYaxis()->SetLabelColor(kRed+1);
+   gPt2->SetMinimum(0.80); // Dopasowane pod szerokie odrzucenie pionów
+   gPt2->SetMaximum(1.02);
+   gPad->Update();
+
+   // Wspólna legenda
+   TLegend *legPt = new TLegend(0.37, 0.20, 0.65, 0.35);
+   legPt->SetBorderSize(1);
+   legPt->AddEntry(pXGB_EffPt, "Muon Efficiency", "lp");
+   legPt->AddEntry(pXGB_RejPt, "Pion Rejection", "lp");
+   legPt->Draw();
+
+   c1.cd();
+   tex.SetNDC();
+   tex.DrawLatex(0.22, 0.94, "#bf{XGBoost Performance vs p_{T}}");
+   c1.SaveAs("Plots/XGBoost_Performance_Pt.png");
+
+
+   // =========================================================================
+   // 2. ZINTEGROWANY WYKRES DLA ETA (XGBoost Efficiency + Rejection)
+   // =========================================================================
+   c1.Clear();
+
+   double etaMin = FoundParticEta[0]->GetXaxis()->GetXmin();
+   double etaMax = FoundParticEta[0]->GetXaxis()->GetXmax();
+
+   // Główny pad dla Eta Efficiency
+   TPad *padEta1 = new TPad("padEta1", "", 0, 0, 1, 1);
+   padEta1->SetGrid();
+   padEta1->Draw();
+   padEta1->cd();
+
+   TEfficiency *pXGB_EffEta = new TEfficiency(*FoundParticEta[0], *AllParticEta[0]);
+   pXGB_EffEta->SetLineColor(kGreen+2);
+   pXGB_EffEta->SetMarkerStyle(22);
+   pXGB_EffEta->SetMarkerSize(1.0);
+   pXGB_EffEta->SetMarkerColor(kGreen+2);
+   pXGB_EffEta->SetStatisticOption(TEfficiency::kBUniform);
+   
+   pXGB_EffEta->Draw("AP");
+   gPad->Update();
+   
+   TGraphAsymmErrors *gEta1 = pXGB_EffEta->GetPaintedGraph();
+   gEta1->SetTitle(";Pseudorapidity #eta;");
+   gEta1->GetYaxis()->SetTitleColor(kGreen+2);
+   gEta1->GetYaxis()->SetLabelColor(kGreen+2);
+   gEta1->GetXaxis()->SetLimits(etaMin, etaMax);
+   gEta1->SetMinimum(0.86);
+   gEta1->SetMaximum(1.02);
+   gPad->Update();
+
+   // Transparentny pad dla Eta Rejection
+   c1.cd();
+   TPad *padEta2 = new TPad("padEta2", "", 0, 0, 1, 1);
+   padEta2->SetFillStyle(4000);
+   padEta2->SetFrameFillStyle(4000);
+   padEta2->Draw();
+   padEta2->cd();
+
+   TEfficiency *pXGB_RejEta = new TEfficiency(*FoundParticEta[1], *AllParticEta[1]);
+   pXGB_RejEta->SetLineColor(kRed+1);
+   pXGB_RejEta->SetMarkerStyle(23);
+   pXGB_RejEta->SetMarkerSize(1.0);
+   pXGB_RejEta->SetMarkerColor(kRed+1);
+   pXGB_RejEta->SetStatisticOption(TEfficiency::kBUniform);
+   
+   pXGB_RejEta->Draw("APY+");
+   gPad->Update();
+
+   TGraphAsymmErrors *gEta2 = pXGB_RejEta->GetPaintedGraph();
+   gEta2->SetTitle(";Pseudorapidity #eta;");
+   gEta2->GetYaxis()->SetTitleColor(kRed+1);
+   gEta2->GetYaxis()->SetLabelColor(kRed+1);
+   gEta2->GetXaxis()->SetLimits(etaMin, etaMax);
+   gEta2->SetMinimum(0.86);
+   gEta2->SetMaximum(1.02);
+   gPad->Update();
+
+   // Wspólna legenda (przesunięta na środek-dół)
+   TLegend *legEta = new TLegend(0.37, 0.20, 0.65, 0.35);
+   legEta->SetBorderSize(1);
+   legEta->AddEntry(pXGB_EffEta, "Muon Efficiency", "lp");
+   legEta->AddEntry(pXGB_RejEta, "Pion Rejection", "lp");
+   legEta->Draw();
+
+   c1.cd();
+   tex.SetNDC();
+   tex.DrawLatex(0.25, 0.94, "#bf{XGBoost Performance vs #eta}");
+   c1.SaveAs("Plots/XGBoost_Performance_Eta.png");
 }

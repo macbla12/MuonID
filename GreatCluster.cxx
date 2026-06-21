@@ -26,7 +26,7 @@ vector<float> GreatCluster(const vector<vector<float>>& Shapes)
     int n = Shapes.size();
     //cout<<"Number of Shapes: "<<n<<endl;
     // ============================================================
-    // SPECIAL CASE: only one cluster → return its local parameters
+    // SPECIAL CASE: only one cluster → return its local parameters(sorted)
     // ============================================================
     if (n == 1) {
 
