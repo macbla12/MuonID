@@ -1,4 +1,3 @@
-
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
@@ -12,7 +11,7 @@
 #include <tuple>
 
 //#include "ToFFastSim.cxx"
-#include "Calorimeters.cxx"
+#include "CalorimeterValues.cxx"
 
 void CalorimeterCheck()
 {
@@ -27,7 +26,7 @@ void CalorimeterCheck()
    double DEG=180/TMath::Pi();
 
 
-   static constexpr int NumOfFiles=3;
+   static constexpr int NumOfFiles=2;
    TH1D *EnergyEcal[NumOfFiles],*EnergyHcal[NumOfFiles],*NumberEcal[NumOfFiles],*NumberHcal[NumOfFiles];
    TH1D *NumberEcalBarrel[NumOfFiles],*NumberEcalEndcapP[NumOfFiles],*NumberEcalEndcapN[NumOfFiles],*NumberHcalBarrel[NumOfFiles],
       *NumberHcalEndcapP[NumOfFiles],*NumberHcalEndcapN[NumOfFiles],*NumberLFHcal[NumOfFiles],*NumberB0Barrel[NumOfFiles];
@@ -42,9 +41,9 @@ void CalorimeterCheck()
    
    vector<TString> files(NumOfFiles);
 
-   files.at(0)="/run/media/epic/Data/Muons/Grape-10x275/Paper/RECO/FULLRECO.root";
-   files.at(1)="/run/media/epic/Data/Background/JPsi/Fulldata.root";
-   files.at(2)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
+   files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
+   files.at(1)="/run/media/epic/Data/Muons/Grape-10x275/Current/reco*.root";
+
    TF1 *upperbondE = new TF1("upperbondE", "2/x", 0.5, 20.0);
    upperbondE->SetLineColor(kRed);
    upperbondE->SetLineWidth(1);
@@ -72,7 +71,7 @@ void CalorimeterCheck()
       // Initialize reader
       TTreeReader tree_reader(mychain);
 
-      // Get Particle Information
+// Get Particle Information
       TTreeReaderArray<int> partGenStat(tree_reader, "MCParticles.generatorStatus");
       TTreeReaderArray<double> partMomX(tree_reader, "MCParticles.momentum.x");
       TTreeReaderArray<double> partMomY(tree_reader, "MCParticles.momentum.y");
@@ -94,12 +93,13 @@ void CalorimeterCheck()
       TTreeReaderArray<float> trackEng(tree_reader, "ReconstructedChargedParticles.energy");
 
       // Get Associations Between MCParticles and ReconstructedChargedParticles
-      TTreeReaderArray<unsigned int> recoAssoc(tree_reader, "ReconstructedChargedParticleAssociations.recID");
-      TTreeReaderArray<unsigned int> simuAssoc(tree_reader, "ReconstructedChargedParticleAssociations.simID");
+      TTreeReaderArray<int> simuAssoc(tree_reader, "_ReconstructedChargedParticleAssociations_sim.index");
 
       // Get B0 Information
-      TTreeReaderArray<unsigned int> recoAssocB0(tree_reader, "B0ECalClusterAssociations.recID");
-      TTreeReaderArray<unsigned int> simuAssocB0(tree_reader, "B0ECalClusterAssociations.simID");
+      TTreeReaderArray<int> simuAssocB0(tree_reader, "_B0ECalClusterAssociations_sim.index");
+      TTreeReaderArray<float> B0x(tree_reader, "B0ECalClusters.position.x");
+      TTreeReaderArray<float> B0y(tree_reader, "B0ECalClusters.position.y");
+      TTreeReaderArray<float> B0z(tree_reader, "B0ECalClusters.position.z");
       TTreeReaderArray<float> B0Eng(tree_reader, "B0ECalClusters.energy");
       TTreeReaderArray<unsigned int> B0ShPB(tree_reader, "B0ECalClusters.shapeParameters_begin");
       TTreeReaderArray<unsigned int> B0ShPE(tree_reader, "B0ECalClusters.shapeParameters_end");
@@ -107,54 +107,90 @@ void CalorimeterCheck()
 
 
 
-      TTreeReaderArray<float> B0z(tree_reader, "B0ECalClusters.position.z");
-
-      // Get Forward Detectors Information
-      TTreeReaderArray<float> RPEng(tree_reader, "ForwardRomanPotRecParticles.energy");
-      TTreeReaderArray<float> RPMomX(tree_reader, "ForwardRomanPotRecParticles.momentum.x");
-      TTreeReaderArray<float> RPMomY(tree_reader, "ForwardRomanPotRecParticles.momentum.y");
-      TTreeReaderArray<float> RPMomZ(tree_reader, "ForwardRomanPotRecParticles.momentum.z");
-
-      TTreeReaderArray<float> OffMEng(tree_reader, "ForwardOffMRecParticles.energy");
 
       // Ecal Information
-      TTreeReaderArray<unsigned int> simuAssocEcalBarrel(tree_reader, "EcalBarrelClusterAssociations.simID");
-      TTreeReaderArray<unsigned int> recoAssocEcalBarrel(tree_reader, "EcalBarrelClusterAssociations.recID");
+      TTreeReaderArray<int> simuAssocEcalBarrel(tree_reader, "_EcalBarrelClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalBarrelEng(tree_reader, "EcalBarrelClusters.energy");
+      TTreeReaderArray<float> EcalBarrelx(tree_reader, "EcalBarrelClusters.position.x");
+      TTreeReaderArray<float> EcalBarrely(tree_reader, "EcalBarrelClusters.position.y");
+      TTreeReaderArray<float> EcalBarrelz(tree_reader, "EcalBarrelClusters.position.z");
+      TTreeReaderArray<unsigned int> EcalBarrelShPB(tree_reader, "EcalBarrelClusters.shapeParameters_begin");
+      TTreeReaderArray<unsigned int> EcalBarrelShPE(tree_reader, "EcalBarrelClusters.shapeParameters_end");
+      TTreeReaderArray<float> EcalBarrelShParameters(tree_reader, "_EcalBarrelClusters_shapeParameters");
 
 
-      TTreeReaderArray<unsigned int> simuAssocEcalBarrelImaging(tree_reader, "EcalBarrelImagingClusterAssociations.simID");
-      TTreeReaderArray<unsigned int> recoAssocEcalBarrelImaging(tree_reader, "EcalBarrelImagingClusterAssociations.recID");
+      TTreeReaderArray<int> simuAssocEcalBarrelImaging(tree_reader, "_EcalBarrelImagingClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalBarrelImagingEng(tree_reader, "EcalBarrelImagingClusters.energy");
+      TTreeReaderArray<float> EcalBarrelImagingx(tree_reader, "EcalBarrelImagingClusters.position.x");
+      TTreeReaderArray<float> EcalBarrelImagingy(tree_reader, "EcalBarrelImagingClusters.position.y");
+      TTreeReaderArray<float> EcalBarrelImagingz(tree_reader, "EcalBarrelImagingClusters.position.z");
+      TTreeReaderArray<unsigned int> EcalBarrelImagingShPB(tree_reader, "EcalBarrelImagingClusters.shapeParameters_begin");
+      TTreeReaderArray<unsigned int> EcalBarrelImagingShPE(tree_reader, "EcalBarrelImagingClusters.shapeParameters_end");
+      TTreeReaderArray<float> EcalBarrelImagingShParameters(tree_reader, "_EcalBarrelImagingClusters_shapeParameters");
 
-      TTreeReaderArray<unsigned int> simuAssocEcalBarrelScFi(tree_reader, "EcalBarrelScFiClusterAssociations.simID");
-      TTreeReaderArray<unsigned int> recoAssocEcalBarrelScFi(tree_reader, "EcalBarrelScFiClusterAssociations.recID");
+      TTreeReaderArray<int> simuAssocEcalBarrelScFi(tree_reader, "_EcalBarrelScFiClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalBarrelScFiEng(tree_reader, "EcalBarrelScFiClusters.energy");
+      TTreeReaderArray<float> EcalBarrelScFix(tree_reader, "EcalBarrelScFiClusters.position.x");
+      TTreeReaderArray<float> EcalBarrelScFiy(tree_reader, "EcalBarrelScFiClusters.position.y");
+      TTreeReaderArray<float> EcalBarrelScFiz(tree_reader, "EcalBarrelScFiClusters.position.z");
+      TTreeReaderArray<unsigned int> EcalBarrelScFiShPB(tree_reader, "EcalBarrelScFiClusters.shapeParameters_begin");
+      TTreeReaderArray<unsigned int> EcalBarrelScFiShPE(tree_reader, "EcalBarrelScFiClusters.shapeParameters_end");
+      TTreeReaderArray<float> EcalBarrelScFiShParameters(tree_reader, "_EcalBarrelScFiClusters_shapeParameters");
 
-      TTreeReaderArray<unsigned int> simuAssocEcalEndcapP(tree_reader, "EcalEndcapPClusterAssociations.simID");
-      TTreeReaderArray<unsigned int> recoAssocEcalEndcapP(tree_reader, "EcalEndcapPClusterAssociations.recID");    
+      TTreeReaderArray<int> simuAssocEcalEndcapP(tree_reader, "_EcalEndcapPClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalEndcapPEng(tree_reader, "EcalEndcapPClusters.energy");
+      TTreeReaderArray<float> EcalEndcapPx(tree_reader, "EcalEndcapPClusters.position.x");
+      TTreeReaderArray<float> EcalEndcapPy(tree_reader, "EcalEndcapPClusters.position.y");
+      TTreeReaderArray<float> EcalEndcapPz(tree_reader, "EcalEndcapPClusters.position.z");
+      TTreeReaderArray<unsigned int> EcalEndcapPShPB(tree_reader, "EcalEndcapPClusters.shapeParameters_begin");
+      TTreeReaderArray<unsigned int> EcalEndcapPShPE(tree_reader, "EcalEndcapPClusters.shapeParameters_end");
+      TTreeReaderArray<float> EcalEndcapPShParameters(tree_reader, "_EcalEndcapPClusters_shapeParameters");
 
-      TTreeReaderArray<unsigned int> simuAssocEcalEndcapN(tree_reader, "EcalEndcapNClusterAssociations.simID");
-      TTreeReaderArray<unsigned int> recoAssocEcalEndcapN(tree_reader, "EcalEndcapNClusterAssociations.recID");
+      TTreeReaderArray<int> simuAssocEcalEndcapN(tree_reader, "_EcalEndcapNClusterAssociations_sim.index");
       TTreeReaderArray<float> EcalEndcapNEng(tree_reader, "EcalEndcapNClusters.energy");
+      TTreeReaderArray<float> EcalEndcapNx(tree_reader, "EcalEndcapNClusters.position.x");
+      TTreeReaderArray<float> EcalEndcapNy(tree_reader, "EcalEndcapNClusters.position.y");
+      TTreeReaderArray<float> EcalEndcapNz(tree_reader, "EcalEndcapNClusters.position.z");
+      TTreeReaderArray<unsigned int> EcalEndcapNShPB(tree_reader, "EcalEndcapNClusters.shapeParameters_begin");
+      TTreeReaderArray<unsigned int> EcalEndcapNShPE(tree_reader, "EcalEndcapNClusters.shapeParameters_end");
+      TTreeReaderArray<float> EcalEndcapNShParameters(tree_reader, "_EcalEndcapNClusters_shapeParameters");
 
       // Hcal Information
-      TTreeReaderArray<unsigned int> simuAssocHcalBarrel(tree_reader, "HcalBarrelClusterAssociations.simID");
-      TTreeReaderArray<unsigned int> recoAssocHcalBarrel(tree_reader, "HcalBarrelClusterAssociations.recID");
+      TTreeReaderArray<int> simuAssocHcalBarrel(tree_reader, "_HcalBarrelClusterAssociations_sim.index");
       TTreeReaderArray<float> HcalBarrelEng(tree_reader, "HcalBarrelClusters.energy");
+      TTreeReaderArray<float> HcalBarrelx(tree_reader, "HcalBarrelClusters.position.x");
+      TTreeReaderArray<float> HcalBarrely(tree_reader, "HcalBarrelClusters.position.y");
+      TTreeReaderArray<float> HcalBarrelz(tree_reader, "HcalBarrelClusters.position.z");
+      TTreeReaderArray<unsigned int> HcalBarrelShPB(tree_reader, "HcalBarrelClusters.shapeParameters_begin");
+      TTreeReaderArray<unsigned int> HcalBarrelShPE(tree_reader, "HcalBarrelClusters.shapeParameters_end");
+      TTreeReaderArray<float> HcalBarrelShParameters(tree_reader, "_HcalBarrelClusters_shapeParameters");
 
-      TTreeReaderArray<unsigned int> simuAssocHcalEndcapP(tree_reader, "HcalEndcapPInsertClusterAssociations.simID");
-      TTreeReaderArray<unsigned int> recoAssocHcalEndcapP(tree_reader, "HcalEndcapPInsertClusterAssociations.recID");    
+      TTreeReaderArray<int> simuAssocHcalEndcapP(tree_reader, "_HcalEndcapPInsertClusterAssociations_sim.index");
       TTreeReaderArray<float> HcalEndcapPEng(tree_reader, "HcalEndcapPInsertClusters.energy");
+      TTreeReaderArray<float> HcalEndcapPx(tree_reader, "HcalEndcapPInsertClusters.position.x");
+      TTreeReaderArray<float> HcalEndcapPy(tree_reader, "HcalEndcapPInsertClusters.position.y");
+      TTreeReaderArray<float> HcalEndcapPz(tree_reader, "HcalEndcapPInsertClusters.position.z");
+      TTreeReaderArray<unsigned int> HcalEndcapPShPB(tree_reader, "HcalEndcapPInsertClusters.shapeParameters_begin");
+      TTreeReaderArray<unsigned int> HcalEndcapPShPE(tree_reader, "HcalEndcapPInsertClusters.shapeParameters_end");
+      TTreeReaderArray<float> HcalEndcapPShParameters(tree_reader, "_HcalEndcapPInsertClusters_shapeParameters");
 
-      TTreeReaderArray<unsigned int> simuAssocLFHcal(tree_reader, "LFHCALClusterAssociations.simID");
-      TTreeReaderArray<unsigned int> recoAssocLFHcal(tree_reader, "LFHCALClusterAssociations.recID");    
+      TTreeReaderArray<int> simuAssocLFHcal(tree_reader, "_LFHCALClusterAssociations_sim.index");
       TTreeReaderArray<float> LFHcalEng(tree_reader, "LFHCALClusters.energy");
+      TTreeReaderArray<float> LFHcalx(tree_reader, "LFHCALClusters.position.x");
+      TTreeReaderArray<float> LFHcaly(tree_reader, "LFHCALClusters.position.y");
+      TTreeReaderArray<float> LFHcalz(tree_reader, "LFHCALClusters.position.z");
+      TTreeReaderArray<unsigned int> LFHcalShPB(tree_reader, "LFHCALClusters.shapeParameters_begin");
+      TTreeReaderArray<unsigned int> LFHcalShPE(tree_reader, "LFHCALClusters.shapeParameters_end");
+      TTreeReaderArray<float> LFHcalShParameters(tree_reader, "_LFHCALClusters_shapeParameters");
 
-      TTreeReaderArray<unsigned int> simuAssocHcalEndcapN(tree_reader, "HcalEndcapNClusterAssociations.simID");
-      TTreeReaderArray<unsigned int> recoAssocHcalEndcapN(tree_reader, "HcalEndcapNClusterAssociations.recID");
+      TTreeReaderArray<int> simuAssocHcalEndcapN(tree_reader, "_HcalEndcapNClusterAssociations_sim.index");
       TTreeReaderArray<float> HcalEndcapNEng(tree_reader, "HcalEndcapNClusters.energy");
+      TTreeReaderArray<float> HcalEndcapNx(tree_reader, "HcalEndcapNClusters.position.x");
+      TTreeReaderArray<float> HcalEndcapNy(tree_reader, "HcalEndcapNClusters.position.y");
+      TTreeReaderArray<float> HcalEndcapNz(tree_reader, "HcalEndcapNClusters.position.z");
+      TTreeReaderArray<unsigned int> HcalEndcapNShPB(tree_reader, "HcalEndcapNClusters.shapeParameters_begin");
+      TTreeReaderArray<unsigned int> HcalEndcapNShPE(tree_reader, "HcalEndcapNClusters.shapeParameters_end");
+      TTreeReaderArray<float> HcalEndcapNShParameters(tree_reader, "_HcalEndcapNClusters_shapeParameters");
 
       //==================================//
       NumberB0Barrel[File]= new TH1D(Form("NumberB0Barrel%s",name.c_str()),Form("NumberB0Barrel%s",name.c_str()),5,-0.5,4.5);
@@ -238,14 +274,17 @@ void CalorimeterCheck()
             Partic.SetPxPyPzE(trackMomX[particle],trackMomY[particle],trackMomZ[particle],trackEng[particle]);
            
             if(Partic.Theta()*DEG>178) continue;
+            if(Partic.Eta()<-1.25) continue;
+
+
          
             PDG[File]->Fill(trackPDG[particle]);
-            if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
+            //if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
             
            //Ecal Energy Search
             NumberParticles[File]->Fill(simuAssocEcalBarrel.GetSize());
             int simuID = simuAssoc[particle];
-            auto [ECalEnergy,ECalNumber,HCalEnergy,HCalNumber] = Calorimeters(Partic, simuID, EcalBarrelEng, EcalEndcapPEng, EcalEndcapNEng, HcalBarrelEng, HcalEndcapPEng, LFHcalEng, HcalEndcapNEng, B0Eng, EcalBarrelImagingEng, EcalBarrelScFiEng, 
+            auto [ECalEnergy,ECalNumber,HCalEnergy,HCalNumber] = CalorimeterValues(Partic, simuID, EcalBarrelEng, EcalEndcapPEng, EcalEndcapNEng, HcalBarrelEng, HcalEndcapPEng, LFHcalEng, HcalEndcapNEng, B0Eng, EcalBarrelImagingEng, EcalBarrelScFiEng, 
                simuAssocEcalBarrel, simuAssocEcalEndcapP, simuAssocEcalEndcapN, simuAssocHcalBarrel, simuAssocHcalEndcapP, simuAssocLFHcal, simuAssocHcalEndcapN, simuAssocB0, simuAssocEcalBarrelImaging, simuAssocEcalBarrelScFi,B0ShPB,B0ShPE,B0ShParameters);
             if(ECalEnergy!=0)
             {
@@ -330,7 +369,6 @@ void CalorimeterCheck()
     leg->SetTextSize(0.05);  
     leg->AddEntry(HCalEnergyMomHist[0],"Muons DP","l");
     leg->AddEntry(HCalEnergyMomHist[1],"Muons J/Psi","l");
-    leg->AddEntry(HCalEnergyMomHist[2],"Pions","l");
    TLegend* leg2 = new TLegend(0.38, 0.6, 0.45, 0.85);
     leg2->SetBorderSize(0);
     leg2->SetNColumns(1);
@@ -342,7 +380,7 @@ void CalorimeterCheck()
     leg2->AddEntry(ParticTheta[0],"All Paritcles","l");
     leg2->AddEntry(TripleHCalParticTheta[0],"Triple Hcal","l");
     leg2->AddEntry(TripleECalParticTheta[0],"Triple Ecal","l");
-   c1.SaveAs("Plots/CalimeterCheck.pdf[");
+   c1.SaveAs("CalimeterCheck.pdf[");
 
     c1.Clear();
    c1.Divide(2,2);
@@ -387,7 +425,7 @@ void CalorimeterCheck()
       TripleECalParticPt[0]->Draw("same"); 
       leg2->Draw();
 
-   c1.SaveAs("Plots/CalimeterCheck.pdf");
+   c1.SaveAs("CalimeterCheck.pdf");
     c1.Clear();
    c1.Divide(2,2);
    c1.cd(1);
@@ -433,85 +471,34 @@ void CalorimeterCheck()
       TripleECalParticPt[1]->Draw("same"); 
       leg2->Draw();
 
-   c1.SaveAs("Plots/CalimeterCheck.pdf");
-   c1.Clear();
-   c1.Divide(2,2);
-   c1.cd(1);
-      ParticTheta[2]->SetLineColor(kBlue);
-      TripleHCalParticTheta[2]->SetLineColor(kRed);
-      TripleECalParticTheta[2]->SetLineColor(kGreen);
-      
-      ParticTheta[2]->Draw();
-      TripleHCalParticTheta[2]->Draw("same");
-      TripleECalParticTheta[2]->Draw("same");
-      leg2->Draw();
-
-   c1.cd(2);
-      ParticPhi[2]->SetMinimum(0);
-
-      ParticPhi[2]->SetLineColor(kBlue);
-      TripleHCalParticPhi[2]->SetLineColor(kRed);
-      TripleECalParticPhi[2]->SetLineColor(kGreen);
-      
-      ParticPhi[2]->Draw();
-      TripleHCalParticPhi[2]->Draw("same");
-      TripleECalParticPhi[2]->Draw("same");
-      leg2->Draw();
-
-   c1.cd(3); 
-      ParticEnergy[2]->SetLineColor(kBlue);
-      TripleHCalParticEnergy[2]->SetLineColor(kRed);
-      TripleECalParticEnergy[2]->SetLineColor(kGreen);
-      
-      ParticEnergy[2]->Draw();
-      TripleHCalParticEnergy[2]->Draw("same");
-      TripleECalParticEnergy[2]->Draw("same");  
-      leg2->Draw();
-
-   c1.cd(4); 
-      ParticPt[2]->SetLineColor(kBlue);
-      TripleHCalParticPt[2]->SetLineColor(kRed);
-      TripleECalParticPt[2]->SetLineColor(kGreen);
-      
-      ParticPt[2]->Draw();
-      TripleHCalParticPt[2]->Draw("same");
-      TripleECalParticPt[2]->Draw("same"); 
-      leg2->Draw();
-
-   c1.SaveAs("Plots/CalimeterCheck.pdf");
-
+   c1.SaveAs("CalimeterCheck.pdf");
+   
    c1.Clear();
    
       HCalEnergyMomHist[0]->Scale(1./HCalEnergyMomHist[0]->Integral());
       HCalEnergyMomHist[1]->Scale(1./HCalEnergyMomHist[1]->Integral());
-      HCalEnergyMomHist[2]->Scale(1./HCalEnergyMomHist[2]->Integral());
 
       HCalEnergyMomHist[0]->SetLineColor(kRed);
       HCalEnergyMomHist[1]->SetLineColor(kBlue);
-      HCalEnergyMomHist[2]->SetLineColor(kGreen);
 
       HCalEnergyMomHist[1]->Draw("HIST");
       HCalEnergyMomHist[0]->Draw("HIST SAME");
-      HCalEnergyMomHist[2]->Draw("HIST SAME");
       leg->Draw();
-   c1.SaveAs("Plots/CalimeterCheck.pdf");
+   c1.SaveAs("CalimeterCheck.pdf");
 
    c1.Clear();
       ECalEnergyMomHist[0]->Scale(1./ECalEnergyMomHist[0]->Integral());
       ECalEnergyMomHist[1]->Scale(1./ECalEnergyMomHist[1]->Integral());
-      ECalEnergyMomHist[2]->Scale(1./ECalEnergyMomHist[2]->Integral());
 
       ECalEnergyMomHist[0]->SetLineColor(kRed);
       ECalEnergyMomHist[1]->SetLineColor(kBlue);
-      ECalEnergyMomHist[2]->SetLineColor(kGreen);
 
       ECalEnergyMomHist[1]->Draw("HIST");
       ECalEnergyMomHist[0]->Draw("HIST SAME");
-      ECalEnergyMomHist[2]->Draw("HIST SAME");
       leg->Draw();
-   c1.SaveAs("Plots/CalimeterCheck.pdf");
+   c1.SaveAs("CalimeterCheck.pdf");
    c1.Clear();
-   c1.Divide(2,2);
+   c1.Divide(2,1);
    c1.cd(1);
       gPad->SetLogz(1);
       ECalEnergyvsMomHist[0]->Draw("HIST");
@@ -522,14 +509,9 @@ void CalorimeterCheck()
       ECalEnergyvsMomHist[1]->Draw("HIST");
       upperbondE->Draw("same");
 
-   c1.cd(3);
-      gPad->SetLogz(1);
-      ECalEnergyvsMomHist[2]->Draw("HIST");
-      upperbondE->Draw("same");
-
-   c1.SaveAs("Plots/CalimeterCheck.pdf");
+   c1.SaveAs("CalimeterCheck.pdf");
    c1.Clear();
-   c1.Divide(2,2);
+   c1.Divide(2,1);
    gPad->SetLogz(0);
      c1.cd(1);
       gPad->SetLogz(1);
@@ -541,15 +523,11 @@ void CalorimeterCheck()
       HCalEnergyvsMomHist[1]->Draw("HIST");
       upperbondH->Draw("same");
       lowerbondH->Draw("same");
-   c1.cd(3);
-      gPad->SetLogz(1);
-      HCalEnergyvsMomHist[2]->Draw("HIST");
-      upperbondH->Draw("same");
-      lowerbondH->Draw("same");
-   c1.SaveAs("Plots/CalimeterCheck.pdf");
+
+   c1.SaveAs("CalimeterCheck.pdf");
    gPad->SetLogz(0);
 
-   c1.SaveAs("Plots/CalimeterCheck.pdf]");
+   c1.SaveAs("CalimeterCheck.pdf]");
 
     
 }

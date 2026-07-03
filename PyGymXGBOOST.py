@@ -24,12 +24,17 @@ from skl2onnx.common._apply_operation import (
 from onnxmltools import convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType as OnnxFloat
 
+import torch
+import torch.nn as nn
+import numpy as np
+import onnx
+
 os.makedirs("Plots", exist_ok=True)
 
 
 
 # =============================================================================
-# 1. WCZYTYWANIE DANYCH (WSZYSTKIE PLIKI JUŻ ZŁĄCZONE W MLDataGrape.root)
+# 1. Load the combined training data
 # =============================================================================
 file_path = "ONNX/MLData.root"
 
@@ -38,10 +43,10 @@ with uproot.open(file_path) as f:
 
 n_sig_total = (df['IsMuon'] == 1).sum()
 n_bkg_total = (df['IsMuon'] == 0).sum()
-print(f"Wczytano {len(df)} zdarzeń.")
-print(f"  Sygnał (miony) : {n_sig_total}")
-print(f"  Tło            : {n_bkg_total}")
-print(f"  Stosunek S/B   : 1 : {n_bkg_total/n_sig_total:.1f}")
+print(f"Loaded {len(df)} events.")
+print(f"  Signal (muons) : {n_sig_total}")
+print(f"  Background     : {n_bkg_total}")
+print(f"  S/B ratio       : 1 : {n_bkg_total/n_sig_total:.1f}")
 
 file_idx = df["FileIndex"].values
 is_mu    = df["IsMuon"].values
@@ -63,7 +68,7 @@ for label in [0, 1]:  # 0 = piony, 1 = miony
         weights[mask_f] = w
 
 # =============================================================================
-# 2. ROZWIJANIE WEKTORÓW Z SEMANTYCZNYMI NAZWAMI
+# 2. Expand shape vectors into named features
 # =============================================================================
 SHAPE_COLS = ['radius', 'dispersion', 'theta_width', 'phi_width',
               'lambda1', 'lambda2', 'lambda3']
@@ -77,7 +82,7 @@ df_ecal = expand_vector_column(df, 'EcalShape')
 df_hcal = expand_vector_column(df, 'HcalShape')
 
 # =============================================================================
-# 3. FEATURE ENGINEERING
+# 3. Build engineered features
 # =============================================================================
 
 def safe_divide(num, denom):
@@ -171,13 +176,12 @@ X        = pd.concat([X_scalar, X_shape], axis=1)
 y        = (df['IsMuon'] == 1).astype(int)
 file_idx = df['FileIndex'].astype(int)
 
-print(f"\nŁączna liczba cech: {X.shape[1]}")
-#print(f"  Skalarne + pochodne : {X_scalar.shape[1]}")
-print(f"  Shape pochodne      : {X.shape[1]}")
+print(f"\nTotal number of features: {X.shape[1]}")
+print(f"  Shape-derived features: {X.shape[1]}")
 all_features = X.columns.tolist()
 
 # =============================================================================
-# 4. PODZIAŁ DANYCH — STRATYFIKACJA PO KLASIE I FileIndex
+# 4. Split data stratified by class and file index
 # =============================================================================
 rng = np.random.RandomState(42)
 
@@ -219,9 +223,9 @@ n_sig_test  = int(y_test.sum())
 n_bkg_test  = int((y_test == 0).sum())
 
 print(f"\n{'='*55}")
-print(f"  TRENING : Sygnał={n_sig_train:>5}  Tło={n_bkg_train:>5}  "
+print(f"  TRAIN : Signal={n_sig_train:>5}  Background={n_bkg_train:>5}  "
       f"S/B = 1:{n_bkg_train/n_sig_train:.1f}")
-print(f"  TEST    : Sygnał={n_sig_test:>5}  Tło={n_bkg_test:>5}  "
+print(f"  TEST  : Signal={n_sig_test:>5}  Background={n_bkg_test:>5}  "
       f"S/B = 1:{n_bkg_test/n_sig_test:.1f}  ")
 print(f"{'='*55}")
 
@@ -236,7 +240,7 @@ with open("ONNX/scalars.txt", "w") as f:
     f.write(",".join([f"{x:.8f}" for x in scales]) + "\n")
 
 # =============================================================================
-# 5. XGBOOST – TRENING
+# 5. Train the XGBoost classifier
 # =============================================================================
 scale_pos_weight = n_bkg_train / n_sig_train
 
@@ -259,12 +263,11 @@ xgb = XGBClassifier(
     verbosity             = 1,
 )
 
-# 1. policz fp_penalty na CAŁYM df
-fp_penalty = 3
-# 3. klasyczne ważenie FP
+# Apply stronger penalty for false positives on the full training set
+fp_penalty = 4
 sample_weights = np.where(y_train == 0, fp_penalty, 1.0)
 
-# 4. reweighting po FileIndex
+# Reweight samples by file index to balance the input files
 sample_weights = sample_weights * weights[idx_train]
 
 
@@ -279,119 +282,201 @@ y_pred  = xgb.predict(X_test_sc)
 y_probs = xgb.predict_proba(X_test_sc)[:, 1]
 
 best_iteration = xgb.best_iteration
-print(f"\nNajlepszy iteration (early stopping): {best_iteration}")
+print(f"\nBest iteration (early stopping): {best_iteration}")
 
 n_features = X_train_sc.shape[1]
 onnx_model = convert_xgboost(
     xgb,
     initial_types=[('input', OnnxFloat([None, n_features]))]
 )
-onnx_path = "ONNX/xgb_muonID.onnx"
+onnx_path = "ONNX/xgb_muonID_raw.onnx"
 with open(onnx_path, "wb") as f:
     f.write(onnx_model.SerializeToString())
-print(f"Model ONNX zapisany: {onnx_path}")
+print(f"ONNX model saved: {onnx_path}")
+
+
+
+
 
 # =============================================================================
-# 6. ANALIZA SHAP DLA TRUDNYCH PRZYPADKÓW (RESPONSE > 0.7) ORAZ DRUGI XGBOOST
+# A. Torch preprocessor matching the feature engineering pipeline
 # =============================================================================
+class MuonIDPreprocessor(nn.Module):
+    """
+    Inputs: batch tensors with one value per scalar feature and a 7-element shape vector.
+    Output: scaled features matching the XGBoost input format.
+    """
 
-THRESHOLD = 0.7
+    def __init__(self, mean, scale):
+        super().__init__()
+        self.register_buffer("mean", torch.tensor(np.asarray(mean), dtype=torch.float32))
+        self.register_buffer("scale", torch.tensor(np.asarray(scale), dtype=torch.float32))
 
-# 1. Filtrowanie zbioru testowego pod kątem wysokiego response
-mask_hard_test = y_probs > THRESHOLD
-X_test_hard = X_test.assert_all_finite()[mask_hard_test] if hasattr(X_test, 'assert_all_finite') else X_test[mask_hard_test]
-X_test_hard_sc = X_test_sc[mask_hard_test]
-y_test_hard = y_test.iloc[mask_hard_test]
+    @staticmethod
+    def safe_divide(num, denom):
+        is_zero = denom == 0
+        denom_safe = torch.where(is_zero, torch.ones_like(denom), denom)
+        result = num / denom_safe
+        return torch.where(is_zero, torch.zeros_like(result), result)
 
-print(f"\n--- Analiza SHAP dla response > {THRESHOLD} ---")
-print(f"Liczba trudnych przypadków w zbiorze testowym: {len(X_test_hard)}")
-print(f" W tym miony (sygnał): {(y_test_hard == 1).sum()}")
-print(f" W tym piony (tło):    {(y_test_hard == 0).sum()}")
+    def forward(self, ECalEnergy, HCalEnergy, ECalNumber, HCalNumber,
+                ECalEoverP, HCalEoverP, EcalShape, HcalShape):
+        sd = self.safe_divide
 
-if len(X_test_hard) > 0:
-    # Obliczanie wartości SHAP przy użyciu TreeExplainer dla pierwszego modelu
-    explainer = shap.TreeExplainer(xgb)
-    shap_values = explainer(X_test_hard_sc)
+        # --- engineer_scalar_features ---
+        totalE = ECalEnergy + HCalEnergy
+        ECalFrac = sd(ECalEnergy, totalE)
+        HCalFrac = sd(HCalEnergy, totalE)
+        HitRatio = sd(ECalNumber, HCalNumber)
+        ECalDensity = sd(ECalEnergy, ECalNumber)
+        HCalDensity = sd(HCalEnergy, HCalNumber)
+        EoverP_ratio = sd(ECalEoverP, HCalEoverP)
+        logECal = torch.log1p(ECalEnergy)
+        logHCal = torch.log1p(HCalEnergy)
 
-    # SHAP wymaga nazw cech do ładnych wykresów, przypisujemy je do obiektu
-    shap_values.feature_names = all_features
+        scalar_features = torch.cat([
+            ECalEnergy, HCalEnergy, ECalNumber, HCalNumber, ECalEoverP,
+            HCalEoverP, ECalFrac, HCalFrac, HitRatio, ECalDensity,
+            HCalDensity, EoverP_ratio, logECal, logHCal,
+        ], dim=1)
 
-    # Generowanie i zapisywanie wykresu Summary Plot
-    plt.figure(figsize=(12, 8))
-    shap.summary_plot(shap_values, X_test_hard, show=False)
-    plt.title(f"SHAP Importance dla przypadków z Response > {THRESHOLD}", fontsize=14, pad=20)
-    plt.tight_layout()
-    plt.savefig("Plots/shap_summary_hard_cases.png", dpi=150)
-    plt.close()
-    print("Zapisano wykres SHAP: Plots/shap_summary_hard_cases.png")
-else:
-    print("Brak przypadków spełniających kryterium do analizy SHAP.")
+        # --- engineer_shape_features ---
+        e_radius, e_disp, e_theta, e_phi, lam1e, lam2e, lam3e = torch.split(EcalShape, 1, dim=1)
+        h_radius, h_disp, h_theta, h_phi, lam1h, lam2h, lam3h = torch.split(HcalShape, 1, dim=1)
+
+        Ecal_trans = torch.sqrt(torch.clamp(lam1e * lam2e, min=0.0))
+        Hcal_trans = torch.sqrt(torch.clamp(lam1h * lam2h, min=0.0))
+        Ecal_long, Hcal_long = lam3e, lam3h
+
+        Ecal_LoverT = sd(lam3e, Ecal_trans)
+        Hcal_LoverT = sd(lam3h, Hcal_trans)
+        Ecal_sphericity = sd(lam1e, lam3e)
+        Hcal_sphericity = sd(lam1h, lam3h)
+
+        Ecal_angular_asym = sd(e_theta - e_phi, e_theta + e_phi)
+        Hcal_angular_asym = sd(h_theta - h_phi, h_theta + h_phi)
+
+        radius_ratio = sd(e_radius, h_radius)
+        disp_ratio = sd(e_disp, h_disp)
+        trans_ratio = sd(Ecal_trans, Hcal_trans)
+        long_ratio = sd(Ecal_long, Hcal_long)
+
+        LoverT_mismatch = torch.abs(Ecal_LoverT - Hcal_LoverT)
+        sphericity_mismatch = torch.abs(Ecal_sphericity - Hcal_sphericity)
+        Radial_HCal_Fraction = sd(h_radius, e_radius + h_radius)
+
+        shape_derived = torch.cat([
+            Ecal_trans, Hcal_trans, Ecal_long, Hcal_long,
+            Ecal_LoverT, Hcal_LoverT, Ecal_sphericity, Hcal_sphericity,
+            Ecal_angular_asym, Hcal_angular_asym, radius_ratio, disp_ratio,
+            trans_ratio, long_ratio, LoverT_mismatch, sphericity_mismatch,
+            Radial_HCal_Fraction,
+        ], dim=1)
+
+        shape_features = torch.cat([shape_derived, EcalShape, HcalShape], dim=1)
+        X = torch.cat([scalar_features, shape_features], dim=1)
+
+        return (X - self.mean) / self.scale
 
 
-print(f"\n--- Przygotowanie danych do DRUGIEGO XGBoosta ---")
-# 2. Musimy przefiltrować również zbiór TRENINGOWY na podstawie pierwszego modelu
-y_train_probs = xgb.predict_proba(X_train_sc)[:, 1]
-mask_hard_train = y_train_probs > THRESHOLD
+INPUT_NAMES = ["ECalEnergy", "HCalEnergy", "ECalNumber", "HCalNumber",
+               "ECalEoverP", "HCalEoverP", "EcalShape", "HcalShape"]
 
-X_train_hard_sc = X_train_sc[mask_hard_train]
-y_train_hard = y_train.iloc[mask_hard_train]
-weights_hard_train = sample_weights[mask_hard_train]
 
-n_sig_hard = int(y_train_hard.sum())
-n_bkg_hard = int((y_train_hard == 0).sum())
+def export_preprocessor(mean, scale, out_path, opset_version=18):
+    model = MuonIDPreprocessor(mean, scale)
+    model.eval()
 
-print(f"Trening 2: Sygnał (miony) = {n_sig_hard}, Tło (piony) = {n_bkg_hard}")
-
-if n_sig_hard > 10 and n_bkg_hard > 10:
-    # Obliczamy nową wagę klas dla trudnego podzbioru
-    scale_pos_weight_2 = n_bkg_hard / n_sig_hard
-
-    # Definiujemy drugi model (płtszy max_depth, by uniknąć overfittingu na mniejszej próbie)
-    xgb_stage2 = XGBClassifier(
-        n_estimators=1000,
-        learning_rate=0.03,
-        max_depth=3,
-        min_child_weight=5,
-        subsample=0.7,
-        colsample_bytree=0.7,
-        scale_pos_weight=scale_pos_weight_2,
-        eval_metric='auc',
-        early_stopping_rounds=20,
-        tree_method='hist',
-        random_state=1337, # Inny seed dla różnorodności
-        n_jobs=-1
+    dummy = (
+        torch.rand(2, 1), torch.rand(2, 1), torch.rand(2, 1) + 1, torch.rand(2, 1) + 1,
+        torch.rand(2, 1), torch.rand(2, 1) + 0.1, torch.rand(2, 7), torch.rand(2, 7),
     )
+    dyn_axes = {name: {0: "N"} for name in INPUT_NAMES}
+    dyn_axes["features_scaled"] = {0: "N"}
 
-    # Trening drugiego stopnia
-    xgb_stage2.fit(
-        X_train_hard_sc, y_train_hard,
-        sample_weight=weights_hard_train,
-        eval_set=[(X_train_hard_sc, y_train_hard), (X_test_hard_sc, y_test_hard)],
-        verbose=50
+    torch.onnx.export(
+        model, dummy, out_path,
+        input_names=INPUT_NAMES,
+        output_names=["features_scaled"],
+        dynamic_axes=dyn_axes,
+        opset_version=opset_version,
     )
+    return out_path
 
-    # Predykcje kaskadowe (Finalny scoring)
-    y_probs_stage2 = xgb_stage2.predict_proba(X_test_sc)[:, 1]
-    
-    # Łączymy decyzje: jeśli pierwszy model mówi < THRESHOLD -> zostaje wynik z 1. 
-    # Jeśli > THRESHOLD -> ostateczną decyzję podejmuje model 2.
-    final_probs = np.where(y_probs > THRESHOLD, y_probs_stage2, y_probs)
-
-    # Zapisujemy nowy model do ONNX
-    onnx_model_2 = convert_xgboost(
-        xgb_stage2,
-        initial_types=[('input', OnnxFloat([None, n_features]))]
-    )
-    onnx_path_2 = "ONNX/xgb_muonID_stage2.onnx"
-    with open(onnx_path_2, "wb") as f:
-        f.write(onnx_model_2.SerializeToString())
-    print(f"Drugi model ONNX zapisany: {onnx_path_2}")
-
-else:
-    print("Zbyt mała liczba trudnych przypadków w treningu, by odpalić drugi model.")
 
 # =============================================================================
-# 6. METRYKI I PROGI CIĘCIA
+# B. Merge preprocessing and XGBoost models into one ONNX pipeline
+# =============================================================================
+def merge_with_xgboost(preprocessing_path, xgboost_path, output_path):
+    model_pre = onnx.load(preprocessing_path)
+    model_xgb = onnx.load(xgboost_path)
+
+    # merge_models wymaga identycznej wersji IR w obu modelach
+    if model_pre.ir_version != model_xgb.ir_version:
+        target_ir = min(model_pre.ir_version, model_xgb.ir_version)
+        model_pre.ir_version = target_ir
+        model_xgb.ir_version = target_ir
+
+    xgb_input_name = model_xgb.graph.input[0].name
+    pre_output_name = model_pre.graph.output[0].name
+
+    merged = onnx.compose.merge_models(
+        model_pre, model_xgb,
+        io_map=[(pre_output_name, xgb_input_name)],
+    )
+    onnx.checker.check_model(merged)
+    onnx.save(merged, output_path)
+    return merged
+
+
+# =============================================================================
+# C. Export and test the full ONNX pipeline
+# =============================================================================
+preprocessing_path = export_preprocessor(
+    means, scales, out_path="ONNX/preprocessing.onnx"
+)
+
+merged_model = merge_with_xgboost(
+    preprocessing_path=preprocessing_path,
+    xgboost_path="ONNX/xgb_muonID_raw.onnx",
+    output_path="ONNX/xgb_muonID.onnx",
+)
+
+print("Done: ONNX/xgb_muonID.onnx")
+print("Inputs for the C++ ONNX Runtime pipeline:")
+for inp in merged_model.graph.input:
+    dims = [d.dim_value or d.dim_param for d in inp.type.tensor_type.shape.dim]
+    print(f"  {inp.name}: {dims}")
+
+# Quick end-to-end check on one test event
+import onnxruntime as ort
+
+sess = ort.InferenceSession("ONNX/xgb_muonID.onnx")
+
+# Use one row from the original dataframe as a simple sanity check
+row = df.iloc[[0]]
+raw_inputs = {
+    "ECalEnergy": row[["ECalEnergy"]].values.astype(np.float32),
+    "HCalEnergy": row[["HCalEnergy"]].values.astype(np.float32),
+    "ECalNumber": row[["ECalNumber"]].values.astype(np.float32),
+    "HCalNumber": row[["HCalNumber"]].values.astype(np.float32),
+    "ECalEoverP": row[["ECalEoverP"]].values.astype(np.float32),
+    "HCalEoverP": row[["HCalEoverP"]].values.astype(np.float32),
+    "EcalShape": np.array(row["EcalShape"].to_list(), dtype=np.float32),
+    "HcalShape": np.array(row["HcalShape"].to_list(), dtype=np.float32),
+}
+onnx_out = sess.run(None, raw_inputs)[0]
+
+row_features = X.iloc[[0]]
+row_scaled = scaler.transform(row_features)
+pandas_out = xgb.predict_proba(row_scaled)[:, 1]
+
+print("\nComparison for one event:")
+print("  full ONNX pipeline :", onnx_out.ravel())
+print("  original pandas    :", pandas_out)
+
+# =============================================================================
+# 6. Metrics and decision thresholds
 # =============================================================================
 fpr_arr, tpr_arr, roc_thresholds = roc_curve(y_test, y_probs)
 roc_auc = auc(fpr_arr, tpr_arr)
@@ -421,7 +506,7 @@ train_auc_hist = evals['validation_0']['auc']
 val_auc_hist   = evals['validation_1']['auc']
 
 # =============================================================================
-# 7. KORELACJE (Spearman) + korelacja z etykietą
+# 7. Spearman correlations and correlation with the label
 # =============================================================================
 X_corr = X.copy()
 corr_matrix = X_corr.corr(method='spearman')
@@ -431,7 +516,7 @@ feature_label_corr = X_corr.corrwith(y_float, method='spearman').sort_values(
 )
 
 # =============================================================================
-# 8. PDF — BEZ DUPLIKATÓW PNG, Z DODANYM SHAP
+# 8. Create the PDF report with SHAP diagnostics
 # =============================================================================
 plt.rcParams.update({
     'figure.facecolor': 'white',
@@ -448,7 +533,7 @@ PUR_COLOR = '#9467bd'
 
 with PdfPages("Plots/XGB_Output.pdf") as pdf:
 
-    # STRONA 1: METRYKI PODSTAWOWE
+    # Page 1: basic metrics
     fig = plt.figure(figsize=(18, 14))
     fig.suptitle('Muon Identification — XGBoost Analysis\n'
                   f'[Train S/B=1:{n_bkg_train/n_sig_train:.0f}  |  '
@@ -556,7 +641,7 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # STRONA 2: TRAINING DIAGNOSTICS
+    # Page 2: training diagnostics
     fig, axes = plt.subplots(1, 2, figsize=(18, 7))
     fig.suptitle('XGBoost Training Diagnostics',
                  fontsize=16, y=1.01, fontweight='bold')
@@ -595,7 +680,7 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # STRONA 3: FEATURE IMPORTANCE
+    # Page 3: feature importance
     fig, axes = plt.subplots(1, 2, figsize=(18, 10))
     fig.suptitle('Feature Importances — XGBoost',
                 fontsize=20, y=1.02, fontweight='bold') # Tytuł główny nieco większy dla czytelności
@@ -649,13 +734,13 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # STRONA 4: ROZKŁADY KLUCZOWYCH CECH
+    # Page 4: distributions of key features
     imp_series = pd.Series(importances, index=all_features)
     phys_features = imp_series.nlargest(15).index.tolist()
 
     fig, axes = plt.subplots(3, 5, figsize=(20, 14))
     fig.suptitle('Key Physics Variable Distributions: Signal vs Background\n'
-                 '[rozkłady z całego datasetu przed podziałem]',
+                 '[full dataset before splitting]',
                  fontsize=14, y=1.01, fontweight='bold')
     axes = axes.flatten()
 
@@ -683,10 +768,10 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # STRONA 5: MACIERZ KORELACJI SPEARMANA
+    # Page 5: Spearman correlation matrix
     fig, ax = plt.subplots(figsize=(20, 17))
     fig.suptitle('Spearman Correlation Matrix — All Features\n'
-                 '(wartości z całego datasetu)',
+                 '(values from the full dataset)',
                  fontsize=14, fontweight='bold', y=1.005)
 
     mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
@@ -706,14 +791,14 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     )
     ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', fontsize=6)
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0,  fontsize=6)
-    ax.set_title('Wyższe |ρ| → silniejsza monotonna zależność między cechami',
+    ax.set_title('Higher |ρ| means a stronger monotonic relationship between features',
                  fontsize=9, color='gray', pad=8)
 
     plt.tight_layout()
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # STRONA 6: KORELACJA CECH Z ETYKIETĄ
+    # Page 6: feature correlation with the label
     fig, ax = plt.subplots(figsize=(12, 16))
     colors_bar = [SIG_COLOR if v > 0 else BKG_COLOR for v in feature_label_corr.values]
     y_pos = range(len(feature_label_corr))
@@ -722,17 +807,17 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     ax.set_yticks(list(y_pos))
     ax.set_yticklabels(feature_label_corr.index, fontsize=7)
     ax.axvline(0, color='black', lw=0.8)
-    ax.set_xlabel('Spearman ρ z etykietą (IsMuon)', fontsize=10)
-    ax.set_title('Korelacja cech z klasą sygnał/tło\n'
-                 'Niebieski = pozytywna (→muon), Czerwony = negatywna (→tło)',
+    ax.set_xlabel('Spearman ρ with the label (IsMuon)', fontsize=10)
+    ax.set_title('Feature correlation with signal/background class\n'
+                 'Blue = positive (→ muon), Red = negative (→ background)',
                  color=SIG_COLOR, pad=8, fontsize=9)
     plt.tight_layout()
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # STRONA 7: SHAP — WYJAŚNIENIE MODELU
+    # Page 7: SHAP model explanation
     explainer = shap.TreeExplainer(xgb)
-    # Bierzemy próbkę, żeby nie zabić pamięci
+    # Use a sample to limit memory usage
     sample_idx = np.random.choice(len(X_test_sc), size=min(5000, len(X_test_sc)), replace=False)
     X_shap = X_test_sc[sample_idx]
     shap_values = explainer.shap_values(X_shap)
@@ -744,39 +829,39 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # Dependence plot dla najważniejszej cechy
+    # Dependence plot for the most important feature
     top_feat = imp_series.nlargest(1).index[0]
     fig = plt.figure(figsize=(8, 6))
     shap.dependence_plot(top_feat, shap_values, X_shap,
                          feature_names=all_features, show=False)
     plt.title(f'SHAP Dependence: {top_feat}', fontsize=14)
     
-    # STRONY 8+: SHAP PER FILEINDEX — DIAGNOSTYKA DOMAIN SHIFT
+    # SHAP per FileIndex for domain-shift diagnostics
     
     unique_files = sorted(file_idx.unique())
 
     for fidx in unique_files:
         mask_f = (file_idx.iloc[idx_test] == fidx)
         if mask_f.sum() < 50:
-            continue  # za mało zdarzeń, pomijamy
+            continue  # too few events, skip this file
 
         X_f = X_test_sc[mask_f]
         y_f = y_test[mask_f]
 
-        # Bierzemy próbkę, żeby nie zabić pamięci
+        # Use a sample to limit memory usage
         sample_idx_f = np.random.choice(len(X_f), size=min(3000, len(X_f)), replace=False)
         X_shap_f = X_f[sample_idx_f]
 
         shap_values_f = explainer.shap_values(X_shap_f)
 
-        # --- STRONA: SHAP SUMMARY ---
+        # --- SHAP summary page ---
         fig = plt.figure(figsize=(12, 10))
         shap.summary_plot(shap_values_f, X_shap_f, feature_names=all_features, show=False)
         plt.title(f'SHAP Summary — FileIndex={fidx}', fontsize=14)
         pdf.savefig(fig, bbox_inches='tight')
         plt.close()
 
-        # --- STRONA: SHAP DEPENDENCE (najważniejsza cecha) ---
+        # --- SHAP dependence page for the top feature ---
         top_feat = imp_series.nlargest(1).index[0]
         fig = plt.figure(figsize=(8, 6))
         shap.dependence_plot(top_feat, shap_values_f, X_shap_f,
@@ -784,10 +869,10 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
         plt.title(f'SHAP Dependence: {top_feat}  (FileIndex={fidx})', fontsize=14)
 
     # =========================================================================
-    # STRONA: SHAP SIMILARITY MATRIX (FileIndex vs FileIndex)
+    # SHAP similarity matrix (FileIndex vs FileIndex)
     # =========================================================================
 
-    # 1. Liczymy SHAP importance per FileIndex
+    # 1. Compute SHAP importance per file index
     shap_importances = {}
 
     for fidx in unique_files:
@@ -801,24 +886,24 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
 
         shap_values_f = explainer.shap_values(X_shap_f)
 
-        # średnia absolutna wartość SHAP dla każdej cechy
+        # Mean absolute SHAP value for each feature
         shap_importances[fidx] = np.mean(np.abs(shap_values_f), axis=0)
 
-    # 2. Tworzymy macierz (n_files × n_features)
+    # 2. Build the matrix of shape (n_files × n_features)
     file_ids = sorted(shap_importances.keys())
     shap_matrix = np.vstack([shap_importances[f] for f in file_ids])
 
-    # 3. Korelacja między FileIndex
+    # 3. Correlate the SHAP vectors across file indices
     similarity = np.corrcoef(shap_matrix)
 
-    # 4. Rysujemy heatmapę
+    # 4. Draw the similarity heatmap
     fig, ax = plt.subplots(figsize=(10, 8))
     sns.heatmap(similarity, annot=True, fmt=".2f",
                 xticklabels=file_ids, yticklabels=file_ids,
                 cmap="coolwarm", vmin=-1, vmax=1,
                 cbar_kws={'label': 'Correlation'})
     ax.set_title("SHAP Similarity Matrix — FileIndex vs FileIndex\n"
-                 "(korelacja między wektorami ważności SHAP)", fontsize=14)
+                 "(correlation between SHAP importance vectors)", fontsize=14)
     ax.set_xlabel("FileIndex")
     ax.set_ylabel("FileIndex")
 
@@ -828,4 +913,4 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
 
     plt.close()
 
-print("Gotowe: trening na wszystkich plikach, podział per FileIndex, PDF + SHAP.")
+print("Done: training on all files, split by FileIndex, PDF report and SHAP diagnostics.")

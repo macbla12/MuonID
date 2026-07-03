@@ -13,139 +13,60 @@
 #include <onnxruntime_cxx_api.h>
 #include <numeric>
 
-#include "Calorimeternew.cxx"
+#include "CalorimeterShapes.cxx"
 #include "GreatCluster.cxx"
 
-std::vector<float> load_line(const std::string& path, int line_no)
+float run_muon_id_pipeline(
+    Ort::Session& session,
+    Ort::MemoryInfo& memory_info,
+    double ECalEnergy_d, double HCalEnergy_d,
+    double ECalNumber_d, double HCalNumber_d,
+    double ECalEoverP_d, double HCalEoverP_d,
+    const std::vector<float>& EcalShapeIn,
+    const std::vector<float>& HcalShapeIn)
 {
-    std::ifstream in(path);
-    if (!in.is_open())
-        throw std::runtime_error("Nie mogę otworzyć scalars.txt");
+    float ECalEnergy = static_cast<float>(ECalEnergy_d);
+    float HCalEnergy = static_cast<float>(HCalEnergy_d);
+    float ECalNumber = static_cast<float>(ECalNumber_d);
+    float HCalNumber = static_cast<float>(HCalNumber_d);
+    float ECalEoverP = static_cast<float>(ECalEoverP_d);
+    float HCalEoverP = static_cast<float>(HCalEoverP_d);
 
-    std::string line;
-    for (int i = 0; i <= line_no; i++)
-        std::getline(in, line);
+    // model oczekuje DOKŁADNIE 7 elementów -- to samo zabezpieczenie,
+    // które i tak powinieneś mieć (a docelowo naprawiłeś w produkcji ROOT)
+    std::vector<float> e = (EcalShapeIn.size() == 7 ? EcalShapeIn : std::vector<float>(7, 0.0f));
+    std::vector<float> h = (HcalShapeIn.size() == 7 ? HcalShapeIn : std::vector<float>(7, 0.0f));
 
-    std::vector<float> vals;
-    std::stringstream ss(line);
-    std::string item;
+    int64_t shape_scalar[] = {1, 1};
+    int64_t shape_vec[]    = {1, 7};
 
-    while (std::getline(ss, item, ',')) {
-        vals.push_back(std::stof(item));
-    }
+    std::vector<Ort::Value> ort_inputs;
+    ort_inputs.push_back(Ort::Value::CreateTensor<float>(memory_info, &ECalEnergy, 1, shape_scalar, 2));
+    ort_inputs.push_back(Ort::Value::CreateTensor<float>(memory_info, &HCalEnergy, 1, shape_scalar, 2));
+    ort_inputs.push_back(Ort::Value::CreateTensor<float>(memory_info, &ECalNumber, 1, shape_scalar, 2));
+    ort_inputs.push_back(Ort::Value::CreateTensor<float>(memory_info, &HCalNumber, 1, shape_scalar, 2));
+    ort_inputs.push_back(Ort::Value::CreateTensor<float>(memory_info, &ECalEoverP, 1, shape_scalar, 2));
+    ort_inputs.push_back(Ort::Value::CreateTensor<float>(memory_info, &HCalEoverP, 1, shape_scalar, 2));
+    ort_inputs.push_back(Ort::Value::CreateTensor<float>(memory_info, e.data(), e.size(), shape_vec, 2));
+    ort_inputs.push_back(Ort::Value::CreateTensor<float>(memory_info, h.data(), h.size(), shape_vec, 2));
 
-    return vals;
+    static const char* input_names[] = {
+        "ECalEnergy", "HCalEnergy", "ECalNumber", "HCalNumber",
+        "ECalEoverP", "HCalEoverP", "EcalShape", "HcalShape"
+    };
+    static const char* output_names[] = {"probabilities"};
+
+    auto output_tensors = session.Run(
+        Ort::RunOptions{nullptr},
+        input_names, ort_inputs.data(), ort_inputs.size(),
+        output_names, 1
+    );
+
+    float* probs = output_tensors[0].GetTensorMutableData<float>();
+    return probs[1];  // P(mion), kolumna 1 -- tak jak w probabilities[:, 1] w Pythonie
 }
 
-auto scaler_mean  = load_line("ONNX/scalars.txt", 0);
-auto scaler_scale = load_line("ONNX/scalars.txt", 1);
-
-
-inline float safe_div(float a, float b) {
-    return (std::abs(b) > 1e-12f ? a / b : 0.0f);
-}
-
-std::vector<float> prepare_45_features(
-    float ECalEnergy,
-    float HCalEnergy,
-    float ECalNumber,
-    float HCalNumber,
-    float ECalEoverP,
-    float HCalEoverP,
-    const std::vector<float>& eS,
-    const std::vector<float>& hS)
-{
-    std::vector<float> X;
-    X.reserve(45);
-
-    // --- 0. Bezpieczne shape’y ---
-    std::vector<float> e = (eS.size() == 7 ? eS : std::vector<float>(7, 0.0f));
-    std::vector<float> h = (hS.size() == 7 ? hS : std::vector<float>(7, 0.0f));
-
-    // ============================================================
-    // 1. SCALAR FEATURES (16)
-    // ============================================================
-
-    // --- Surowe ---
-    X.push_back(ECalEnergy);   // 0
-    X.push_back(HCalEnergy);   // 1
-    X.push_back(ECalNumber);   // 2
-    X.push_back(HCalNumber);   // 3
-    X.push_back(ECalEoverP);   // 4
-    X.push_back(HCalEoverP);   // 5    // 6
-
-    // --- Pochodne ---
-    float totalE = ECalEnergy + HCalEnergy;
-
-    X.push_back(safe_div(ECalEnergy, totalE));  // 7  ECalFrac
-    X.push_back(safe_div(HCalEnergy, totalE));  // 8  HCalFrac
-
-    X.push_back(safe_div(ECalNumber, HCalNumber)); // 9 HitRatio
-
-    X.push_back(safe_div(ECalEoverP, HCalEoverP)); // 10 EoverP_ratio
-
-    X.push_back(safe_div(ECalEnergy, ECalNumber)); // 11 ECalDensity
-    X.push_back(safe_div(HCalEnergy, HCalNumber)); // 12 HCalDensity
-
-    X.push_back(std::log1p(ECalEnergy));   // 14 logECal
-    X.push_back(std::log1p(HCalEnergy));   // 15 logHCal
-
-    // ============================================================
-    // 2. SHAPE FEATURES (17 derived + 14 raw = 31)
-    // ============================================================
-
-    // --- Derived shape ---
-    float e_trans = std::sqrt(std::max(0.0f, e[4] * e[5]));
-    float h_trans = std::sqrt(std::max(0.0f, h[4] * h[5]));
-
-    float e_long = e[6];
-    float h_long = h[6];
-
-    float e_LoverT = safe_div(e_long, e_trans);
-    float h_LoverT = safe_div(h_long, h_trans);
-
-    float e_sph = safe_div(e[4], e[6]);
-    float h_sph = safe_div(h[4], h[6]);
-
-    float e_asym = safe_div(e[2] - e[3], e[2] + e[3]);
-    float h_asym = safe_div(h[2] - h[3], h[2] + h[3]);
-
-    X.push_back(e_trans);     // 16
-    X.push_back(h_trans);     // 17
-    X.push_back(e_long);      // 18
-    X.push_back(h_long);      // 19
-    X.push_back(e_LoverT);    // 20
-    X.push_back(h_LoverT);    // 21
-    X.push_back(e_sph);       // 22
-    X.push_back(h_sph);       // 23
-    X.push_back(e_asym);      // 24
-    X.push_back(h_asym);      // 25
-
-    X.push_back(safe_div(e[0], h[0]));      // 26 radius_ratio
-    X.push_back(safe_div(e[1], h[1]));      // 27 disp_ratio
-    X.push_back(safe_div(e_trans, h_trans)); // 28 trans_ratio
-    X.push_back(safe_div(e_long, h_long));   // 29 long_ratio
-
-    X.push_back(std::abs(e_LoverT - h_LoverT)); // 30 LoverT_mismatch
-    X.push_back(std::abs(e_sph - h_sph));       // 31 sphericity_mismatch
-
-    X.push_back(safe_div(h[0], e[0] + h[0]));   // 32 Radial_HCal_Fraction
-
-    // --- Raw shapes (14) ---
-    for (float v : e) X.push_back(v); // 33–39
-    for (float v : h) X.push_back(v); // 40–46
-
-    // ============================================================
-    // 3. SKALOWANIE (47 cech)
-    // ============================================================
-    for (size_t i = 0; i < X.size(); i++)
-        X[i] = (X[i] - scaler_mean[i]) / scaler_scale[i];
-
-    return X;
-}
-
-
-void FinalClassification()
+void TestingMacro()
 {
     //////////////////////
     //Setting up constants
@@ -171,14 +92,6 @@ void FinalClassification()
     const char* input_names[] = {"input"};
     const char* output_names[] = {"probabilities"};
 
-    // --- INICJALIZACJA ONNX (Dodaj tutaj) ---
-    Ort::Session session2(env, "ONNX/xgb_muonID_stage2.onnx", session_options);
-
-    // Nazwy wejść/wyjść (zależą od konwertera, zazwyczaj "input" i "probabilities")
-    const char* input_names2[] = {"input"};
-    const char* output_names2[] = {"probabilities"};
-
-
     //////////////////////
     //Setting up histograms
     //////////////////////
@@ -196,13 +109,13 @@ void FinalClassification()
     vector<TString> files(NumOfFiles);
 
 
-   files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
+   //files.at(0)="/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
    //files.at(0)="/run/media/epic/Data/Muons/Grape-10x275/Paper/RECO/*.root";
-   //files.at(0)="/run/media/epic/Data/Background/JPsi/March/*.root";
+   files.at(0)="/run/media/epic/Data/Background/JPsi/March/*.root";
 
 
-   files.at(1)="/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
-   //files.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
+   //files.at(1)="/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
+   files.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/double_pi/recoDoublePi.root";
 
    //files.at(1)="/run/media/epic/Data/Background/SingleParticles/SingleFiles/Electrons.root";
    //files.at(1)="/run/media/epic/Data/Background/SingleParticles/SingleFiles/Kaons.root";
@@ -440,7 +353,7 @@ void FinalClassification()
             vector<vector<float>> EcalAllShapes;
             //cout<<"Tutaj EcalBarrel"<<endl;
             
-            auto [EnergyEcalBarrel,NumberEcalBarrel,ShapeEcalBarrel] = Calorimeternew( simuID, EcalBarrelEng, simuAssocEcalBarrel, EcalBarrelx, EcalBarrely,
+            auto [EnergyEcalBarrel,NumberEcalBarrel,ShapeEcalBarrel] = Calorimeter( simuID, EcalBarrelEng, simuAssocEcalBarrel, EcalBarrelx, EcalBarrely,
                 EcalBarrelz, EcalBarrelShPB, EcalBarrelShPE,EcalBarrelShParameters);
 
             ECalEnergy+=EnergyEcalBarrel;
@@ -451,7 +364,7 @@ void FinalClassification()
             }  
          
             
-            auto [EnergyEndcapP,NumberEndcapP,ShapeEndcapP] = Calorimeternew( simuID, EcalEndcapPEng, simuAssocEcalEndcapP, EcalEndcapPx, EcalEndcapPy,
+            auto [EnergyEndcapP,NumberEndcapP,ShapeEndcapP] = Calorimeter( simuID, EcalEndcapPEng, simuAssocEcalEndcapP, EcalEndcapPx, EcalEndcapPy,
                 EcalEndcapPz, EcalEndcapPShPB, EcalEndcapPShPE,EcalEndcapPShParameters);
             ECalEnergy+=EnergyEndcapP;
             
@@ -460,7 +373,7 @@ void FinalClassification()
                EcalAllShapes.insert(EcalAllShapes.end(), ShapeEndcapP.begin(), ShapeEndcapP.end());
             }
 
-            auto [EnergyEndcapN,NumberEndcapN,ShapeEndcapN] = Calorimeternew( simuID, EcalEndcapNEng, simuAssocEcalEndcapN, EcalEndcapNx, EcalEndcapNy,
+            auto [EnergyEndcapN,NumberEndcapN,ShapeEndcapN] = Calorimeter( simuID, EcalEndcapNEng, simuAssocEcalEndcapN, EcalEndcapNx, EcalEndcapNy,
                 EcalEndcapNz, EcalEndcapNShPB, EcalEndcapNShPE,EcalEndcapNShParameters);
 
             ECalEnergy+=EnergyEndcapN;
@@ -470,7 +383,7 @@ void FinalClassification()
                EcalAllShapes.insert(EcalAllShapes.end(), ShapeEndcapN.begin(), ShapeEndcapN.end());
             }
             
-            auto [EnergyB0,NumberB0,ShapeB0] = Calorimeternew( simuID, B0Eng, simuAssocB0, B0x, B0y, B0z, B0ShPB, B0ShPE,B0ShParameters);
+            auto [EnergyB0,NumberB0,ShapeB0] = Calorimeter( simuID, B0Eng, simuAssocB0, B0x, B0y, B0z, B0ShPB, B0ShPE,B0ShParameters);
                
             ECalEnergy+=EnergyB0;
             
@@ -479,7 +392,7 @@ void FinalClassification()
                EcalAllShapes.insert(EcalAllShapes.end(), ShapeB0.begin(), ShapeB0.end());
             }
 
-            auto [EnergyImaging,NumberImaging,ShapeImaging] = Calorimeternew( simuID, EcalBarrelImagingEng, simuAssocEcalBarrelImaging, EcalBarrelImagingx, EcalBarrelImagingy,
+            auto [EnergyImaging,NumberImaging,ShapeImaging] = Calorimeter( simuID, EcalBarrelImagingEng, simuAssocEcalBarrelImaging, EcalBarrelImagingx, EcalBarrelImagingy,
                 EcalBarrelImagingz, EcalBarrelImagingShPB, EcalBarrelImagingShPE,EcalBarrelImagingShParameters);
 
             ECalEnergy+=EnergyImaging;
@@ -489,7 +402,7 @@ void FinalClassification()
                EcalAllShapes.insert(EcalAllShapes.end(), ShapeImaging.begin(), ShapeImaging.end());
             }
             
-            auto [EnergyScFi,NumberScFi,ShapeScFi] = Calorimeternew( simuID, EcalBarrelScFiEng, simuAssocEcalBarrelScFi, EcalBarrelScFix, EcalBarrelScFiy,
+            auto [EnergyScFi,NumberScFi,ShapeScFi] = Calorimeter( simuID, EcalBarrelScFiEng, simuAssocEcalBarrelScFi, EcalBarrelScFix, EcalBarrelScFiy,
                 EcalBarrelScFiz, EcalBarrelScFiShPB, EcalBarrelScFiShPE,EcalBarrelScFiShParameters);
 
             ECalEnergy+=EnergyScFi;
@@ -508,13 +421,15 @@ void FinalClassification()
                EcalShape = GreatCluster(EcalAllShapes);
                CaloHit=1;
             }
+            else EcalShape = vector<float>(7, 0.0f);
+
             //////////////////////           
             //Hcal Energy Search
             //////////////////////
             //cout<<"Tutaj ShapeHcalBarrel"<<endl;
             vector<vector<float>> HcalAllShapes;
             
-            auto [EnergyHcalBarrel,NumberHcalBarrel,ShapeHcalBarrel] = Calorimeternew( simuID, HcalBarrelEng, simuAssocHcalBarrel, HcalBarrelx, HcalBarrely,
+            auto [EnergyHcalBarrel,NumberHcalBarrel,ShapeHcalBarrel] = Calorimeter( simuID, HcalBarrelEng, simuAssocHcalBarrel, HcalBarrelx, HcalBarrely,
                 HcalBarrelz, HcalBarrelShPB, HcalBarrelShPE,HcalBarrelShParameters);
 
             HCalEnergy+=EnergyHcalBarrel;
@@ -524,7 +439,7 @@ void FinalClassification()
                HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalBarrel.begin(), ShapeHcalBarrel.end());
             }
             
-            auto [EnergyHcalEndcapP,NumberHcalEndcapP,ShapeHcalEndcapP] = Calorimeternew( simuID, HcalEndcapPEng, simuAssocHcalEndcapP, HcalEndcapPx, HcalEndcapPy,
+            auto [EnergyHcalEndcapP,NumberHcalEndcapP,ShapeHcalEndcapP] = Calorimeter( simuID, HcalEndcapPEng, simuAssocHcalEndcapP, HcalEndcapPx, HcalEndcapPy,
                 HcalEndcapPz, HcalEndcapPShPB, HcalEndcapPShPE,HcalEndcapPShParameters);
 
             HCalEnergy+=EnergyHcalEndcapP;
@@ -534,7 +449,7 @@ void FinalClassification()
                HcalAllShapes.insert(HcalAllShapes.end(), ShapeHcalEndcapP.begin(), ShapeHcalEndcapP.end());
             }
             
-            auto [EnergyLFHcal,NumberLFHcal,ShapeLFHcal] = Calorimeternew( simuID, LFHcalEng, simuAssocLFHcal, LFHcalx, LFHcaly, LFHcalz, LFHcalShPB, LFHcalShPE,LFHcalShParameters);
+            auto [EnergyLFHcal,NumberLFHcal,ShapeLFHcal] = Calorimeter( simuID, LFHcalEng, simuAssocLFHcal, LFHcalx, LFHcaly, LFHcalz, LFHcalShPB, LFHcalShPE,LFHcalShParameters);
 
             HCalEnergy+=EnergyLFHcal;
             
@@ -543,7 +458,7 @@ void FinalClassification()
                HcalAllShapes.insert(HcalAllShapes.end(), ShapeLFHcal.begin(), ShapeLFHcal.end());
             }
             
-            auto [EnergyHcalEndcapN,NumberHcalEndcapN,ShapeHcalEndcapN] = Calorimeternew( simuID, HcalEndcapNEng, simuAssocHcalEndcapN, HcalEndcapNx, HcalEndcapNy,
+            auto [EnergyHcalEndcapN,NumberHcalEndcapN,ShapeHcalEndcapN] = Calorimeter( simuID, HcalEndcapNEng, simuAssocHcalEndcapN, HcalEndcapNx, HcalEndcapNy,
                 HcalEndcapNz, HcalEndcapNShPB, HcalEndcapNShPE,HcalEndcapNShParameters);
 
             HCalEnergy+=EnergyHcalEndcapN;
@@ -562,7 +477,7 @@ void FinalClassification()
                HcalShape = GreatCluster(HcalAllShapes);
                CaloHit=1;
             }
-            
+            else HcalShape = vector<float>(7, 0.0f);
             
             //Track properties 
             double FullEnergy=HCalEnergy+ECalEnergy;
@@ -581,7 +496,7 @@ void FinalClassification()
  
             
                 
-            //if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
+            if(!(trackPDG[particle]==0 || abs(trackPDG[particle])==13)) continue;
 
             if(HCalEoverP<upperbondH->Eval(Momentum) && HCalEoverP>lowerbondH->Eval(Momentum) && ECalEoverP<upperbondE->Eval(Momentum)){
      
@@ -630,38 +545,16 @@ void FinalClassification()
             } 
             else{
 
-               std::vector<float> feats = prepare_45_features(ECalEnergy, HCalEnergy, ECalNumber, HCalNumber, ECalEoverP, HCalEoverP, EcalShape, HcalShape);
-
-               // 2. Stwórz tensor wejściowy
-               int64_t input_shape[] = {1, 45};
-               Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
-                  memory_info, feats.data(), feats.size(), input_shape, 2
-               );
-
-               // 3. Uruchom model
-               auto output_tensors = session.Run(Ort::RunOptions{nullptr}, 
-                                                input_names, &input_tensor, 1, 
-                                                output_names, 1);
-
-               // 4. Pobierz wynik (prawdopodobieństwo miona)
-               float* probs = output_tensors[0].GetTensorMutableData<float>();
-               float muon_prob = probs[1]; 
+               float muon_prob = run_muon_id_pipeline(session, memory_info,
+                    ECalEnergy, HCalEnergy, ECalNumber, HCalNumber,
+                    ECalEoverP, HCalEoverP, EcalShape, HcalShape
+                );
                XGBResponse[File]->Fill(muon_prob);
 
 
                
 
-               if(muon_prob>0.86){ 
-
-                  // 3. Uruchom model
-                  auto output_tensors2 = session2.Run(Ort::RunOptions{nullptr}, 
-                                                   input_names, &input_tensor, 1, 
-                                                   output_names, 1);
-
-                  // 4. Pobierz wynik (prawdopodobieństwo miona)
-                  float* probs2 = output_tensors2[0].GetTensorMutableData<float>();
-                  float muon_prob2 = probs2[1]; 
-                  XGBResponse_Stage2[File]->Fill(muon_prob2);
+               if(muon_prob>0.4){ 
          
 
                   secondcuts++;
@@ -740,7 +633,7 @@ void FinalClassification()
     leg2->AddEntry(XGBResponse[1],"Pions","l");
    c1.SaveAs("Plots/FinalCalID.pdf[");
    c1.Clear();
-   //gPad->SetLogy(1);
+   gPad->SetLogy(1);
    XGBResponse[0]->Scale(1/XGBResponse[0]->Integral());
    XGBResponse[1]->Scale(1/XGBResponse[1]->Integral());
    XGBResponse[0]->SetLineColor(kBlue);
@@ -748,17 +641,7 @@ void FinalClassification()
    XGBResponse[0]->Draw("HIST");
    XGBResponse[1]->Draw("HIST SAME");
    c1.SaveAs("Plots/FinalCalID.pdf");
-
-   c1.Clear();
-   //gPad->SetLogy(1);
-   XGBResponse_Stage2[0]->Scale(1/XGBResponse_Stage2[0]->Integral());
-   XGBResponse_Stage2[1]->Scale(1/XGBResponse_Stage2[1]->Integral());
-   XGBResponse_Stage2[0]->SetLineColor(kBlue);
-   XGBResponse_Stage2[1]->SetLineColor(kRed);
-   XGBResponse_Stage2[0]->Draw("HIST");
-   XGBResponse_Stage2[1]->Draw("HIST SAME");
-   c1.SaveAs("Plots/FinalCalID.pdf");
-   //gPad->SetLogy(0);
+   gPad->SetLogy(0);
 
 
    c1.Clear();
@@ -938,7 +821,7 @@ void FinalClassification()
    title.SetTextFont(42);
    title.SetTextSize(0.05);
    title.DrawLatex(0.32, 0.93, "HCal Response to Pions");
-   c1.SaveAs("Plots/Presentation/HCalPion.png");
+   c1.SaveAs("Plots/Presentation/HCalPion.pdf");
 
    c1.Clear();
 
@@ -972,7 +855,7 @@ void FinalClassification()
    title.SetTextFont(42);
    title.SetTextSize(0.05);
    title.DrawLatex(0.32, 0.93, "HCal Response to Muons");
-   c1.SaveAs("Plots/Presentation/JPsiHCalMuon.png");
+   c1.SaveAs("Plots/Presentation/JPsiHCalMuon.pdf");
    c1.Clear();
 
    // --- Wykres ECal ---
@@ -1004,7 +887,7 @@ void FinalClassification()
    tex.DrawLatex(0.32, 0.93, "ECal Response to Pions");
 
    // --- Zapis ---
-   c1.SaveAs("Plots/Presentation/EcalPions.png");
+   c1.SaveAs("Plots/Presentation/EcalPions.pdf");
    c1.Clear();
 
       // --- Wykres ECal ---
@@ -1035,7 +918,7 @@ void FinalClassification()
    tex.DrawLatex(0.32, 0.93, "ECal Response to Muons");
 
    // --- Zapis ---
-   c1.SaveAs("Plots/Presentation/EcalMuons.png");
+   c1.SaveAs("Plots/Presentation/EcalMuons.pdf");
 
 
    c1.Clear();
@@ -1063,7 +946,7 @@ void FinalClassification()
    gPad->Update(); // <-- konieczne, żeby ROOT obliczył zakres osi
 
    // Linia od 0 do aktualnego maksimum osi Y na padzie
-   TLine *line = new TLine(0.86, gPad->GetUymin(), 0.86, gPad->GetUymax());
+   TLine *line = new TLine(0.4, gPad->GetUymin(), 0.4, gPad->GetUymax());
    line->SetLineColor(kBlack);
    line->SetLineStyle(2); // Linia przerywana
    line->SetLineWidth(3);
@@ -1076,7 +959,7 @@ void FinalClassification()
    leg->SetTextSize(0.04);
    leg->AddEntry(XGBResponse[0], "Muon (Signal)", "l");
    leg->AddEntry(XGBResponse[1], "Pion (Background)", "l");
-   leg->AddEntry(line, "Cut at 0.86", "l");
+   leg->AddEntry(line, "Cut at 0.4", "l");
    leg->Draw();
 
    // --- NAPIS TYTUŁOWY ---
@@ -1085,7 +968,7 @@ void FinalClassification()
    tex.SetTextSize(0.05);
    tex.DrawLatex(0.12, 0.92, "#bf{XGBoost Output Distribution}");
 
-   c1.SaveAs("Plots/Presentation/ResponseContinuous.png");
+   c1.SaveAs("Plots/Presentation/ResponseContinuous.pdf");
 
    // === Efficiency for Muon Candidates ===
    // =============================================
@@ -1110,6 +993,12 @@ void FinalClassification()
 
    pEff1->Draw("AP");
    gPad->Update();
+   // increase axis/title/label sizes for readability
+   pEff1->GetPaintedGraph()->GetXaxis()->SetTitleSize(0.05);
+   pEff1->GetPaintedGraph()->GetXaxis()->SetLabelSize(0.04);
+   pEff1->GetPaintedGraph()->GetYaxis()->SetTitleSize(0.05);
+   pEff1->GetPaintedGraph()->GetYaxis()->SetLabelSize(0.04);
+   tex.SetTextSize(0.04);
    pEff1->GetPaintedGraph()->SetMinimum(0.9);
    pEff1->GetPaintedGraph()->SetMaximum(1.01);
    gPad->Update();
@@ -1117,16 +1006,17 @@ void FinalClassification()
    pEff2->Draw("P SAME");
    gPad->Update();
 
-   TLegend *legEff = new TLegend(0.5, 0.75, 0.83, 0.92);
+   TLegend *legEff = new TLegend(0.5, 0.15, 0.83, 0.42);
    legEff->SetBorderSize(0);
    legEff->SetFillStyle(0);
+   legEff->SetTextSize(0.04);
    legEff->AddEntry(pEff1, "Previous efficiency", "lp");
    legEff->AddEntry(pEff2, "XGBoost efficiency", "lp");
    legEff->Draw();
 
    tex.SetNDC();
    tex.DrawLatex(0.25, 0.94, "#bf{Muon Candidate Efficiency vs p}");
-   c1.SaveAs("Plots/Efficiency/EfficiencyBoth.png");
+   c1.SaveAs("Plots/Efficiency/EfficiencyBoth.pdf");
 
    // =============================================
    // === PLOT 2: Rejection (E/p + XGBoost) ===
@@ -1150,6 +1040,12 @@ void FinalClassification()
 
    pEff0->Draw("AP");
    gPad->Update();
+   // increase axis/title/label sizes for readability
+   pEff0->GetPaintedGraph()->GetXaxis()->SetTitleSize(0.05);
+   pEff0->GetPaintedGraph()->GetXaxis()->SetLabelSize(0.04);
+   pEff0->GetPaintedGraph()->GetYaxis()->SetTitleSize(0.05);
+   pEff0->GetPaintedGraph()->GetYaxis()->SetLabelSize(0.04);
+   tex.SetTextSize(0.04);
    pEff0->GetPaintedGraph()->SetMinimum(0.4);
    pEff0->GetPaintedGraph()->SetMaximum(1.05);
    gPad->Update();
@@ -1160,13 +1056,14 @@ void FinalClassification()
    TLegend *legRej = new TLegend(0.5, 0.15, 0.83, 0.42);
    legRej->SetBorderSize(0);
    legRej->SetFillStyle(0);
+   legRej->SetTextSize(0.04);
    legRej->AddEntry(pEff0, "Previous rejection", "lp");
    legRej->AddEntry(pEff3, "XGBoost rejection", "lp");
    legRej->Draw();
 
    tex.SetNDC();
    tex.DrawLatex(0.4, 0.92, "#bf{Pion Rejection vs p}");
-   c1.SaveAs("Plots/Rejection//RejectionBoth.png");
+   c1.SaveAs("Plots/Rejection//RejectionBoth.pdf");
 
    c1.Clear();
 
@@ -1192,6 +1089,12 @@ void FinalClassification()
 
    pEffEta1->Draw("AP");
    gPad->Update();
+   // increase axis/title/label sizes for readability
+   pEffEta1->GetPaintedGraph()->GetXaxis()->SetTitleSize(0.05);
+   pEffEta1->GetPaintedGraph()->GetXaxis()->SetLabelSize(0.04);
+   pEffEta1->GetPaintedGraph()->GetYaxis()->SetTitleSize(0.05);
+   pEffEta1->GetPaintedGraph()->GetYaxis()->SetLabelSize(0.04);
+   tex.SetTextSize(0.04);
    pEffEta1->GetPaintedGraph()->SetMinimum(0.88);
    pEffEta1->GetPaintedGraph()->SetMaximum(1.02);
    gPad->Update();
@@ -1202,13 +1105,14 @@ void FinalClassification()
    TLegend *legEffEta = new TLegend(0.5, 0.75, 0.83, 0.92);
    legEffEta->SetBorderSize(0);
    legEffEta->SetFillStyle(0);
+   legEffEta->SetTextSize(0.04);
    legEffEta->AddEntry(pEffEta1, "E/p cut efficiency", "lp");
    legEffEta->AddEntry(pEffEta3, "XGBoost efficiency", "lp");
    legEffEta->Draw();
 
    tex.SetNDC();
    tex.DrawLatex(0.25, 0.94, "#bf{Muon Candidate Efficiency vs #eta}");
-   c1.SaveAs("Plots/Efficiency/EfficiencyBoth_Eta.png");
+   c1.SaveAs("Plots/Efficiency/EfficiencyBoth_Eta.pdf");
 
    // =============================================
    // === PLOT: Eta Rejection (E/p + XGBoost) ===
@@ -1232,6 +1136,12 @@ void FinalClassification()
 
    pEffEta0->Draw("AP");
    gPad->Update();
+   // increase axis/title/label sizes for readability
+   pEffEta0->GetPaintedGraph()->GetXaxis()->SetTitleSize(0.05);
+   pEffEta0->GetPaintedGraph()->GetXaxis()->SetLabelSize(0.04);
+   pEffEta0->GetPaintedGraph()->GetYaxis()->SetTitleSize(0.05);
+   pEffEta0->GetPaintedGraph()->GetYaxis()->SetLabelSize(0.04);
+   tex.SetTextSize(0.04);
    pEffEta0->GetPaintedGraph()->SetMinimum(0.7);
    pEffEta0->GetPaintedGraph()->SetMaximum(1.02);
    gPad->Update();
@@ -1242,13 +1152,14 @@ void FinalClassification()
    TLegend *legRejEta = new TLegend(0.15, 0.75, 0.48, 0.92);
    legRejEta->SetBorderSize(0);
    legRejEta->SetFillStyle(0);
+   legRejEta->SetTextSize(0.04);
    legRejEta->AddEntry(pEffEta0, "E/p cut rejection", "lp");
    legRejEta->AddEntry(pEffEta2, "XGBoost rejection", "lp");
    legRejEta->Draw();
 
    tex.SetNDC();
    tex.DrawLatex(0.4, 0.94, "#bf{Pion Rejection vs #eta}");
-   c1.SaveAs("Plots/Rejection/RejectionBoth_Eta.png");
+   c1.SaveAs("Plots/Rejection/RejectionBoth_Eta.pdf");
 
 
    // =============================================
@@ -1273,6 +1184,12 @@ void FinalClassification()
 
    pEffPt1->Draw("AP");
    gPad->Update();
+   // increase axis/title/label sizes for readability
+   pEffPt1->GetPaintedGraph()->GetXaxis()->SetTitleSize(0.05);
+   pEffPt1->GetPaintedGraph()->GetXaxis()->SetLabelSize(0.04);
+   pEffPt1->GetPaintedGraph()->GetYaxis()->SetTitleSize(0.05);
+   pEffPt1->GetPaintedGraph()->GetYaxis()->SetLabelSize(0.04);
+   tex.SetTextSize(0.04);
    pEffPt1->GetPaintedGraph()->SetMinimum(0.94);
    pEffPt1->GetPaintedGraph()->SetMaximum(1.02);
    gPad->Update();
@@ -1283,13 +1200,14 @@ void FinalClassification()
    TLegend *legEffPt = new TLegend(0.5, 0.75, 0.83, 0.92);
    legEffPt->SetBorderSize(0);
    legEffPt->SetFillStyle(0);
+   legEffPt->SetTextSize(0.04);
    legEffPt->AddEntry(pEffPt1, "E/p cut efficiency", "lp");
    legEffPt->AddEntry(pEffPt2, "XGBoost efficiency", "lp");
    legEffPt->Draw();
 
    tex.SetNDC();
    tex.DrawLatex(0.25, 0.94, "#bf{Muon Candidate Efficiency vs p_{T}}");
-   c1.SaveAs("Plots/Efficiency/EfficiencyBoth_Pt.png");
+   c1.SaveAs("Plots/Efficiency/EfficiencyBoth_Pt.pdf");
 
    // =============================================
    // === PLOT: Pt Rejection (E/p + XGBoost) ===
@@ -1313,6 +1231,12 @@ void FinalClassification()
 
    pEffPt0->Draw("AP");
    gPad->Update();
+   // increase axis/title/label sizes for readability
+   pEffPt0->GetPaintedGraph()->GetXaxis()->SetTitleSize(0.05);
+   pEffPt0->GetPaintedGraph()->GetXaxis()->SetLabelSize(0.04);
+   pEffPt0->GetPaintedGraph()->GetYaxis()->SetTitleSize(0.05);
+   pEffPt0->GetPaintedGraph()->GetYaxis()->SetLabelSize(0.04);
+   tex.SetTextSize(0.04);
    pEffPt0->GetPaintedGraph()->SetMinimum(0.47);
    pEffPt0->GetPaintedGraph()->SetMaximum(1.02);
    gPad->Update();
@@ -1323,13 +1247,14 @@ void FinalClassification()
    TLegend *legRejPt = new TLegend(0.5, 0.15, 0.83, 0.42);
    legRejPt->SetBorderSize(0);
    legRejPt->SetFillStyle(0);
+   legRejPt->SetTextSize(0.04);
    legRejPt->AddEntry(pEffPt0, "E/p cut rejection", "lp");
    legRejPt->AddEntry(pEffPt3, "XGBoost rejection", "lp");
    legRejPt->Draw();
 
    tex.SetNDC();
    tex.DrawLatex(0.4, 0.94, "#bf{Pion Rejection vs p_{T}}");
-   c1.SaveAs("Plots/Rejection//RejectionBoth_Pt.png");
+   c1.SaveAs("Plots/Rejection//RejectionBoth_Pt.pdf");
 
    // =========================================================================
    // 1. ZINTEGROWANY WYKRES DLA PT (XGBoost Efficiency + Rejection)
@@ -1401,7 +1326,7 @@ void FinalClassification()
    c1.cd();
    tex.SetNDC();
    tex.DrawLatex(0.22, 0.94, "#bf{XGBoost Performance vs p_{T}}");
-   c1.SaveAs("Plots/XGBoost_Performance_Pt.png");
+   c1.SaveAs("Plots/XGBoost_Performance_Pt.pdf");
 
 
    // =========================================================================
@@ -1474,5 +1399,5 @@ void FinalClassification()
    c1.cd();
    tex.SetNDC();
    tex.DrawLatex(0.25, 0.94, "#bf{XGBoost Performance vs #eta}");
-   c1.SaveAs("Plots/XGBoost_Performance_Eta.png");
+   c1.SaveAs("Plots/XGBoost_Performance_Eta.pdf");
 }
