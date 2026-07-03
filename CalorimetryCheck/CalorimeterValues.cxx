@@ -1,5 +1,7 @@
 #include <TLorentzVector.h>
 #include <TRandom.h>
+#include <TTreeReader.h>
+
 struct CalResult {
     double ECalEnergy;
     double ECalNumber;
@@ -7,14 +9,14 @@ struct CalResult {
     double HCalNumber;
 };
 
-CalResult Calorimeters(TLorentzVector particle, int simuID,
-            TTreeReaderArray<float>& EcalBarrelEng, TTreeReaderArray<float>& EcalEndcapPEng, TTreeReaderArray<float>& EcalEndcapNEng, 
+CalResult CalorimeterValues(TLorentzVector particle, int simuID,
+            TTreeReaderArray<float>& EcalBarrelEng, TTreeReaderArray<float>& EcalEndcapPEng, TTreeReaderArray<float>& EcalEndcapNEng,
             TTreeReaderArray<float>& HcalBarrelEng, TTreeReaderArray<float>& HcalEndcapPEng, TTreeReaderArray<float>& LFHcalEng, TTreeReaderArray<float>& HcalEndcapNEng,
-            TTreeReaderArray<float>& B0Eng,TTreeReaderArray<float>& EcalBarrelImagingEng,TTreeReaderArray<float>& EcalBarrelScFiEng,
-            TTreeReaderArray<unsigned int>& simuAssocEcalBarrel, TTreeReaderArray<unsigned int>& simuAssocEcalEndcapP, TTreeReaderArray<unsigned int>& simuAssocEcalEndcapN,
-            TTreeReaderArray<unsigned int>& simuAssocHcalBarrel, TTreeReaderArray<unsigned int>& simuAssocHcalEndcapP, TTreeReaderArray<unsigned int>& simuAssocLFHcal,
-            TTreeReaderArray<unsigned int>& simuAssocHcalEndcapN, TTreeReaderArray<unsigned int>&simuAssocB0, TTreeReaderArray<unsigned int>&simuAssocEcalBarrelImaging,
-            TTreeReaderArray<unsigned int>&simuAssocEcalBarrelScFi, TTreeReaderArray<unsigned int>&B0ShPB, TTreeReaderArray<unsigned int>& B0ShPE, TTreeReaderArray<float>& B0ShParameters)
+            TTreeReaderArray<float>& B0Eng, TTreeReaderArray<float>& EcalBarrelImagingEng, TTreeReaderArray<float>& EcalBarrelScFiEng,
+            TTreeReaderArray<int>& simuAssocEcalBarrel, TTreeReaderArray<int>& simuAssocEcalEndcapP, TTreeReaderArray<int>& simuAssocEcalEndcapN,
+            TTreeReaderArray<int>& simuAssocHcalBarrel, TTreeReaderArray<int>& simuAssocHcalEndcapP, TTreeReaderArray<int>& simuAssocLFHcal,
+            TTreeReaderArray<int>& simuAssocHcalEndcapN, TTreeReaderArray<int>& simuAssocB0, TTreeReaderArray<int>& simuAssocEcalBarrelImaging,
+            TTreeReaderArray<int>& simuAssocEcalBarrelScFi, TTreeReaderArray<unsigned int>& B0ShPB, TTreeReaderArray<unsigned int>& B0ShPE, TTreeReaderArray<float>& B0ShParameters)
 {
     double ECalEnergy=0.0,ECalNumber=0.0,HCalEnergy=0.0,HCalNumber=0.0;
     vector<vector<float>> ShapeParameters;
@@ -32,14 +34,14 @@ CalResult Calorimeters(TLorentzVector particle, int simuID,
                 int start = B0ShPB[cluster];
                 int end   = B0ShPE[cluster];
                 vector<float> temp(7);
-                cout<<"Start"<<endl;        
+                //cout<<"Start"<<endl;        
                 for(int i = start; i < end; i++) {
                     if(B0ShParameters[0]==0) break;
 
                     int j=i-start;
                     temp[j] = B0ShParameters[i]; 
 
-                    cout<<temp[j]<<endl;
+                    //cout<<temp[j]<<endl;
                 }
 
                 ShapeParameters.push_back(temp);

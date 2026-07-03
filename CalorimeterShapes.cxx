@@ -6,7 +6,7 @@ struct CalResult {
     vector<vector<float>> Shape;
 };
 
-CalResult Calorimeternew(int simuID, TTreeReaderArray<float>& Eng, TTreeReaderArray<int>& simuAssoc, TTreeReaderArray<float>& posX, TTreeReaderArray<float>& posY, TTreeReaderArray<float>& posZ,
+CalResult Calorimeter(int simuID, TTreeReaderArray<float>& Eng, TTreeReaderArray<int>& simuAssoc, TTreeReaderArray<float>& posX, TTreeReaderArray<float>& posY, TTreeReaderArray<float>& posZ,
                          TTreeReaderArray<unsigned int>& ShPB, TTreeReaderArray<unsigned int>& ShPE, TTreeReaderArray<float>& ShParameters)
 {
     float Energy = 0.0, Number = 0.0;
