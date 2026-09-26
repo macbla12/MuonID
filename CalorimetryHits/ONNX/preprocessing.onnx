@@ -1,0 +1,2382 @@
+
+pytorch2.12.1+cu130:ÛÀ
+€
+raw_features
+val_14
+val_18
+val_18
+val_18slice_2node_slice_2"SliceJE
+	namespace8: __main__.MuonIDPreprocessor/slice_2: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%slice_2 : [num_users=3] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_1, 1, 0, 1), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'slice_2']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 312, in forward
+    ECalEnergy   = col(raw, 'ECalEnergy')
+€
+raw_features
+val_18
+val_39
+val_18
+val_18slice_4node_slice_4"SliceJE
+	namespace8: __main__.MuonIDPreprocessor/slice_4: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%slice_4 : [num_users=3] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_3, 1, 1, 2), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'slice_4']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 313, in forward
+    HCalEnergy   = col(raw, 'HCalEnergy')
+€
+raw_features
+val_39
+val_60
+val_18
+val_18slice_6node_slice_6"SliceJE
+	namespace8: __main__.MuonIDPreprocessor/slice_6: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%slice_6 : [num_users=1] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_5, 1, 2, 3), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'slice_6']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 314, in forward
+    ECalNumber   = col(raw, 'ECalNumber')
+€
+raw_features
+val_60
+val_81
+val_18
+val_18slice_8node_slice_8"SliceJE
+	namespace8: __main__.MuonIDPreprocessor/slice_8: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%slice_8 : [num_users=3] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_7, 1, 3, 4), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'slice_8']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 315, in forward
+    HCalNumber   = col(raw, 'HCalNumber')
+·
+raw_features
+val_81
+val_102
+val_18
+val_18slice_10node_slice_10"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_10: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jê
+pkg.torch.onnx.fx_nodev%slice_10 : [num_users=1] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_9, 1, 4, 5), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_10']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 316, in forward
+    ECalEoverP   = col(raw, 'ECalEoverP')
+„
+raw_features
+val_102
+val_123
+val_18
+val_18slice_12node_slice_12"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_12: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jë
+pkg.torch.onnx.fx_nodew%slice_12 : [num_users=3] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_11, 1, 5, 6), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_12']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 317, in forward
+    HCalEoverP   = col(raw, 'HCalEoverP')
+Ï
+raw_features
+val_141
+val_145
+val_18
+val_18slice_14node_slice_14"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_14: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_14 : [num_users=4] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_13, 1, 22, 23), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_14']J≥
+pkg.torch.onnx.stack_traceîFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 319, in forward
+    ECalEta_w = col(raw, 'ECalEta_DispWeighted')
+Ï
+raw_features
+val_145
+val_166
+val_18
+val_18slice_16node_slice_16"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_16: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_16 : [num_users=6] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_15, 1, 23, 24), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_16']J≥
+pkg.torch.onnx.stack_traceîFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 320, in forward
+    ECalPhi_w = col(raw, 'ECalPhi_DispWeighted')
+Ï
+raw_features
+val_184
+val_188
+val_18
+val_18slice_18node_slice_18"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_18: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_18 : [num_users=4] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_17, 1, 26, 27), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_18']J≥
+pkg.torch.onnx.stack_traceîFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 321, in forward
+    HCalEta_w = col(raw, 'HCalEta_DispWeighted')
+Ï
+raw_features
+val_188
+val_209
+val_18
+val_18slice_20node_slice_20"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_20: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_20 : [num_users=6] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_19, 1, 27, 28), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_20']J≥
+pkg.torch.onnx.stack_traceîFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 322, in forward
+    HCalPhi_w = col(raw, 'HCalPhi_DispWeighted')
+·
+raw_features
+val_227
+val_231
+val_18
+val_18slice_22node_slice_22"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_22: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_22 : [num_users=1] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_21, 1, 20, 21), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_22']J®
+pkg.torch.onnx.stack_traceâFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 324, in forward
+    ECalR_uw = col(raw, 'ECalR_Disp')
+È
+raw_features
+val_231
+val_141
+val_18
+val_18slice_24node_slice_24"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_24: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_24 : [num_users=5] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_23, 1, 21, 22), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_24']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 325, in forward
+    ECalR_w  = col(raw, 'ECalR_DispWeighted')
+·
+raw_features
+val_166
+val_272
+val_18
+val_18slice_26node_slice_26"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_26: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_26 : [num_users=3] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_25, 1, 24, 25), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_26']J®
+pkg.torch.onnx.stack_traceâFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 326, in forward
+    HCalR_uw = col(raw, 'HCalR_Disp')
+Í
+raw_features
+val_272
+val_184
+val_18
+val_18slice_28node_slice_28"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_28: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jî
+pkg.torch.onnx.fx_nodez%slice_28 : [num_users=10] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_27, 1, 25, 26), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_28']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 327, in forward
+    HCalR_w  = col(raw, 'HCalR_DispWeighted')
+˝
+raw_features
+val_310
+val_314
+val_18
+val_18slice_30node_slice_30"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_30: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_30 : [num_users=1] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_29, 1, 18, 19), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_30']Jƒ
+pkg.torch.onnx.stack_trace•File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 329, in forward
+    ECalEnergyConcentration = col(raw, 'ECalEnergyConcentration')
+˝
+raw_features
+val_314
+val_227
+val_18
+val_18slice_32node_slice_32"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_32: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_32 : [num_users=1] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_31, 1, 19, 20), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_32']Jƒ
+pkg.torch.onnx.stack_trace•File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 330, in forward
+    HCalEnergyConcentration = col(raw, 'HCalEnergyConcentration')
+Ù
+raw_features
+val_352
+val_356
+val_18
+val_18slice_34node_slice_34"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_34: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_34 : [num_users=1] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_33, 1, 14, 15), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_34']Jª
+pkg.torch.onnx.stack_traceúFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 331, in forward
+    ECalMaxHitFrac          = col(raw, 'ECalMaxHitFrac')
+Ù
+raw_features
+val_356
+val_377
+val_18
+val_18slice_36node_slice_36"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_36: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_36 : [num_users=1] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_35, 1, 15, 16), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_36']Jª
+pkg.torch.onnx.stack_traceúFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 332, in forward
+    HCalMaxHitFrac          = col(raw, 'HCalMaxHitFrac')
+ˆ
+raw_features
+val_377
+val_398
+val_18
+val_18slice_38node_slice_38"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_38: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_38 : [num_users=1] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_37, 1, 16, 17), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_38']JΩ
+pkg.torch.onnx.stack_traceûFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 333, in forward
+    ECalEnergyStdDev        = col(raw, 'ECalEnergyStdDev')
+ˆ
+raw_features
+val_398
+val_310
+val_18
+val_18slice_40node_slice_40"SliceJF
+	namespace9: __main__.MuonIDPreprocessor/slice_40: aten.slice.TensorJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.slice.Tensor']Jì
+pkg.torch.onnx.fx_nodey%slice_40 : [num_users=3] = call_function[target=torch.ops.aten.slice.Tensor](args = (%slice_39, 1, 17, 18), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'slice_40']JΩ
+pkg.torch.onnx.stack_traceûFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 334, in forward
+    HCalEnergyStdDev        = col(raw, 'HCalEnergyStdDev')
+≥
+slice_2
+slice_4add_120node_add_120"AddJC
+	namespace6: __main__.MuonIDPreprocessor/add_120: aten.add.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.add.Tensor']Jé
+pkg.torch.onnx.fx_nodet%add_120 : [num_users=6] = call_function[target=torch.ops.aten.add.Tensor](args = (%slice_2, %slice_4), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'add_120']Jß
+pkg.torch.onnx.stack_traceàFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 337, in forward
+    totalE = ECalEnergy + HCalEnergy
+…
+add_120
+scalar_tensor_defaulteq_41
+node_eq_41"EqualJ@
+	namespace3: __main__.MuonIDPreprocessor/eq_41: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jô
+pkg.torch.onnx.fx_node%eq_41 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%add_120, %scalar_tensor_default), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'eq_41']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 338, in forward
+    ECalFrac     = sd(ECalEnergy, totalE)
+Â
+add_120val_424node_Shape_424"Shape*
+start †JL
+	namespace?: __main__.MuonIDPreprocessor/ones_like: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J†
+pkg.torch.onnx.fx_nodeÖ%ones_like : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%add_120,), kwargs = {pin_memory: False})J/
+pkg.torch.onnx.name_scopes['', 'ones_like']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 338, in forward
+    ECalFrac     = sd(ECalEnergy, totalE)
+„
+val_423
+val_424	ones_likenode_ones_like"ExpandJL
+	namespace?: __main__.MuonIDPreprocessor/ones_like: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J†
+pkg.torch.onnx.fx_nodeÖ%ones_like : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%add_120,), kwargs = {pin_memory: False})J/
+pkg.torch.onnx.name_scopes['', 'ones_like']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 338, in forward
+    ECalFrac     = sd(ECalEnergy, totalE)
+√
+eq_41
+	ones_like
+add_120where
+node_where"WhereJA
+	namespace4: __main__.MuonIDPreprocessor/where: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jñ
+pkg.torch.onnx.fx_node|%where : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_41, %ones_like, %add_120), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'where']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 338, in forward
+    ECalFrac     = sd(ECalEnergy, totalE)
+†
+slice_2
+wheredivnode_div"DivJ?
+	namespace2: __main__.MuonIDPreprocessor/div: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jà
+pkg.torch.onnx.fx_noden%div : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_2, %where), kwargs = {})J)
+pkg.torch.onnx.name_scopes['', 'div']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 338, in forward
+    ECalFrac     = sd(ECalEnergy, totalE)
+„
+divval_426node_Shape_426"Shape*
+start †JN
+	namespaceA: __main__.MuonIDPreprocessor/zeros_like: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']Jû
+pkg.torch.onnx.fx_nodeÉ%zeros_like : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div,), kwargs = {pin_memory: False})J0
+pkg.torch.onnx.name_scopes['', 'zeros_like']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 338, in forward
+    ECalFrac     = sd(ECalEnergy, totalE)
+ı
+scalar_tensor_default
+val_426
+zeros_likenode_zeros_like"ExpandJN
+	namespaceA: __main__.MuonIDPreprocessor/zeros_like: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']Jû
+pkg.torch.onnx.fx_nodeÉ%zeros_like : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div,), kwargs = {pin_memory: False})J0
+pkg.torch.onnx.name_scopes['', 'zeros_like']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 338, in forward
+    ECalFrac     = sd(ECalEnergy, totalE)
+«
+eq_41
+
+zeros_like
+divwhere_1node_where_1"WhereJC
+	namespace6: __main__.MuonIDPreprocessor/where_1: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jï
+pkg.torch.onnx.fx_node{%where_1 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_41, %zeros_like, %div), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'where_1']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 338, in forward
+    ECalFrac     = sd(ECalEnergy, totalE)
+¨
+slice_4
+wherediv_1
+node_div_1"DivJA
+	namespace4: __main__.MuonIDPreprocessor/div_1: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jå
+pkg.torch.onnx.fx_noder%div_1 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_4, %where_2), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'div_1']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 339, in forward
+    HCalFrac     = sd(HCalEnergy, totalE)
+Ì
+div_1val_430node_Shape_430"Shape*
+start †JP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_1: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_1 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_1,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_1']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 339, in forward
+    HCalFrac     = sd(HCalEnergy, totalE)
+Å
+scalar_tensor_default
+val_430zeros_like_1node_zeros_like_1"ExpandJP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_1: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_1 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_1,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_1']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 339, in forward
+    HCalFrac     = sd(HCalEnergy, totalE)
+œ
+eq_41
+zeros_like_1
+div_1where_3node_where_3"WhereJC
+	namespace6: __main__.MuonIDPreprocessor/where_3: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jô
+pkg.torch.onnx.fx_node%where_3 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_48, %zeros_like_1, %div_1), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'where_3']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 339, in forward
+    HCalFrac     = sd(HCalEnergy, totalE)
+–
+slice_8
+scalar_tensor_defaulteq_55
+node_eq_55"EqualJ@
+	namespace3: __main__.MuonIDPreprocessor/eq_55: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jú
+pkg.torch.onnx.fx_nodeÅ%eq_55 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%slice_8, %scalar_tensor_default_2), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'eq_55']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 340, in forward
+    HitRatio     = sd(ECalNumber, HCalNumber)
+Ô
+slice_8val_432node_Shape_432"Shape*
+start †JN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_2: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J¢
+pkg.torch.onnx.fx_nodeá%ones_like_2 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_8,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_2']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 340, in forward
+    HitRatio     = sd(ECalNumber, HCalNumber)
+Ò
+val_423
+val_432ones_like_2node_ones_like_2"ExpandJN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_2: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J¢
+pkg.torch.onnx.fx_nodeá%ones_like_2 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_8,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_2']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 340, in forward
+    HitRatio     = sd(ECalNumber, HCalNumber)
+÷
+eq_55
+ones_like_2
+slice_8where_4node_where_4"WhereJC
+	namespace6: __main__.MuonIDPreprocessor/where_4: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jõ
+pkg.torch.onnx.fx_nodeÄ%where_4 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_55, %ones_like_2, %slice_8), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'where_4']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 340, in forward
+    HitRatio     = sd(ECalNumber, HCalNumber)
+≤
+slice_6
+where_4div_2
+node_div_2"DivJA
+	namespace4: __main__.MuonIDPreprocessor/div_2: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jå
+pkg.torch.onnx.fx_noder%div_2 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_6, %where_4), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'div_2']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 340, in forward
+    HitRatio     = sd(ECalNumber, HCalNumber)
+Ò
+div_2val_434node_Shape_434"Shape*
+start †JP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_2: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_2 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_2,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_2']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 340, in forward
+    HitRatio     = sd(ECalNumber, HCalNumber)
+Ö
+scalar_tensor_default
+val_434zeros_like_2node_zeros_like_2"ExpandJP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_2: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_2 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_2,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_2']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 340, in forward
+    HitRatio     = sd(ECalNumber, HCalNumber)
+”
+eq_55
+zeros_like_2
+div_2where_5node_where_5"WhereJC
+	namespace6: __main__.MuonIDPreprocessor/where_5: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jô
+pkg.torch.onnx.fx_node%where_5 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_55, %zeros_like_2, %div_2), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'where_5']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 340, in forward
+    HitRatio     = sd(ECalNumber, HCalNumber)
+“
+slice_12
+scalar_tensor_defaulteq_62
+node_eq_62"EqualJ@
+	namespace3: __main__.MuonIDPreprocessor/eq_62: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jù
+pkg.torch.onnx.fx_nodeÇ%eq_62 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%slice_12, %scalar_tensor_default_3), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'eq_62']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 341, in forward
+    EoverP_ratio = sd(ECalEoverP, HCalEoverP)
+Ò
+slice_12val_436node_Shape_436"Shape*
+start †JN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_3: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J£
+pkg.torch.onnx.fx_nodeà%ones_like_3 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_12,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_3']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 341, in forward
+    EoverP_ratio = sd(ECalEoverP, HCalEoverP)
+Ú
+val_423
+val_436ones_like_3node_ones_like_3"ExpandJN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_3: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J£
+pkg.torch.onnx.fx_nodeà%ones_like_3 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_12,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_3']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 341, in forward
+    EoverP_ratio = sd(ECalEoverP, HCalEoverP)
+ÿ
+eq_62
+ones_like_3
+slice_12where_6node_where_6"WhereJC
+	namespace6: __main__.MuonIDPreprocessor/where_6: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jú
+pkg.torch.onnx.fx_nodeÅ%where_6 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_62, %ones_like_3, %slice_12), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'where_6']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 341, in forward
+    EoverP_ratio = sd(ECalEoverP, HCalEoverP)
+¥
+slice_10
+where_6div_3
+node_div_3"DivJA
+	namespace4: __main__.MuonIDPreprocessor/div_3: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jç
+pkg.torch.onnx.fx_nodes%div_3 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_10, %where_6), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'div_3']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 341, in forward
+    EoverP_ratio = sd(ECalEoverP, HCalEoverP)
+Ò
+div_3val_438node_Shape_438"Shape*
+start †JP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_3: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_3 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_3,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_3']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 341, in forward
+    EoverP_ratio = sd(ECalEoverP, HCalEoverP)
+Ö
+scalar_tensor_default
+val_438zeros_like_3node_zeros_like_3"ExpandJP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_3: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_3 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_3,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_3']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 341, in forward
+    EoverP_ratio = sd(ECalEoverP, HCalEoverP)
+”
+eq_62
+zeros_like_3
+div_3where_7node_where_7"WhereJC
+	namespace6: __main__.MuonIDPreprocessor/where_7: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jô
+pkg.torch.onnx.fx_node%where_7 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_62, %zeros_like_3, %div_3), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'where_7']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 341, in forward
+    EoverP_ratio = sd(ECalEoverP, HCalEoverP)
+•
+slice_2
+val_423tmpn2"AddJD
+	namespace7: __main__.MuonIDPreprocessor/log1p: aten.log1p.defaultJW
+pkg.torch.onnx.class_hierarchy5['__main__.MuonIDPreprocessor', 'aten.log1p.default']JÜ
+pkg.torch.onnx.fx_nodel%log1p : [num_users=1] = call_function[target=torch.ops.aten.log1p.default](args = (%slice_2,), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'log1p']J≠
+pkg.torch.onnx.stack_traceéFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 342, in forward
+    logECal      = torch.log1p(ECalEnergy)
+ö
+tmplog1pn3"LogJD
+	namespace7: __main__.MuonIDPreprocessor/log1p: aten.log1p.defaultJW
+pkg.torch.onnx.class_hierarchy5['__main__.MuonIDPreprocessor', 'aten.log1p.default']JÜ
+pkg.torch.onnx.fx_nodel%log1p : [num_users=1] = call_function[target=torch.ops.aten.log1p.default](args = (%slice_2,), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'log1p']J≠
+pkg.torch.onnx.stack_traceéFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 342, in forward
+    logECal      = torch.log1p(ECalEnergy)
+Ø
+slice_4
+val_423tmp_2n2_2"AddJF
+	namespace9: __main__.MuonIDPreprocessor/log1p_1: aten.log1p.defaultJW
+pkg.torch.onnx.class_hierarchy5['__main__.MuonIDPreprocessor', 'aten.log1p.default']Jà
+pkg.torch.onnx.fx_noden%log1p_1 : [num_users=1] = call_function[target=torch.ops.aten.log1p.default](args = (%slice_4,), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'log1p_1']J≠
+pkg.torch.onnx.stack_traceéFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 343, in forward
+    logHCal      = torch.log1p(HCalEnergy)
+¶
+tmp_2log1p_1n3_2"LogJF
+	namespace9: __main__.MuonIDPreprocessor/log1p_1: aten.log1p.defaultJW
+pkg.torch.onnx.class_hierarchy5['__main__.MuonIDPreprocessor', 'aten.log1p.default']Jà
+pkg.torch.onnx.fx_noden%log1p_1 : [num_users=1] = call_function[target=torch.ops.aten.log1p.default](args = (%slice_4,), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'log1p_1']J≠
+pkg.torch.onnx.stack_traceéFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 343, in forward
+    logHCal      = torch.log1p(HCalEnergy)
+ö
+raw_features
+where_1
+where_3
+where_5
+where_7
+log1p
+log1p_1catnode_cat"Concat*
+axis†J@
+	namespace3: __main__.MuonIDPreprocessor/cat: aten.cat.defaultJU
+pkg.torch.onnx.class_hierarchy3['__main__.MuonIDPreprocessor', 'aten.cat.default']J∆
+pkg.torch.onnx.fx_node´%cat : [num_users=1] = call_function[target=torch.ops.aten.cat.default](args = ([%raw_features, %where_1, %where_3, %where_5, %where_7, %log1p, %log1p_1], 1), kwargs = {})J)
+pkg.torch.onnx.name_scopes['', 'cat']J§
+pkg.torch.onnx.stack_traceÖFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 345, in forward
+    scalar_features = torch.cat([
+€
+slice_14
+slice_16mul_105node_mul_105"MulJC
+	namespace6: __main__.MuonIDPreprocessor/mul_105: aten.mul.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.mul.Tensor']Jê
+pkg.torch.onnx.fx_nodev%mul_105 : [num_users=1] = call_function[target=torch.ops.aten.mul.Tensor](args = (%slice_14, %slice_16), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'mul_105']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 351, in forward
+    Ecal_trans = torch.sqrt(torch.clamp(ECalEta_w * ECalPhi_w, min=0.0))
+‡
+mul_105
+scalar_tensor_defaultclamp
+node_clamp"ClipJD
+	namespace7: __main__.MuonIDPreprocessor/clamp: aten.clamp.defaultJW
+pkg.torch.onnx.class_hierarchy5['__main__.MuonIDPreprocessor', 'aten.clamp.default']Jä
+pkg.torch.onnx.fx_nodep%clamp : [num_users=1] = call_function[target=torch.ops.aten.clamp.default](args = (%mul_105, 0.0), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'clamp']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 351, in forward
+    Ecal_trans = torch.sqrt(torch.clamp(ECalEta_w * ECalPhi_w, min=0.0))
+π
+clampsqrt	node_sqrt"SqrtJB
+	namespace5: __main__.MuonIDPreprocessor/sqrt: aten.sqrt.defaultJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.sqrt.default']JÇ
+pkg.torch.onnx.fx_nodeh%sqrt : [num_users=5] = call_function[target=torch.ops.aten.sqrt.default](args = (%clamp,), kwargs = {})J*
+pkg.torch.onnx.name_scopes['', 'sqrt']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 351, in forward
+    Ecal_trans = torch.sqrt(torch.clamp(ECalEta_w * ECalPhi_w, min=0.0))
+€
+slice_18
+slice_20mul_109node_mul_109"MulJC
+	namespace6: __main__.MuonIDPreprocessor/mul_109: aten.mul.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.mul.Tensor']Jê
+pkg.torch.onnx.fx_nodev%mul_109 : [num_users=1] = call_function[target=torch.ops.aten.mul.Tensor](args = (%slice_18, %slice_20), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'mul_109']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 352, in forward
+    Hcal_trans = torch.sqrt(torch.clamp(HCalEta_w * HCalPhi_w, min=0.0))
+Í
+mul_109
+scalar_tensor_defaultclamp_1node_clamp_1"ClipJF
+	namespace9: __main__.MuonIDPreprocessor/clamp_1: aten.clamp.defaultJW
+pkg.torch.onnx.class_hierarchy5['__main__.MuonIDPreprocessor', 'aten.clamp.default']Jå
+pkg.torch.onnx.fx_noder%clamp_1 : [num_users=1] = call_function[target=torch.ops.aten.clamp.default](args = (%mul_109, 0.0), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'clamp_1']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 352, in forward
+    Hcal_trans = torch.sqrt(torch.clamp(HCalEta_w * HCalPhi_w, min=0.0))
+«
+clamp_1sqrt_1node_sqrt_1"SqrtJD
+	namespace7: __main__.MuonIDPreprocessor/sqrt_1: aten.sqrt.defaultJV
+pkg.torch.onnx.class_hierarchy4['__main__.MuonIDPreprocessor', 'aten.sqrt.default']JÜ
+pkg.torch.onnx.fx_nodel%sqrt_1 : [num_users=7] = call_function[target=torch.ops.aten.sqrt.default](args = (%clamp_1,), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'sqrt_1']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 352, in forward
+    Hcal_trans = torch.sqrt(torch.clamp(HCalEta_w * HCalPhi_w, min=0.0))
+«
+sqrt
+scalar_tensor_defaulteq_78
+node_eq_78"EqualJ@
+	namespace3: __main__.MuonIDPreprocessor/eq_78: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jò
+pkg.torch.onnx.fx_node~%eq_78 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%sqrt, %scalar_tensor_default_4), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'eq_78']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 356, in forward
+    Ecal_LoverT = sd(Ecal_long, Ecal_trans)
+Á
+sqrtval_443node_Shape_443"Shape*
+start †JN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_4: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']Jü
+pkg.torch.onnx.fx_nodeÑ%ones_like_4 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%sqrt,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_4']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 356, in forward
+    Ecal_LoverT = sd(Ecal_long, Ecal_trans)
+Ï
+val_423
+val_443ones_like_4node_ones_like_4"ExpandJN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_4: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']Jü
+pkg.torch.onnx.fx_nodeÑ%ones_like_4 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%sqrt,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_4']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 356, in forward
+    Ecal_LoverT = sd(Ecal_long, Ecal_trans)
+Õ
+eq_78
+ones_like_4
+sqrtwhere_8node_where_8"WhereJC
+	namespace6: __main__.MuonIDPreprocessor/where_8: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jó
+pkg.torch.onnx.fx_node}%where_8 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_78, %ones_like_4, %sqrt), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'where_8']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 356, in forward
+    Ecal_LoverT = sd(Ecal_long, Ecal_trans)
+≤
+slice_24
+where_8div_4
+node_div_4"DivJA
+	namespace4: __main__.MuonIDPreprocessor/div_4: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jç
+pkg.torch.onnx.fx_nodes%div_4 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_24, %where_8), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'div_4']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 356, in forward
+    Ecal_LoverT = sd(Ecal_long, Ecal_trans)
+Ô
+div_4val_445node_Shape_445"Shape*
+start †JP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_4: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_4 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_4,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_4']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 356, in forward
+    Ecal_LoverT = sd(Ecal_long, Ecal_trans)
+É
+scalar_tensor_default
+val_445zeros_like_4node_zeros_like_4"ExpandJP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_4: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_4 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_4,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_4']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 356, in forward
+    Ecal_LoverT = sd(Ecal_long, Ecal_trans)
+—
+eq_78
+zeros_like_4
+div_4where_9node_where_9"WhereJC
+	namespace6: __main__.MuonIDPreprocessor/where_9: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jô
+pkg.torch.onnx.fx_node%where_9 : [num_users=2] = call_function[target=torch.ops.aten.where.self](args = (%eq_78, %zeros_like_4, %div_4), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'where_9']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 356, in forward
+    Ecal_LoverT = sd(Ecal_long, Ecal_trans)
+Ã
+sqrt_1
+scalar_tensor_defaulteq_85
+node_eq_85"EqualJ@
+	namespace3: __main__.MuonIDPreprocessor/eq_85: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jõ
+pkg.torch.onnx.fx_nodeÄ%eq_85 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%sqrt_1, %scalar_tensor_default_5), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'eq_85']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 357, in forward
+    Hcal_LoverT = sd(Hcal_long, Hcal_trans)
+Î
+sqrt_1val_447node_Shape_447"Shape*
+start †JN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_5: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J°
+pkg.torch.onnx.fx_nodeÜ%ones_like_5 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%sqrt_1,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_5']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 357, in forward
+    Hcal_LoverT = sd(Hcal_long, Hcal_trans)
+Ó
+val_423
+val_447ones_like_5node_ones_like_5"ExpandJN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_5: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J°
+pkg.torch.onnx.fx_nodeÜ%ones_like_5 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%sqrt_1,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_5']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 357, in forward
+    Hcal_LoverT = sd(Hcal_long, Hcal_trans)
+◊
+eq_85
+ones_like_5
+sqrt_1where_10node_where_10"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_10: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jõ
+pkg.torch.onnx.fx_nodeÄ%where_10 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_85, %ones_like_5, %sqrt_1), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_10']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 357, in forward
+    Hcal_LoverT = sd(Hcal_long, Hcal_trans)
+¥
+slice_28
+where_10div_5
+node_div_5"DivJA
+	namespace4: __main__.MuonIDPreprocessor/div_5: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jé
+pkg.torch.onnx.fx_nodet%div_5 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_28, %where_10), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'div_5']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 357, in forward
+    Hcal_LoverT = sd(Hcal_long, Hcal_trans)
+Ô
+div_5val_449node_Shape_449"Shape*
+start †JP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_5: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_5 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_5,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_5']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 357, in forward
+    Hcal_LoverT = sd(Hcal_long, Hcal_trans)
+É
+scalar_tensor_default
+val_449zeros_like_5node_zeros_like_5"ExpandJP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_5: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_5 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_5,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_5']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 357, in forward
+    Hcal_LoverT = sd(Hcal_long, Hcal_trans)
+◊
+eq_85
+zeros_like_5
+div_5where_11node_where_11"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_11: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jõ
+pkg.torch.onnx.fx_nodeÄ%where_11 : [num_users=2] = call_function[target=torch.ops.aten.where.self](args = (%eq_85, %zeros_like_5, %div_5), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_11']JÆ
+pkg.torch.onnx.stack_traceèFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 357, in forward
+    Hcal_LoverT = sd(Hcal_long, Hcal_trans)
+”
+slice_16
+scalar_tensor_defaulteq_92
+node_eq_92"EqualJ@
+	namespace3: __main__.MuonIDPreprocessor/eq_92: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jù
+pkg.torch.onnx.fx_nodeÇ%eq_92 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%slice_16, %scalar_tensor_default_6), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'eq_92']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 359, in forward
+    Ecal_sphericity = sd(ECalEta_w, ECalPhi_w)
+Ú
+slice_16val_451node_Shape_451"Shape*
+start †JN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_6: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J£
+pkg.torch.onnx.fx_nodeà%ones_like_6 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_16,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_6']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 359, in forward
+    Ecal_sphericity = sd(ECalEta_w, ECalPhi_w)
+Û
+val_423
+val_451ones_like_6node_ones_like_6"ExpandJN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_6: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J£
+pkg.torch.onnx.fx_nodeà%ones_like_6 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_16,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_6']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 359, in forward
+    Ecal_sphericity = sd(ECalEta_w, ECalPhi_w)
+ﬁ
+eq_92
+ones_like_6
+slice_16where_12node_where_12"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_12: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jù
+pkg.torch.onnx.fx_nodeÇ%where_12 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_92, %ones_like_6, %slice_16), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_12']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 359, in forward
+    Ecal_sphericity = sd(ECalEta_w, ECalPhi_w)
+∑
+slice_14
+where_12div_6
+node_div_6"DivJA
+	namespace4: __main__.MuonIDPreprocessor/div_6: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jé
+pkg.torch.onnx.fx_nodet%div_6 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_14, %where_12), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'div_6']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 359, in forward
+    Ecal_sphericity = sd(ECalEta_w, ECalPhi_w)
+Ú
+div_6val_453node_Shape_453"Shape*
+start †JP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_6: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_6 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_6,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_6']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 359, in forward
+    Ecal_sphericity = sd(ECalEta_w, ECalPhi_w)
+Ü
+scalar_tensor_default
+val_453zeros_like_6node_zeros_like_6"ExpandJP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_6: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_6 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_6,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_6']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 359, in forward
+    Ecal_sphericity = sd(ECalEta_w, ECalPhi_w)
+⁄
+eq_92
+zeros_like_6
+div_6where_13node_where_13"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_13: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jõ
+pkg.torch.onnx.fx_nodeÄ%where_13 : [num_users=2] = call_function[target=torch.ops.aten.where.self](args = (%eq_92, %zeros_like_6, %div_6), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_13']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 359, in forward
+    Ecal_sphericity = sd(ECalEta_w, ECalPhi_w)
+”
+slice_20
+scalar_tensor_defaulteq_99
+node_eq_99"EqualJ@
+	namespace3: __main__.MuonIDPreprocessor/eq_99: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jù
+pkg.torch.onnx.fx_nodeÇ%eq_99 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%slice_20, %scalar_tensor_default_7), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'eq_99']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 360, in forward
+    Hcal_sphericity = sd(HCalEta_w, HCalPhi_w)
+Ú
+slice_20val_455node_Shape_455"Shape*
+start †JN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_7: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J£
+pkg.torch.onnx.fx_nodeà%ones_like_7 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_20,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_7']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 360, in forward
+    Hcal_sphericity = sd(HCalEta_w, HCalPhi_w)
+Û
+val_423
+val_455ones_like_7node_ones_like_7"ExpandJN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_7: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J£
+pkg.torch.onnx.fx_nodeà%ones_like_7 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_20,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_7']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 360, in forward
+    Hcal_sphericity = sd(HCalEta_w, HCalPhi_w)
+ﬁ
+eq_99
+ones_like_7
+slice_20where_14node_where_14"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_14: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jù
+pkg.torch.onnx.fx_nodeÇ%where_14 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_99, %ones_like_7, %slice_20), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_14']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 360, in forward
+    Hcal_sphericity = sd(HCalEta_w, HCalPhi_w)
+∑
+slice_18
+where_14div_7
+node_div_7"DivJA
+	namespace4: __main__.MuonIDPreprocessor/div_7: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jé
+pkg.torch.onnx.fx_nodet%div_7 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_18, %where_14), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'div_7']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 360, in forward
+    Hcal_sphericity = sd(HCalEta_w, HCalPhi_w)
+Ú
+div_7val_457node_Shape_457"Shape*
+start †JP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_7: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_7 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_7,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_7']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 360, in forward
+    Hcal_sphericity = sd(HCalEta_w, HCalPhi_w)
+Ü
+scalar_tensor_default
+val_457zeros_like_7node_zeros_like_7"ExpandJP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_7: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_7 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_7,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_7']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 360, in forward
+    Hcal_sphericity = sd(HCalEta_w, HCalPhi_w)
+⁄
+eq_99
+zeros_like_7
+div_7where_15node_where_15"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_15: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jõ
+pkg.torch.onnx.fx_nodeÄ%where_15 : [num_users=2] = call_function[target=torch.ops.aten.where.self](args = (%eq_99, %zeros_like_7, %div_7), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_15']J±
+pkg.torch.onnx.stack_traceíFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 360, in forward
+    Hcal_sphericity = sd(HCalEta_w, HCalPhi_w)
+÷
+slice_14
+slice_16sub_98node_sub_98"SubJB
+	namespace5: __main__.MuonIDPreprocessor/sub_98: aten.sub.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.sub.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%sub_98 : [num_users=1] = call_function[target=torch.ops.aten.sub.Tensor](args = (%slice_14, %slice_16), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'sub_98']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+€
+slice_14
+slice_16add_298node_add_298"AddJC
+	namespace6: __main__.MuonIDPreprocessor/add_298: aten.add.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.add.Tensor']Jê
+pkg.torch.onnx.fx_nodev%add_298 : [num_users=3] = call_function[target=torch.ops.aten.add.Tensor](args = (%slice_14, %slice_16), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'add_298']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+
+add_298
+scalar_tensor_defaulteq_108node_eq_108"EqualJA
+	namespace4: __main__.MuonIDPreprocessor/eq_108: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jù
+pkg.torch.onnx.fx_nodeÇ%eq_108 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%add_298, %scalar_tensor_default_8), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'eq_108']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+ä
+add_298val_459node_Shape_459"Shape*
+start †JN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_8: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J¢
+pkg.torch.onnx.fx_nodeá%ones_like_8 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%add_298,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_8']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+å
+val_423
+val_459ones_like_8node_ones_like_8"ExpandJN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_8: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J¢
+pkg.torch.onnx.fx_nodeá%ones_like_8 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%add_298,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_8']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+¯
+eq_108
+ones_like_8
+add_298where_16node_where_16"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_16: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jù
+pkg.torch.onnx.fx_nodeÇ%where_16 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_108, %ones_like_8, %add_298), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_16']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+Õ
+sub_98
+where_16div_8
+node_div_8"DivJA
+	namespace4: __main__.MuonIDPreprocessor/div_8: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jå
+pkg.torch.onnx.fx_noder%div_8 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%sub_98, %where_16), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'div_8']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+å
+div_8val_461node_Shape_461"Shape*
+start †JP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_8: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_8 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_8,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_8']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+†
+scalar_tensor_default
+val_461zeros_like_8node_zeros_like_8"ExpandJP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_8: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_8 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_8,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_8']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+ˆ
+eq_108
+zeros_like_8
+div_8where_17node_where_17"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_17: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jú
+pkg.torch.onnx.fx_nodeÅ%where_17 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_108, %zeros_like_8, %div_8), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_17']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 362, in forward
+    Ecal_angular_asym = sd(ECalEta_w - ECalPhi_w, ECalEta_w + ECalPhi_w)
+€
+slice_18
+slice_20sub_107node_sub_107"SubJC
+	namespace6: __main__.MuonIDPreprocessor/sub_107: aten.sub.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.sub.Tensor']Jê
+pkg.torch.onnx.fx_nodev%sub_107 : [num_users=1] = call_function[target=torch.ops.aten.sub.Tensor](args = (%slice_18, %slice_20), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'sub_107']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+€
+slice_18
+slice_20add_323node_add_323"AddJC
+	namespace6: __main__.MuonIDPreprocessor/add_323: aten.add.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.add.Tensor']Jê
+pkg.torch.onnx.fx_nodev%add_323 : [num_users=3] = call_function[target=torch.ops.aten.add.Tensor](args = (%slice_18, %slice_20), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'add_323']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+
+add_323
+scalar_tensor_defaulteq_117node_eq_117"EqualJA
+	namespace4: __main__.MuonIDPreprocessor/eq_117: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jù
+pkg.torch.onnx.fx_nodeÇ%eq_117 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%add_323, %scalar_tensor_default_9), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'eq_117']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+ä
+add_323val_463node_Shape_463"Shape*
+start †JN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_9: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J¢
+pkg.torch.onnx.fx_nodeá%ones_like_9 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%add_323,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_9']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+å
+val_423
+val_463ones_like_9node_ones_like_9"ExpandJN
+	namespaceA: __main__.MuonIDPreprocessor/ones_like_9: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J¢
+pkg.torch.onnx.fx_nodeá%ones_like_9 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%add_323,), kwargs = {pin_memory: False})J1
+pkg.torch.onnx.name_scopes['', 'ones_like_9']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+¯
+eq_117
+ones_like_9
+add_323where_18node_where_18"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_18: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jù
+pkg.torch.onnx.fx_nodeÇ%where_18 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_117, %ones_like_9, %add_323), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_18']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+œ
+sub_107
+where_18div_9
+node_div_9"DivJA
+	namespace4: __main__.MuonIDPreprocessor/div_9: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jç
+pkg.torch.onnx.fx_nodes%div_9 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%sub_107, %where_18), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'div_9']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+å
+div_9val_465node_Shape_465"Shape*
+start †JP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_9: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_9 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_9,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_9']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+†
+scalar_tensor_default
+val_465zeros_like_9node_zeros_like_9"ExpandJP
+	namespaceC: __main__.MuonIDPreprocessor/zeros_like_9: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J¢
+pkg.torch.onnx.fx_nodeá%zeros_like_9 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_9,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'zeros_like_9']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+ˆ
+eq_117
+zeros_like_9
+div_9where_19node_where_19"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_19: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jú
+pkg.torch.onnx.fx_nodeÅ%where_19 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_117, %zeros_like_9, %div_9), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_19']JÀ
+pkg.torch.onnx.stack_trace¨File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 363, in forward
+    Hcal_angular_asym = sd(HCalEta_w - HCalPhi_w, HCalEta_w + HCalPhi_w)
+‘
+slice_26
+scalar_tensor_defaulteq_124node_eq_124"EqualJA
+	namespace4: __main__.MuonIDPreprocessor/eq_124: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jü
+pkg.torch.onnx.fx_nodeÑ%eq_124 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%slice_26, %scalar_tensor_default_10), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'eq_124']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 365, in forward
+    radius_ratio = sd(ECalR_uw, HCalR_uw)
+
+slice_26val_467node_Shape_467"Shape*
+start †JO
+	namespaceB: __main__.MuonIDPreprocessor/ones_like_10: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J§
+pkg.torch.onnx.fx_nodeâ%ones_like_10 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_26,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'ones_like_10']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 365, in forward
+    radius_ratio = sd(ECalR_uw, HCalR_uw)
+Û
+val_423
+val_467ones_like_10node_ones_like_10"ExpandJO
+	namespaceB: __main__.MuonIDPreprocessor/ones_like_10: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J§
+pkg.torch.onnx.fx_nodeâ%ones_like_10 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_26,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'ones_like_10']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 365, in forward
+    radius_ratio = sd(ECalR_uw, HCalR_uw)
+›
+eq_124
+ones_like_10
+slice_26where_20node_where_20"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_20: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jü
+pkg.torch.onnx.fx_nodeÑ%where_20 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_124, %ones_like_10, %slice_26), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_20']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 365, in forward
+    radius_ratio = sd(ECalR_uw, HCalR_uw)
+∑
+slice_22
+where_20div_10node_div_10"DivJB
+	namespace5: __main__.MuonIDPreprocessor/div_10: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%div_10 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_22, %where_20), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'div_10']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 365, in forward
+    radius_ratio = sd(ECalR_uw, HCalR_uw)
+Ú
+div_10val_469node_Shape_469"Shape*
+start †JQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_10: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_10 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_10,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_10']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 365, in forward
+    radius_ratio = sd(ECalR_uw, HCalR_uw)
+á
+scalar_tensor_default
+val_469zeros_like_10node_zeros_like_10"ExpandJQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_10: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_10 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_10,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_10']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 365, in forward
+    radius_ratio = sd(ECalR_uw, HCalR_uw)
+€
+eq_124
+zeros_like_10
+div_10where_21node_where_21"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_21: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jû
+pkg.torch.onnx.fx_nodeÉ%where_21 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_124, %zeros_like_10, %div_10), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_21']J¨
+pkg.torch.onnx.stack_traceçFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 365, in forward
+    radius_ratio = sd(ECalR_uw, HCalR_uw)
+“
+slice_28
+scalar_tensor_defaulteq_131node_eq_131"EqualJA
+	namespace4: __main__.MuonIDPreprocessor/eq_131: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jü
+pkg.torch.onnx.fx_nodeÑ%eq_131 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%slice_28, %scalar_tensor_default_11), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'eq_131']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 366, in forward
+    disp_ratio   = sd(ECalR_w, HCalR_w)
+Ó
+slice_28val_471node_Shape_471"Shape*
+start †JO
+	namespaceB: __main__.MuonIDPreprocessor/ones_like_11: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J§
+pkg.torch.onnx.fx_nodeâ%ones_like_11 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_28,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'ones_like_11']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 366, in forward
+    disp_ratio   = sd(ECalR_w, HCalR_w)
+Ò
+val_423
+val_471ones_like_11node_ones_like_11"ExpandJO
+	namespaceB: __main__.MuonIDPreprocessor/ones_like_11: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J§
+pkg.torch.onnx.fx_nodeâ%ones_like_11 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_28,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'ones_like_11']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 366, in forward
+    disp_ratio   = sd(ECalR_w, HCalR_w)
+€
+eq_131
+ones_like_11
+slice_28where_22node_where_22"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_22: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jü
+pkg.torch.onnx.fx_nodeÑ%where_22 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_131, %ones_like_11, %slice_28), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_22']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 366, in forward
+    disp_ratio   = sd(ECalR_w, HCalR_w)
+µ
+slice_24
+where_22div_11node_div_11"DivJB
+	namespace5: __main__.MuonIDPreprocessor/div_11: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%div_11 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_24, %where_22), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'div_11']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 366, in forward
+    disp_ratio   = sd(ECalR_w, HCalR_w)
+
+div_11val_473node_Shape_473"Shape*
+start †JQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_11: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_11 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_11,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_11']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 366, in forward
+    disp_ratio   = sd(ECalR_w, HCalR_w)
+Ö
+scalar_tensor_default
+val_473zeros_like_11node_zeros_like_11"ExpandJQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_11: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_11 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_11,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_11']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 366, in forward
+    disp_ratio   = sd(ECalR_w, HCalR_w)
+Ÿ
+eq_131
+zeros_like_11
+div_11where_23node_where_23"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_23: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jû
+pkg.torch.onnx.fx_nodeÉ%where_23 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_131, %zeros_like_11, %div_11), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_23']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 366, in forward
+    disp_ratio   = sd(ECalR_w, HCalR_w)
+≥
+sqrt
+where_10div_12node_div_12"DivJB
+	namespace5: __main__.MuonIDPreprocessor/div_12: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jã
+pkg.torch.onnx.fx_nodeq%div_12 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%sqrt, %where_24), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'div_12']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 367, in forward
+    trans_ratio  = sd(Ecal_trans, Hcal_trans)
+ˆ
+div_12val_477node_Shape_477"Shape*
+start †JQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_12: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_12 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_12,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_12']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 367, in forward
+    trans_ratio  = sd(Ecal_trans, Hcal_trans)
+ã
+scalar_tensor_default
+val_477zeros_like_12node_zeros_like_12"ExpandJQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_12: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_12 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_12,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_12']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 367, in forward
+    trans_ratio  = sd(Ecal_trans, Hcal_trans)
+ﬁ
+eq_85
+zeros_like_12
+div_12where_25node_where_25"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_25: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jû
+pkg.torch.onnx.fx_nodeÉ%where_25 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_138, %zeros_like_12, %div_12), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_25']J∞
+pkg.torch.onnx.stack_traceëFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 367, in forward
+    trans_ratio  = sd(Ecal_trans, Hcal_trans)
+œ
+where_9
+where_11sub_140node_sub_140"SubJC
+	namespace6: __main__.MuonIDPreprocessor/sub_140: aten.sub.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.sub.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%sub_140 : [num_users=1] = call_function[target=torch.ops.aten.sub.Tensor](args = (%where_9, %where_11), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'sub_140']J¡
+pkg.torch.onnx.stack_trace¢File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 370, in forward
+    LoverT_mismatch     = torch.abs(Ecal_LoverT - Hcal_LoverT)
+¥
+sub_140abs_1
+node_abs_1"AbsJB
+	namespace5: __main__.MuonIDPreprocessor/abs_1: aten.abs.defaultJU
+pkg.torch.onnx.class_hierarchy3['__main__.MuonIDPreprocessor', 'aten.abs.default']JÑ
+pkg.torch.onnx.fx_nodej%abs_1 : [num_users=1] = call_function[target=torch.ops.aten.abs.default](args = (%sub_140,), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'abs_1']J¡
+pkg.torch.onnx.stack_trace¢File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 370, in forward
+    LoverT_mismatch     = torch.abs(Ecal_LoverT - Hcal_LoverT)
+Ÿ
+where_13
+where_15sub_143node_sub_143"SubJC
+	namespace6: __main__.MuonIDPreprocessor/sub_143: aten.sub.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.sub.Tensor']Jê
+pkg.torch.onnx.fx_nodev%sub_143 : [num_users=1] = call_function[target=torch.ops.aten.sub.Tensor](args = (%where_13, %where_15), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'sub_143']J…
+pkg.torch.onnx.stack_trace™File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 371, in forward
+    sphericity_mismatch = torch.abs(Ecal_sphericity - Hcal_sphericity)
+º
+sub_143abs_2
+node_abs_2"AbsJB
+	namespace5: __main__.MuonIDPreprocessor/abs_2: aten.abs.defaultJU
+pkg.torch.onnx.class_hierarchy3['__main__.MuonIDPreprocessor', 'aten.abs.default']JÑ
+pkg.torch.onnx.fx_nodej%abs_2 : [num_users=1] = call_function[target=torch.ops.aten.abs.default](args = (%sub_143,), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'abs_2']J…
+pkg.torch.onnx.stack_trace™File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 371, in forward
+    sphericity_mismatch = torch.abs(Ecal_sphericity - Hcal_sphericity)
+Ã
+slice_24
+slice_28add_429node_add_429"AddJC
+	namespace6: __main__.MuonIDPreprocessor/add_429: aten.add.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.add.Tensor']Jê
+pkg.torch.onnx.fx_nodev%add_429 : [num_users=3] = call_function[target=torch.ops.aten.add.Tensor](args = (%slice_24, %slice_28), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'add_429']Jº
+pkg.torch.onnx.stack_traceùFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 373, in forward
+    Radial_HCal_Fraction = sd(HCalR_w, ECalR_w + HCalR_w)
+‚
+add_429
+scalar_tensor_defaulteq_157node_eq_157"EqualJA
+	namespace4: __main__.MuonIDPreprocessor/eq_157: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jû
+pkg.torch.onnx.fx_nodeÉ%eq_157 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%add_429, %scalar_tensor_default_14), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'eq_157']Jº
+pkg.torch.onnx.stack_traceùFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 373, in forward
+    Radial_HCal_Fraction = sd(HCalR_w, ECalR_w + HCalR_w)
+˛
+add_429val_483node_Shape_483"Shape*
+start †JO
+	namespaceB: __main__.MuonIDPreprocessor/ones_like_14: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J£
+pkg.torch.onnx.fx_nodeà%ones_like_14 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%add_429,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'ones_like_14']Jº
+pkg.torch.onnx.stack_traceùFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 373, in forward
+    Radial_HCal_Fraction = sd(HCalR_w, ECalR_w + HCalR_w)
+Ç
+val_423
+val_483ones_like_14node_ones_like_14"ExpandJO
+	namespaceB: __main__.MuonIDPreprocessor/ones_like_14: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J£
+pkg.torch.onnx.fx_nodeà%ones_like_14 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%add_429,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'ones_like_14']Jº
+pkg.torch.onnx.stack_traceùFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 373, in forward
+    Radial_HCal_Fraction = sd(HCalR_w, ECalR_w + HCalR_w)
+Î
+eq_157
+ones_like_14
+add_429where_28node_where_28"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_28: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jû
+pkg.torch.onnx.fx_nodeÉ%where_28 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_157, %ones_like_14, %add_429), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_28']Jº
+pkg.torch.onnx.stack_traceùFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 373, in forward
+    Radial_HCal_Fraction = sd(HCalR_w, ECalR_w + HCalR_w)
+«
+slice_28
+where_28div_14node_div_14"DivJB
+	namespace5: __main__.MuonIDPreprocessor/div_14: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%div_14 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_28, %where_28), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'div_14']Jº
+pkg.torch.onnx.stack_traceùFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 373, in forward
+    Radial_HCal_Fraction = sd(HCalR_w, ECalR_w + HCalR_w)
+Ç
+div_14val_485node_Shape_485"Shape*
+start †JQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_14: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_14 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_14,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_14']Jº
+pkg.torch.onnx.stack_traceùFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 373, in forward
+    Radial_HCal_Fraction = sd(HCalR_w, ECalR_w + HCalR_w)
+ó
+scalar_tensor_default
+val_485zeros_like_14node_zeros_like_14"ExpandJQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_14: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_14 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_14,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_14']Jº
+pkg.torch.onnx.stack_traceùFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 373, in forward
+    Radial_HCal_Fraction = sd(HCalR_w, ECalR_w + HCalR_w)
+Î
+eq_157
+zeros_like_14
+div_14where_29node_where_29"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_29: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jû
+pkg.torch.onnx.fx_nodeÉ%where_29 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_157, %zeros_like_14, %div_14), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_29']Jº
+pkg.torch.onnx.stack_traceùFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 373, in forward
+    Radial_HCal_Fraction = sd(HCalR_w, ECalR_w + HCalR_w)
+Ú
+slice_30
+slice_32sub_153node_sub_153"SubJC
+	namespace6: __main__.MuonIDPreprocessor/sub_153: aten.sub.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.sub.Tensor']Jê
+pkg.torch.onnx.fx_nodev%sub_153 : [num_users=1] = call_function[target=torch.ops.aten.sub.Tensor](args = (%slice_30, %slice_32), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'sub_153']J‚
+pkg.torch.onnx.stack_trace√File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 375, in forward
+    EnergyConcentration_mismatch = torch.abs(ECalEnergyConcentration - HCalEnergyConcentration)
+’
+sub_153abs_3
+node_abs_3"AbsJB
+	namespace5: __main__.MuonIDPreprocessor/abs_3: aten.abs.defaultJU
+pkg.torch.onnx.class_hierarchy3['__main__.MuonIDPreprocessor', 'aten.abs.default']JÑ
+pkg.torch.onnx.fx_nodej%abs_3 : [num_users=1] = call_function[target=torch.ops.aten.abs.default](args = (%sub_153,), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'abs_3']J‚
+pkg.torch.onnx.stack_trace√File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 375, in forward
+    EnergyConcentration_mismatch = torch.abs(ECalEnergyConcentration - HCalEnergyConcentration)
+‡
+slice_34
+slice_36sub_156node_sub_156"SubJC
+	namespace6: __main__.MuonIDPreprocessor/sub_156: aten.sub.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.sub.Tensor']Jê
+pkg.torch.onnx.fx_nodev%sub_156 : [num_users=1] = call_function[target=torch.ops.aten.sub.Tensor](args = (%slice_34, %slice_36), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'sub_156']J–
+pkg.torch.onnx.stack_trace±File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 376, in forward
+    MaxHitFrac_mismatch          = torch.abs(ECalMaxHitFrac - HCalMaxHitFrac)
+√
+sub_156abs_4
+node_abs_4"AbsJB
+	namespace5: __main__.MuonIDPreprocessor/abs_4: aten.abs.defaultJU
+pkg.torch.onnx.class_hierarchy3['__main__.MuonIDPreprocessor', 'aten.abs.default']JÑ
+pkg.torch.onnx.fx_nodej%abs_4 : [num_users=1] = call_function[target=torch.ops.aten.abs.default](args = (%sub_156,), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'abs_4']J–
+pkg.torch.onnx.stack_trace±File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 376, in forward
+    MaxHitFrac_mismatch          = torch.abs(ECalMaxHitFrac - HCalMaxHitFrac)
+Ù
+slice_40
+scalar_tensor_defaulteq_168node_eq_168"EqualJA
+	namespace4: __main__.MuonIDPreprocessor/eq_168: aten.eq.TensorJS
+pkg.torch.onnx.class_hierarchy1['__main__.MuonIDPreprocessor', 'aten.eq.Tensor']Jü
+pkg.torch.onnx.fx_nodeÑ%eq_168 : [num_users=2] = call_function[target=torch.ops.aten.eq.Tensor](args = (%slice_40, %scalar_tensor_default_15), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'eq_168']JÃ
+pkg.torch.onnx.stack_trace≠File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 377, in forward
+    EnergyStdDev_ratio           = sd(ECalEnergyStdDev, HCalEnergyStdDev)
+ê
+slice_40val_487node_Shape_487"Shape*
+start †JO
+	namespaceB: __main__.MuonIDPreprocessor/ones_like_15: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J§
+pkg.torch.onnx.fx_nodeâ%ones_like_15 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_40,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'ones_like_15']JÃ
+pkg.torch.onnx.stack_trace≠File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 377, in forward
+    EnergyStdDev_ratio           = sd(ECalEnergyStdDev, HCalEnergyStdDev)
+ì
+val_423
+val_487ones_like_15node_ones_like_15"ExpandJO
+	namespaceB: __main__.MuonIDPreprocessor/ones_like_15: aten.ones_like.defaultJ[
+pkg.torch.onnx.class_hierarchy9['__main__.MuonIDPreprocessor', 'aten.ones_like.default']J§
+pkg.torch.onnx.fx_nodeâ%ones_like_15 : [num_users=1] = call_function[target=torch.ops.aten.ones_like.default](args = (%slice_40,), kwargs = {pin_memory: False})J2
+pkg.torch.onnx.name_scopes['', 'ones_like_15']JÃ
+pkg.torch.onnx.stack_trace≠File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 377, in forward
+    EnergyStdDev_ratio           = sd(ECalEnergyStdDev, HCalEnergyStdDev)
+˝
+eq_168
+ones_like_15
+slice_40where_30node_where_30"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_30: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jü
+pkg.torch.onnx.fx_nodeÑ%where_30 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_168, %ones_like_15, %slice_40), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_30']JÃ
+pkg.torch.onnx.stack_trace≠File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 377, in forward
+    EnergyStdDev_ratio           = sd(ECalEnergyStdDev, HCalEnergyStdDev)
+◊
+slice_38
+where_30div_15node_div_15"DivJB
+	namespace5: __main__.MuonIDPreprocessor/div_15: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jè
+pkg.torch.onnx.fx_nodeu%div_15 : [num_users=2] = call_function[target=torch.ops.aten.div.Tensor](args = (%slice_38, %where_30), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'div_15']JÃ
+pkg.torch.onnx.stack_trace≠File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 377, in forward
+    EnergyStdDev_ratio           = sd(ECalEnergyStdDev, HCalEnergyStdDev)
+í
+div_15val_489node_Shape_489"Shape*
+start †JQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_15: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_15 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_15,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_15']JÃ
+pkg.torch.onnx.stack_trace≠File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 377, in forward
+    EnergyStdDev_ratio           = sd(ECalEnergyStdDev, HCalEnergyStdDev)
+ß
+scalar_tensor_default
+val_489zeros_like_15node_zeros_like_15"ExpandJQ
+	namespaceD: __main__.MuonIDPreprocessor/zeros_like_15: aten.zeros_like.defaultJ\
+pkg.torch.onnx.class_hierarchy:['__main__.MuonIDPreprocessor', 'aten.zeros_like.default']J§
+pkg.torch.onnx.fx_nodeâ%zeros_like_15 : [num_users=1] = call_function[target=torch.ops.aten.zeros_like.default](args = (%div_15,), kwargs = {pin_memory: False})J3
+pkg.torch.onnx.name_scopes['', 'zeros_like_15']JÃ
+pkg.torch.onnx.stack_trace≠File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 377, in forward
+    EnergyStdDev_ratio           = sd(ECalEnergyStdDev, HCalEnergyStdDev)
+˚
+eq_168
+zeros_like_15
+div_15where_31node_where_31"WhereJD
+	namespace7: __main__.MuonIDPreprocessor/where_31: aten.where.selfJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.where.self']Jû
+pkg.torch.onnx.fx_nodeÉ%where_31 : [num_users=1] = call_function[target=torch.ops.aten.where.self](args = (%eq_168, %zeros_like_15, %div_15), kwargs = {})J.
+pkg.torch.onnx.name_scopes['', 'where_31']JÃ
+pkg.torch.onnx.stack_trace≠File "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 377, in forward
+    EnergyStdDev_ratio           = sd(ECalEnergyStdDev, HCalEnergyStdDev)
+ñ
+sqrt
+sqrt_1
+slice_24
+slice_28
+where_9
+where_11
+where_13
+where_15
+where_17
+where_19
+where_21
+where_23
+where_25
+where_23
+abs_1
+abs_2
+where_29
+abs_3
+abs_4
+where_31cat_1
+node_cat_1"Concat*
+axis†JB
+	namespace5: __main__.MuonIDPreprocessor/cat_1: aten.cat.defaultJU
+pkg.torch.onnx.class_hierarchy3['__main__.MuonIDPreprocessor', 'aten.cat.default']J»
+pkg.torch.onnx.fx_node≠%cat_1 : [num_users=1] = call_function[target=torch.ops.aten.cat.default](args = ([%sqrt, %sqrt_1, %slice_24, %slice_28, %where_9, %where_11, %where_13, %where_15, %where_17, %where_19, %where_21, %where_23, %where_25, %where_27, %abs_1, %abs_2, %where_29, %abs_3, %abs_4, %where_31], 1), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'cat_1']J£
+pkg.torch.onnx.stack_traceÑFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 379, in forward
+    shape_features = torch.cat([
+Ã
+cat
+cat_1cat_2
+node_cat_2"Concat*
+axis†JB
+	namespace5: __main__.MuonIDPreprocessor/cat_2: aten.cat.defaultJU
+pkg.torch.onnx.class_hierarchy3['__main__.MuonIDPreprocessor', 'aten.cat.default']Jå
+pkg.torch.onnx.fx_noder%cat_2 : [num_users=1] = call_function[target=torch.ops.aten.cat.default](args = ([%cat, %cat_1], 1), kwargs = {})J+
+pkg.torch.onnx.name_scopes['', 'cat_2']Jæ
+pkg.torch.onnx.stack_traceüFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 388, in forward
+    X = torch.cat([scalar_features, shape_features], dim=1)
+Æ
+cat_2
+meansub_167node_sub_167"SubJC
+	namespace6: __main__.MuonIDPreprocessor/sub_167: aten.sub.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.sub.Tensor']Jã
+pkg.torch.onnx.fx_nodeq%sub_167 : [num_users=1] = call_function[target=torch.ops.aten.sub.Tensor](args = (%cat_2, %b_mean), kwargs = {})J-
+pkg.torch.onnx.name_scopes['', 'sub_167']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 390, in forward
+    return (X - self.mean) / self.scale
+∏
+sub_167
+scalefeatures_scalednode_div_16"DivJB
+	namespace5: __main__.MuonIDPreprocessor/div_16: aten.div.TensorJT
+pkg.torch.onnx.class_hierarchy2['__main__.MuonIDPreprocessor', 'aten.div.Tensor']Jç
+pkg.torch.onnx.fx_nodes%div_16 : [num_users=1] = call_function[target=torch.ops.aten.div.Tensor](args = (%sub_167, %b_scale), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'div_16']J™
+pkg.torch.onnx.stack_traceãFile "/home/mblaut/Epic-analysis/Identification/CalorimetryHits/PyXGBoost.py", line 390, in forward
+    return (X - self.mean) / self.scale
+main_graph*Ì8BmeanJ‡å."?˛Ã,@]˝@Ub6A\r=Ójå>%∑Ë<é6{>…ùØ=Ø:==£¥\B®)‘>ü©J>xßÎBáúÈ=MΩ>Æ∆˘<ºSU>ΩÔ®=ù0ç>7)ÜAê_A÷?—<S=ù^Bq¨˙Avø§=l‘>éX+A‡•>f§>Á÷^?ò˚∏?ú9w?◊3Ñ>„πÉ?«7◊<Õûº=ê_Aq¨˙AØ[D¢˘DÎ
+u>àB?‚∑˛Ωö*•æm•FEñáÑEhpÄ>ñáÑEZ™hD*3A?d&?,Tò>⁄æ>p†>*Ó8BscaleJ‡ÍäÊ?vÅ@·îπAF JA∑˚>-P®>nÍZ=ÇR4> ·?ÅoF>ºfC3Ÿå?uÇû>40ÇCúú]>ÿdN>Ô†…=i£ú>)6>,˜K>ËÖ1B!#!B◊P>‘î>ÿX∑BÔqêBB≠¸=ÁN>-Ñ∞@rø~?J†Ü>J†Ü>·aA<AJ?ÚÜ*?¸Õ˜=d#ﬂ=!#!BÔqêBØ¬DŒrÁD”Q@ÍJA?„ä>3É∑>≈94GÕNäGB•?ÕNäG∂≈E˚RQARs‚>`ÜJ>f¢I>Œá3@*Bval_14J        *Bval_18J       *Bval_39J       *Bval_60J       *Bval_81J       *Bval_102J       *Bval_123J       *Bval_141J       *Bval_145J       *Bval_166J       *Bval_184J       *Bval_188J       *Bval_209J       *Bval_227J       *Bval_231J       *Bval_272J       *Bval_310J       *Bval_314J       *Bval_352J       *Bval_356J       *Bval_377J       *Bval_398J       *Bscalar_tensor_defaultJ    *Bval_423J  Ä?Z–
+raw_features
+	
+N
+"=
+/pkg.torch.export.graph_signature.InputSpec.kind
+USER_INPUT"=
+5pkg.torch.export.graph_signature.InputSpec.persistentNone"1
+!pkg.torch.onnx.original_node_nameraw_featuresbê
+features_scaled
+	
+N
+8"?
+0pkg.torch.export.graph_signature.OutputSpec.kindUSER_OUTPUT"+
+!pkg.torch.onnx.original_node_namediv_16jπ
+mean
+
+
+8"9
+/pkg.torch.export.graph_signature.InputSpec.kindBUFFER"=
+5pkg.torch.export.graph_signature.InputSpec.persistentTrue"+
+!pkg.torch.onnx.original_node_nameb_meanjª
+scale
+
+
+8"9
+/pkg.torch.export.graph_signature.InputSpec.kindBUFFER"=
+5pkg.torch.export.graph_signature.InputSpec.persistentTrue",
+!pkg.torch.onnx.original_node_nameb_scalej[
+val_14
+
+
+"E
+$pkg.onnxscript.optimizer.folded_from['val_0', 'val_12', 'val_13']j\
+val_18
+
+
+"F
+$pkg.onnxscript.optimizer.folded_from['val_15', 'val_16', 'val_17']j\
+val_39
+
+
+"F
+$pkg.onnxscript.optimizer.folded_from['val_36', 'val_37', 'val_38']j\
+val_60
+
+
+"F
+$pkg.onnxscript.optimizer.folded_from['val_57', 'val_58', 'val_59']j\
+val_81
+
+
+"F
+$pkg.onnxscript.optimizer.folded_from['val_78', 'val_79', 'val_80']j_
+val_102
+
+
+"H
+$pkg.onnxscript.optimizer.folded_from ['val_100', 'val_101', 'val_99']j`
+val_123
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_120', 'val_121', 'val_122']j`
+val_141
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_138', 'val_139', 'val_140']j`
+val_145
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_142', 'val_143', 'val_144']j`
+val_166
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_163', 'val_164', 'val_165']j`
+val_184
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_181', 'val_182', 'val_183']j`
+val_188
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_185', 'val_186', 'val_187']j`
+val_209
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_206', 'val_207', 'val_208']j`
+val_227
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_224', 'val_225', 'val_226']j`
+val_231
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_228', 'val_229', 'val_230']j`
+val_272
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_269', 'val_270', 'val_271']j`
+val_310
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_307', 'val_308', 'val_309']j`
+val_314
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_311', 'val_312', 'val_313']j`
+val_352
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_349', 'val_350', 'val_351']j`
+val_356
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_353', 'val_354', 'val_355']j`
+val_377
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_374', 'val_375', 'val_376']j`
+val_398
+
+
+"I
+$pkg.onnxscript.optimizer.folded_from!['val_395', 'val_396', 'val_397']jR
+scalar_tensor_default
+ "1
+$pkg.onnxscript.optimizer.folded_from	['val_0']jE
+val_423
+ "2
+$pkg.onnxscript.optimizer.folded_from
+['val_15']j
+slice_2
+	
+N
+j
+slice_4
+	
+N
+j
+slice_6
+	
+N
+j
+slice_8
+	
+N
+j
+slice_10
+	
+N
+j
+slice_12
+	
+N
+j
+slice_14
+	
+N
+j
+slice_16
+	
+N
+j
+slice_18
+	
+N
+j
+slice_20
+	
+N
+j
+slice_22
+	
+N
+j
+slice_24
+	
+N
+j
+slice_26
+	
+N
+j
+slice_28
+	
+N
+j
+slice_30
+	
+N
+j
+slice_32
+	
+N
+j
+slice_34
+	
+N
+j
+slice_36
+	
+N
+j
+slice_38
+	
+N
+j
+slice_40
+	
+N
+j
+add_120
+	
+N
+j
+eq_41
+		
+N
+j
+val_424
+
+
+j
+	ones_like
+	
+N
+j
+where
+	
+N
+j
+div
+	
+N
+j
+val_426
+
+
+j
+
+zeros_like
+	
+N
+j
+where_1
+	
+N
+j
+div_1
+	
+N
+j
+val_430
+
+
+j
+zeros_like_1
+	
+N
+j
+where_3
+	
+N
+j
+eq_55
+		
+N
+j
+val_432
+
+
+j
+ones_like_2
+	
+N
+j
+where_4
+	
+N
+j
+div_2
+	
+N
+j
+val_434
+
+
+j
+zeros_like_2
+	
+N
+j
+where_5
+	
+N
+j
+eq_62
+		
+N
+j
+val_436
+
+
+j
+ones_like_3
+	
+N
+j
+where_6
+	
+N
+j
+div_3
+	
+N
+j
+val_438
+
+
+j
+zeros_like_3
+	
+N
+j
+where_7
+	
+N
+j
+tmp
+	
+N
+j
+log1p
+	
+N
+j
+tmp_2
+	
+N
+j
+log1p_1
+	
+N
+j
+cat
+	
+N
+$j
+mul_105
+	
+N
+j
+clamp
+	
+N
+j
+sqrt
+	
+N
+j
+mul_109
+	
+N
+j
+clamp_1
+	
+N
+j
+sqrt_1
+	
+N
+j
+eq_78
+		
+N
+j
+val_443
+
+
+j
+ones_like_4
+	
+N
+j
+where_8
+	
+N
+j
+div_4
+	
+N
+j
+val_445
+
+
+j
+zeros_like_4
+	
+N
+j
+where_9
+	
+N
+j
+eq_85
+		
+N
+j
+val_447
+
+
+j
+ones_like_5
+	
+N
+j
+where_10
+	
+N
+j
+div_5
+	
+N
+j
+val_449
+
+
+j
+zeros_like_5
+	
+N
+j
+where_11
+	
+N
+j
+eq_92
+		
+N
+j
+val_451
+
+
+j
+ones_like_6
+	
+N
+j
+where_12
+	
+N
+j
+div_6
+	
+N
+j
+val_453
+
+
+j
+zeros_like_6
+	
+N
+j
+where_13
+	
+N
+j
+eq_99
+		
+N
+j
+val_455
+
+
+j
+ones_like_7
+	
+N
+j
+where_14
+	
+N
+j
+div_7
+	
+N
+j
+val_457
+
+
+j
+zeros_like_7
+	
+N
+j
+where_15
+	
+N
+j
+sub_98
+	
+N
+j
+add_298
+	
+N
+j
+eq_108
+		
+N
+j
+val_459
+
+
+j
+ones_like_8
+	
+N
+j
+where_16
+	
+N
+j
+div_8
+	
+N
+j
+val_461
+
+
+j
+zeros_like_8
+	
+N
+j
+where_17
+	
+N
+j
+sub_107
+	
+N
+j
+add_323
+	
+N
+j
+eq_117
+		
+N
+j
+val_463
+
+
+j
+ones_like_9
+	
+N
+j
+where_18
+	
+N
+j
+div_9
+	
+N
+j
+val_465
+
+
+j
+zeros_like_9
+	
+N
+j
+where_19
+	
+N
+j
+eq_124
+		
+N
+j
+val_467
+
+
+j
+ones_like_10
+	
+N
+j
+where_20
+	
+N
+j
+div_10
+	
+N
+j
+val_469
+
+
+j 
+zeros_like_10
+	
+N
+j
+where_21
+	
+N
+j
+eq_131
+		
+N
+j
+val_471
+
+
+j
+ones_like_11
+	
+N
+j
+where_22
+	
+N
+j
+div_11
+	
+N
+j
+val_473
+
+
+j 
+zeros_like_11
+	
+N
+j
+where_23
+	
+N
+j
+div_12
+	
+N
+j
+val_477
+
+
+j 
+zeros_like_12
+	
+N
+j
+where_25
+	
+N
+j
+sub_140
+	
+N
+j
+abs_1
+	
+N
+j
+sub_143
+	
+N
+j
+abs_2
+	
+N
+j
+add_429
+	
+N
+j
+eq_157
+		
+N
+j
+val_483
+
+
+j
+ones_like_14
+	
+N
+j
+where_28
+	
+N
+j
+div_14
+	
+N
+j
+val_485
+
+
+j 
+zeros_like_14
+	
+N
+j
+where_29
+	
+N
+j
+sub_153
+	
+N
+j
+abs_3
+	
+N
+j
+sub_156
+	
+N
+j
+abs_4
+	
+N
+j
+eq_168
+		
+N
+j
+val_487
+
+
+j
+ones_like_15
+	
+N
+j
+where_30
+	
+N
+j
+div_15
+	
+N
+j
+val_489
+
+
+j 
+zeros_like_15
+	
+N
+j
+where_31
+	
+N
+j
+cat_1
+	
+N
+j
+cat_2
+	
+N
+8j
+sub_167
+	
+N
+8Ç”
+0pkg.torch.export.ExportedProgram.graph_signatureû
+# inputs
+b_mean: BUFFER target='mean' persistent=True
+b_scale: BUFFER target='scale' persistent=True
+raw_features: USER_INPUT
+
+# outputs
+div_16: USER_OUTPUT
+ÇJ
+2pkg.torch.export.ExportedProgram.range_constraints{s10: VR[0, int_oo]}B
+ 
