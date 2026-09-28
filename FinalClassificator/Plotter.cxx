@@ -16,13 +16,13 @@
 using namespace std;
 
 // Helper for drawing the ePIC label
-void DrawEPICLabel() {
+void DrawEPICLabel(double x = 0.7, double y = 0.84, double textSize = 0.040) {
     TLatex latex;
     latex.SetNDC();
-    latex.SetTextSize(0.035);
+    latex.SetTextSize(textSize);
     latex.SetTextFont(42);
-    latex.DrawLatex(0.18, 0.84, "#bf{ePIC simulation}");
-    latex.DrawLatex(0.18, 0.79, "single particle");
+    latex.DrawLatex(x, y, "#bf{ePIC simulation}");
+    latex.DrawLatex(x, y - textSize * 1.25, "single particle");
 }
 
 void Plotter() {
@@ -88,7 +88,7 @@ void Plotter() {
         h_muon->Draw("HIST");
         h_pion->Draw("HIST SAME");
 
-        TLegend* leg = new TLegend(0.68, 0.75, 0.88, 0.88);
+        TLegend* leg = new TLegend(0.18, 0.75, 0.38, 0.88);
         leg->SetBorderSize(1);
         leg->SetFillColor(kWhite);
         leg->AddEntry(h_muon, "Muon", "l");
@@ -119,16 +119,16 @@ void Plotter() {
     };
 
     vector<EffConfig> effConfigs = {
-        {"h_Muon_Efficiency_vs_Pt",            "Muon Efficiency vs p_{T};p_{T} [GeV/c];Efficiency",     0.75, 1.05},
-        {"h_Muon_Efficiency_vs_P",             "Muon Efficiency vs p;p [GeV/c];Efficiency",              0.75, 1.05},
-        {"h_Muon_Efficiency_vs_Eta",           "Muon Efficiency vs #eta;#eta;Efficiency",                 0.75, 1.05},
-        {"h_Pion_Rejection_vs_Pt",             "Pion Rejection vs p_{T};p_{T} [GeV/c];Rejection Efficiency",   0.75, 1.05},
+        {"h_Muon_Efficiency_vs_Pt",            "Muon Efficiency vs p_{T};p_{T} [GeV/c];Efficiency",     0.9, 1.02},
+        {"h_Muon_Efficiency_vs_P",             "Muon Efficiency vs p;p [GeV/c];Efficiency",              0.9, 1.02},
+        {"h_Muon_Efficiency_vs_Eta",           "Muon Efficiency vs #eta;#eta;Efficiency",                 0.9, 1.02},
+        {"h_Pion_Rejection_vs_Pt",             "Pion Rejection vs p_{T};p_{T} [GeV/c];Rejection Efficiency",   0.85, 1.02},
         {"h_Pion_Rejection_vs_P",              "Pion Rejection vs p;p [GeV/c];Rejection Efficiency",          0.75, 1.05},
-        {"h_Pion_Rejection_vs_Eta",            "Pion Rejection vs #eta;#eta;Rejection Efficiency",             0.75, 1.05},
-        {"h_Muon_Efficiency_vs_P_LowP",        "Muon Efficiency vs p (Low p);p [GeV/c];Efficiency",        0.75, 1.05},
-        {"h_Muon_Efficiency_vs_P_HighP",       "Muon Efficiency vs p (High p);p [GeV/c];Efficiency",       0.75, 1.05},
-        {"h_Pion_Rejection_vs_P_LowP",         "Pion Rejection vs p (Low p);p [GeV/c];Rejection Efficiency",    0.5, 1.05},
-        {"h_Pion_Rejection_vs_P_HighP",        "Pion Rejection vs p (High p);p [GeV/c];Rejection Efficiency",   0.75, 1.05},
+        {"h_Pion_Rejection_vs_Eta",            "Pion Rejection vs #eta;#eta;Rejection Efficiency",             0.9, 1.02},
+        {"h_Muon_Efficiency_vs_P_LowP",        "Muon Efficiency vs p (Low p);p [GeV/c];Efficiency",        0.85, 1.02},
+        {"h_Muon_Efficiency_vs_P_HighP",       "Muon Efficiency vs p (High p);p [GeV/c];Efficiency",       0.9, 1.02},
+        {"h_Pion_Rejection_vs_P_LowP",         "Pion Rejection vs p (Low p);p [GeV/c];Rejection Efficiency",    0.6, 1.05},
+        {"h_Pion_Rejection_vs_P_HighP",        "Pion Rejection vs p (High p);p [GeV/c];Rejection Efficiency",   0.85, 1.02},
         {"h_Muon_Efficiency_vs_P_LowP_withToF", "Muon Efficiency vs p (with ToF);p [GeV/c];Efficiency",    0.75, 1.05},
         {"h_Muon_Efficiency_vs_P_LowP_noToF",   "Muon Efficiency vs p (no ToF);p [GeV/c];Efficiency",      0.5, 1.05}
     };
@@ -149,7 +149,21 @@ void Plotter() {
         h_eff->SetLineColor(kBlue + 2);
         h_eff->SetMarkerColor(kBlue + 2);
         h_eff->SetMarkerStyle(20);
-        h_eff->SetMarkerSize(0.9);
+        h_eff->SetMarkerSize(1.2);
+        
+        // Osie
+        h_eff->GetXaxis()->SetTitleSize(0.050);
+        h_eff->GetYaxis()->SetTitleSize(0.050);
+        h_eff->GetXaxis()->SetTitleOffset(1.15);
+        h_eff->GetYaxis()->SetTitleOffset(1.30);
+
+        h_eff->GetXaxis()->SetLabelSize(0.045);
+        h_eff->GetYaxis()->SetLabelSize(0.045);
+        
+        h_eff->GetXaxis()->SetTitleFont(42);
+        h_eff->GetYaxis()->SetTitleFont(42);
+        h_eff->GetXaxis()->SetLabelFont(42);
+        h_eff->GetYaxis()->SetLabelFont(42);
         
         // Set Y limits directly for TH1F
         h_eff->SetMinimum(cfg.yMin);

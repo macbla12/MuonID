@@ -731,7 +731,7 @@ void TestingMuonID()
                 double trackPhi = Partic.Phi();
 
                 if (trackEta >= 1 && trackEta <= 1.3) continue;
-                if (trackEta <= -1.25) continue;
+                if (trackEta <= -1.0) continue;
 
                 if (particle >= trackAssocs.size()) continue;
                 const auto simPart = trackAssocs[particle].getSim();

@@ -104,6 +104,8 @@ void PlotAllFeatures() {
 
         string hMuonName = key->GetName();
         string hPionName = hMuonName;
+        TString name = hMuonName;
+
 
         // Replace '_Muons' with '_Pions' in the pion histogram name
         size_t pos = hPionName.find("_Muons");
@@ -156,7 +158,12 @@ void PlotAllFeatures() {
         // Create canvas
         TCanvas* c = new TCanvas(("c_" + hMuonName).c_str(), hMuonName.c_str(), 1000, 800);
         c->SetGrid();
-        gPad->SetLogy(0);
+        if (name.EndsWith("_h_SpreadR") || name.EndsWith("_h_R_Disp") || name.EndsWith("_h_R_DispWeighted")) {
+            h_muon->SetMaximum(maxVal * 10.0); // Increase the maximum for log scale
+            h_muon->SetMinimum(0.001);
+            gPad->SetLogy(1);
+        }
+        else gPad->SetLogy(0);
 
         // Set a clean title by removing the "_Muons" suffix
         string baseTitle = hMuonName;
@@ -189,7 +196,7 @@ void PlotAllFeatures() {
         h_pion->Draw("HIST SAME");
 
         // Legend and labels
-        TLegend* leg = new TLegend(0.45, 0.75, 0.69, 0.91);
+        TLegend* leg = new TLegend(0.60, 0.70, 0.85, 0.86);
         leg->SetBorderSize(1);
         leg->SetFillColor(kWhite);
         leg->SetTextSize(0.040);

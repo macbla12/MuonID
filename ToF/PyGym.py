@@ -1109,4 +1109,86 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
         pdf.savefig(fig, bbox_inches='tight')
         plt.close()
 
+        # =============================================================================
+        # Page D: Engineered Calorimeter Comparison Features — po jednej stronie
+        # na cechę, ten sam "duży/czytelny" styl co strony A-C powyżej.
+        #
+        # UWAGA: ta wersja pliku (engineer_scalar_features / engineer_shape_features)
+        # nie ma ECalHasHit/HCalHasHit ani AvgHitEnergy_ratio/R_DispWeighted_ratio —
+        # to nazwy z innej wersji pipeline'u. Tu używamy odpowiedników, które
+        # faktycznie istnieją w X: HitRatio (zamiast HasHit binaries) i disp_ratio
+        # (dokładny odpowiednik R_DR,w = ECalR_DispWeighted / HCalR_DispWeighted).
+        # =============================================================================
+        calo_engineered_features = [
+            ('ECalFrac', r'$f_{ECal}$', False),
+            ('HCalFrac', r'$f_{HCal}$', False),
+            ('EoverP_ratio', r'$R_{E/p}$', False),
+            ('logECal', r'$E^{log}_{ECal}$', False),
+            ('logHCal', r'$E^{log}_{HCal}$', False),
+            ('EnergyStdDev_ratio', r'$R_{\sigma_E}$', False),
+            ('EnergyConcentration_mismatch', r'$S_E$', False),
+            ('disp_ratio', r'$R_{D_{R,w}}$', False),
+            ('MaxHitFrac_mismatch', r'$\Delta_{maxhit} $', False),
+            ('HitRatio', r'$R_{hit}$', False),
+        ]
+    
+        # Zabezpieczenie: gdyby nazwa kolumny nadal się nie zgadzała (np. w kolejnej
+        # wersji pipeline'u), pomiń ją zamiast wywalać cały skrypt wyjątkiem.
+        missing_feats = [f for f, _, _ in calo_engineered_features if f not in X.columns]
+        if missing_feats:
+            print(f"  [Page D] WARNING - missing from X, skipping: {missing_feats}")
+    
+        for feat_name, feat_label, is_binary in calo_engineered_features:
+            if feat_name not in X.columns:
+                continue
+    
+            sig_vals = X.loc[y == 1, feat_name]
+            bkg_vals = X.loc[y == 0, feat_name]
+    
+            fig, ax = plt.subplots(figsize=(16, 11))
+    
+            if is_binary:
+                frac_sig = [np.mean(sig_vals == 0), np.mean(sig_vals == 1)]
+                frac_bkg = [np.mean(bkg_vals == 0), np.mean(bkg_vals == 1)]
+                x_pos = np.arange(2)
+                width = 0.35
+                ax.bar(x_pos - width/2, frac_bkg, width, color=BKG_COLOR,
+                        edgecolor='black', linewidth=1.2,
+                        label=f'Pions')
+                ax.bar(x_pos + width/2, frac_sig, width, color=SIG_COLOR,
+                        edgecolor='black', linewidth=1.2,
+                        label=f'Muons')
+                ax.set_yscale('log')
+                ax.set_xticks(x_pos)
+                ax.set_xticklabels(['NO HIT (0)', 'HIT (1)'], fontsize=22, fontweight='bold')
+                ax.set_ylabel('FRACTION OF EVENTS', fontsize=24, fontweight='bold', labelpad=15)
+                for i, (fb, fs) in enumerate(zip(frac_bkg, frac_sig)):
+                    ax.text(i - width/2, fb + 0.01, f'{fb:.2%}', ha='center', fontsize=16, fontweight='bold')
+                    ax.text(i + width/2, fs + 0.01, f'{fs:.2%}', ha='center', fontsize=16, fontweight='bold')
+            else:
+                lo = np.percentile(pd.concat([sig_vals, bkg_vals]), 1)
+                hi = np.percentile(pd.concat([sig_vals, bkg_vals]), 99)
+                bins = np.linspace(lo, hi, 60)
+                ax.hist(bkg_vals.clip(lo, hi), bins=bins, density=True, alpha=0.55,
+                        color=BKG_COLOR, hatch='//', edgecolor=BKG_COLOR, linewidth=1.5,
+                        label=f'Pions')
+                ax.hist(sig_vals.clip(lo, hi), bins=bins, density=True, alpha=0.65,
+                        color=SIG_COLOR, edgecolor='black', linewidth=0.8,
+                        label=f'Muons')
+                ax.set_yscale('log')
+                ax.set_xlabel(feat_label, fontsize=26, fontweight='bold', labelpad=15)
+                ax.set_ylabel('NORMALIZED COUNTS', fontsize=22, fontweight='bold', labelpad=15)
+    
+            ax.set_title(f'ENGINEERED CALORIMETER FEATURE\n{feat_name}',
+                            fontsize=28, fontweight='bold', pad=25)
+            ax.tick_params(axis='both', labelsize=20, width=1.5, length=8)
+            ax.legend(fontsize=20, loc='best', frameon=True, framealpha=0.9)
+            ax.grid(True, alpha=0.4, linewidth=1.0)
+            for spine in ax.spines.values():
+                spine.set_linewidth(1.5)
+    
+            plt.tight_layout()
+            pdf.savefig(fig, bbox_inches='tight')
+            plt.close()
+
 print("Done: training on Calo+ToF features, muon vs pion, PDF report and SHAP diagnostics.")

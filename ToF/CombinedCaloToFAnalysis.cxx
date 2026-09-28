@@ -74,7 +74,7 @@ struct HistSet
     TH1F *DeltaEta, *DeltaPhi;
     TH2F *hHitEtaR, *hHitPhiR, *hHitEtaPhi;
 
-    TH1F *h_EoverP, *h_AvgHitEnergy, *h_NHits;
+    TH1F *h_Energy , *h_EoverP, *h_AvgHitEnergy, *h_NHits;
     TH1F *h_SpreadPhi, *h_SpreadEta, *h_SpreadR;
     TH1F *h_MaxHitFrac, *h_EnergyStdDev;
 
@@ -250,7 +250,7 @@ TrackFeatures ComputeTrackFeatures(const TrackCalHits &hits, double trackP, Hist
     double spreadPhi = hits.phiMax - hits.phiMin;
     double spreadEta = hits.etaMax - hits.etaMin;
     double spreadR   = hits.Rmax - hits.Rmin;
-
+    h.h_Energy->Fill(sumEnergy);
     h.h_EoverP->Fill(sumEnergy / trackP);
     h.h_SpreadPhi->Fill(spreadPhi);
     h.h_SpreadEta->Fill(spreadEta);
@@ -320,20 +320,21 @@ HistSet MakeHistSet(const string &prefix)
     h.hHitPhiR   = new TH2F((prefix + "_hHitPhiR").c_str(), (prefix + " Hit map: #phi vs R;#phi [rad];R [mm]").c_str(), 180, -TMath::Pi(), TMath::Pi(), 200, 0, 3200);
     h.hHitEtaPhi = new TH2F((prefix + "_hHitEtaPhi").c_str(), (prefix + " Hit map: #eta vs #phi;#eta;#phi [rad]").c_str(), 120, -3.5, 3.5, 180, -TMath::Pi(), TMath::Pi());
 
-    h.h_EoverP       = new TH1F((prefix + "_h_EoverP").c_str(), (prefix + " E/p_{track};E/p;Counts").c_str(), 150, 0, 3);
-    h.h_AvgHitEnergy = new TH1F((prefix + "_h_AvgHitEnergy").c_str(), (prefix + " Average Hit Energy per Track;E_{avg} [GeV];Counts").c_str(), 200, 0, 0.5);
-    h.h_NHits        = new TH1F((prefix + "_h_NHits").c_str(), (prefix + " Number of Hits per Track;N_{hits};Counts").c_str(), 60, 0, 60);
-    h.h_SpreadPhi    = new TH1F((prefix + "_h_SpreadPhi").c_str(), (prefix + " Spread in #phi (max-min);#Delta#phi [rad];Counts").c_str(), 100, 0, 1.0);
-    h.h_SpreadEta    = new TH1F((prefix + "_h_SpreadEta").c_str(), (prefix + " Spread in #eta (max-min);#Delta#eta;Counts").c_str(), 100, 0, 1.0);
-    h.h_SpreadR      = new TH1F((prefix + "_h_SpreadR").c_str(), (prefix + " Radial spread of hits (max-min);#Delta R [mm];Counts").c_str(), 100, 0, 100);
-    h.h_MaxHitFrac   = new TH1F((prefix + "_h_MaxHitFrac").c_str(), (prefix + " Max hit energy / total;E_{max}/E_{tot};Counts").c_str(), 100, 0, 1.05);
-    h.h_EnergyStdDev = new TH1F((prefix + "_h_EnergyStdDev").c_str(), (prefix + " Std Dev of hit energies;#sigma_{E} [GeV];Counts").c_str(), 100, 0, 0.3);
+    h.h_Energy      = new TH1F((prefix + "_h_Energy").c_str(), (prefix + " Total Energy;E_{calo} [GeV];Counts").c_str(), 50, 0, 1);
+    h.h_EoverP       = new TH1F((prefix + "_h_EoverP").c_str(), (prefix + " E/p_{track};E/p;Counts").c_str(), 60, 0, 3);
+    h.h_AvgHitEnergy = new TH1F((prefix + "_h_AvgHitEnergy").c_str(), (prefix + " Average Hit Energy per Track;E_{avg} [GeV];Counts").c_str(), 50, 0, 1);
+    h.h_NHits        = new TH1F((prefix + "_h_NHits").c_str(), (prefix + " Number of Hits per Track;N_{hits};Counts").c_str(), 50, -0.5, 99.5);
+    h.h_SpreadPhi    = new TH1F((prefix + "_h_SpreadPhi").c_str(), (prefix + " Spread in #phi (max-min);#phi_{Spread} [rad];Counts").c_str(), 50, 0, 1.0);
+    h.h_SpreadEta    = new TH1F((prefix + "_h_SpreadEta").c_str(), (prefix + " Spread in #eta (max-min);#eta_{Spread} ;Counts").c_str(), 50, 0, 1.0);
+    h.h_SpreadR      = new TH1F((prefix + "_h_SpreadR").c_str(), (prefix + " Radial spread of hits (max-min);R_{Spread} [mm];Counts").c_str(), 50, 0, 2000);
+    h.h_MaxHitFrac   = new TH1F((prefix + "_h_MaxHitFrac").c_str(), (prefix + " Max hit energy / total;f_{max};Counts").c_str(), 50, 0, 1.05);
+    h.h_EnergyStdDev = new TH1F((prefix + "_h_EnergyStdDev").c_str(), (prefix + " Std Dev of hit energies;#sigma_{E} [GeV];Counts").c_str(), 60, 0, 0.3);
 
-    h.h_R_Disp             = new TH1F((prefix + "_h_R_Disp").c_str(), (prefix + " R dispersion (unweighted);#sigma_{R} [mm];Counts").c_str(), 100, 0, 50);
-    h.h_R_DispWeighted      = new TH1F((prefix + "_h_R_DispWeighted").c_str(), (prefix + " R dispersion (energy-weighted);#sigma_{R}^{w} [mm];Counts").c_str(), 100, 0, 50);
-    h.h_EnergyConcentration = new TH1F((prefix + "_h_EnergyConcentration").c_str(), (prefix + " Energy concentration #Sigma E_{i}^{2}/(#Sigma E_{i})^{2};Concentration;Counts").c_str(), 100, 0, 1.05);
-    h.h_Eta_DispWeighted    = new TH1F((prefix + "_h_Eta_DispWeighted").c_str(), (prefix + " #eta dispersion (energy-weighted);#sigma_{#eta}^{w};Counts").c_str(), 100, 0, 0.3);
-    h.h_Phi_DispWeighted    = new TH1F((prefix + "_h_Phi_DispWeighted").c_str(), (prefix + " #phi dispersion (energy-weighted);#sigma_{#phi}^{w} [rad];Counts").c_str(), 100, 0, 0.3);
+    h.h_R_Disp             = new TH1F((prefix + "_h_R_Disp").c_str(), (prefix + " R dispersion (unweighted);D_{R} [mm];Counts").c_str(), 50, 0, 400);
+    h.h_R_DispWeighted      = new TH1F((prefix + "_h_R_DispWeighted").c_str(), (prefix + " R dispersion (energy-weighted);D_{R}^{w} [mm];Counts").c_str(), 50, 0, 400);
+    h.h_EnergyConcentration = new TH1F((prefix + "_h_EnergyConcentration").c_str(), (prefix + " Energy concentration #Sigma E_{i}^{2}/(#Sigma E_{i})^{2};C_{E};Counts").c_str(), 50, 0, 1.05);
+    h.h_Eta_DispWeighted    = new TH1F((prefix + "_h_Eta_DispWeighted").c_str(), (prefix + " #eta dispersion (energy-weighted);D_{#eta}^{w};Counts").c_str(), 60, 0, 0.6);
+    h.h_Phi_DispWeighted    = new TH1F((prefix + "_h_Phi_DispWeighted").c_str(), (prefix + " #phi dispersion (energy-weighted);D_{#phi}^{w} [rad];Counts").c_str(), 60, 0, 3);
 
     return h;
 }
@@ -597,8 +598,8 @@ void CombinedCaloToFAnalysis()
         HistSet ecalHists = MakeHistSet("ECal");
         HistSet hcalHists = MakeHistSet("HCal");
 
-        TH1D *hMass    = new TH1D(Form("Mass_%s", name.c_str()), Form("Mass %s;m [GeV];Counts", name.c_str()), 200, -0.1, 1.1);
-        TH1D *hMassSq    = new TH1D(Form("MassSq_%s", name.c_str()), Form("MassSq %s;m^{2} [GeV^{2}];Counts", name.c_str()), 200, -0.1, 1.1);
+        TH1D *hMass    = new TH1D(Form("Mass_%s", name.c_str()), Form("Mass %s;m [GeV];Counts", name.c_str()), 50, 0, 0.2);
+        TH1D *hMassSq    = new TH1D(Form("MassSq_%s", name.c_str()), Form("MassSq %s;m^{2} [GeV^{2}];Counts", name.c_str()), 50, -0.04, 0.08);
         TH2D *hBetaVsMom  = new TH2D(Form("BetaVsMom_%s", name.c_str()), Form("BetaVsMom %s;p [GeV];#beta", name.c_str()), 100, 0, 2, 100, 0.7, 1.1);
         TH1D *hDRBarrel   = new TH1D(Form("dRBarrel_%s", name.c_str()), Form("dR Barrel %s;#DeltaR;Counts", name.c_str()), 200, 0, 2);
         TH1D *hDistBarrel = new TH1D(Form("DistBarrel_%s", name.c_str()), Form("Dist Barrel %s;dist [mm];Counts", name.c_str()), 200, 0, 100);

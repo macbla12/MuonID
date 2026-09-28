@@ -86,6 +86,8 @@ void PlotAllFeatures() {
 
         string hName = key->GetName();
 
+        TString name = hName;
+        
         // In HitsAll, names are identical in both files (e.g. ECal_HitR)
         TH1D* h_muon_orig = (TH1D*)f_muon->Get(hName.c_str());
         TH1D* h_pion_orig = (TH1D*)f_pion->Get(hName.c_str());
@@ -126,7 +128,11 @@ void PlotAllFeatures() {
         // Canvas
         TCanvas* c = new TCanvas(("c_" + hName).c_str(), hName.c_str(), 1000, 800);
         c->SetGrid();
-        gPad->SetLogy(0);
+        if (name.EndsWith("_h_SpreadR") || name.EndsWith("_h_R_Disp") || name.EndsWith("_h_R_DispWeighted")) {
+            h_muon->SetMinimum(0.001);
+            gPad->SetLogy(1);
+        }
+        else gPad->SetLogy(0);
 
         h_muon->SetTitle(hName.c_str());
 
