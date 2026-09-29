@@ -35,7 +35,7 @@ Most analyses are implemented as ROOT macros (`.cxx`). Run them from the relevan
 
 ```bash
 cd Identification/CalorimetryHits
-root -l -b -q 'TrainingPodioMacro.cxx+'
+root -l -b -q 'TrainingMacro.cxx+'
 ```
 
 Input files, collection names, model paths, and output directories may be configured directly in the macros. Check and adapt these settings to your data before running. Testing macros evaluate a trained model; training scripts and macros prepare data and train classifiers.

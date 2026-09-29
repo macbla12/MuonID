@@ -12,14 +12,12 @@ from sklearn.metrics import (classification_report, confusion_matrix,
 from xgboost import XGBClassifier
 import seaborn as sns
 import os
-import shap
 
 from onnxmltools import convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType as OnnxFloat
 
 import torch
 import torch.nn as nn
-import numpy as np
 import onnx
 
 os.makedirs("Plots", exist_ok=True)
@@ -67,7 +65,6 @@ print(f"  Signal (muons) : {n_sig_total}")
 print(f"  Background     : {n_bkg_total}")
 print(f"  S/B ratio       : 1 : {n_bkg_total/n_sig_total:.1f}")
 
-file_idx = df["FileIndex"].values
 is_mu    = df["IsMuon"].values
 
 # =============================================================================
@@ -259,7 +256,6 @@ xgb.fit(
     verbose=50,
 )
 
-y_pred  = xgb.predict(X_test_sc)
 y_probs = xgb.predict_proba(X_test_sc)[:, 1]
 
 best_iteration = xgb.best_iteration
@@ -508,7 +504,7 @@ feature_label_corr = X_corr.corrwith(y_float, method='spearman').sort_values(
 )
 
 # =============================================================================
-# 7. Create the PDF report with SHAP diagnostics
+# 7. Create the PDF report
 # =============================================================================
 plt.rcParams.update({
     'figure.facecolor': 'white',
@@ -784,87 +780,6 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
 
-    # Page 7: SHAP model explanation
-    explainer = shap.TreeExplainer(xgb)
-    sample_idx = np.random.choice(len(X_test_sc), size=min(5000, len(X_test_sc)), replace=False)
-    X_shap = X_test_sc[sample_idx]
-    shap_values = explainer.shap_values(X_shap)
-
-    fig = plt.figure(figsize=(12, 10))
-    shap.summary_plot(shap_values, X_shap, feature_names=all_features, show=False)
-    plt.title('SHAP Summary Plot — Feature Impact on P(Muon)', fontsize=14)
-    pdf.savefig(fig, bbox_inches='tight')
-    plt.close()
-
-    top_feat = imp_series.nlargest(1).index[0]
-    fig = plt.figure(figsize=(8, 6))
-    shap.dependence_plot(top_feat, shap_values, X_shap,
-                         feature_names=all_features, show=False)
-    plt.title(f'SHAP Dependence: {top_feat}', fontsize=14)
-    pdf.savefig(fig, bbox_inches='tight')
-    plt.close()
-
-    # SHAP per FileIndex for domain-shift diagnostics
-    unique_files = sorted(file_idx.unique())
-
-    for fidx in unique_files:
-        mask_f = (file_idx.iloc[idx_test] == fidx)
-        if mask_f.sum() < 50:
-            continue
-
-        X_f = X_test_sc[mask_f]
-        sample_idx_f = np.random.choice(len(X_f), size=min(3000, len(X_f)), replace=False)
-        X_shap_f = X_f[sample_idx_f]
-
-        shap_values_f = explainer.shap_values(X_shap_f)
-
-        fig = plt.figure(figsize=(12, 10))
-        shap.summary_plot(shap_values_f, X_shap_f, feature_names=all_features, show=False)
-        plt.title(f'SHAP Summary — FileIndex={fidx}', fontsize=14)
-        pdf.savefig(fig, bbox_inches='tight')
-        plt.close()
-
-        top_feat = imp_series.nlargest(1).index[0]
-        fig = plt.figure(figsize=(8, 6))
-        shap.dependence_plot(top_feat, shap_values_f, X_shap_f,
-                             feature_names=all_features, show=False)
-        plt.title(f'SHAP Dependence: {top_feat}  (FileIndex={fidx})', fontsize=14)
-        pdf.savefig(fig, bbox_inches='tight')
-        plt.close()
-
-    # =========================================================================
-    # SHAP similarity matrix (FileIndex vs FileIndex)
-    # =========================================================================
-    shap_importances = {}
-
-    for fidx in unique_files:
-        mask_f = (file_idx.iloc[idx_test] == fidx)
-        if mask_f.sum() < 50:
-            continue
-
-        X_f = X_test_sc[mask_f]
-        sample_idx_f = np.random.choice(len(X_f), size=min(3000, len(X_f)), replace=False)
-        X_shap_f = X_f[sample_idx_f]
-
-        shap_values_f = explainer.shap_values(X_shap_f)
-        shap_importances[fidx] = np.mean(np.abs(shap_values_f), axis=0)
-
-    file_ids = sorted(shap_importances.keys())
-    shap_matrix = np.vstack([shap_importances[f] for f in file_ids])
-    similarity = np.corrcoef(shap_matrix)
-
-    fig, ax = plt.subplots(figsize=(10, 8))
-    sns.heatmap(similarity, annot=True, fmt=".2f",
-                xticklabels=file_ids, yticklabels=file_ids,
-                cmap="coolwarm", vmin=-1, vmax=1,
-                cbar_kws={'label': 'Correlation'})
-    ax.set_title("SHAP Similarity Matrix — FileIndex vs FileIndex\n"
-                 "(correlation between SHAP importance vectors)", fontsize=14)
-    ax.set_xlabel("FileIndex")
-    ax.set_ylabel("FileIndex")
-
-    pdf.savefig(fig, bbox_inches='tight')
-    plt.close()
     # =============================================================================
     # INSERT THIS BLOCK INSIDE:  with PdfPages("Plots/XGB_Output.pdf") as pdf:
     # preferably at the very end, just before:  print("Done: training on all files...")
@@ -1048,4 +963,4 @@ with PdfPages("Plots/XGB_Output.pdf") as pdf:
         pdf.savefig(fig, bbox_inches='tight')
         plt.close()
 
-print("Done: training on all files, split by FileIndex, PDF report and SHAP diagnostics.")
+print("Done: training on all files, split by FileIndex, PDF report.")

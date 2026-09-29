@@ -97,11 +97,11 @@ void PlotAllFeatures() {
         TH1D* h_muon = (TH1D*)h_muon_orig->Clone((hName + "_norm_muon").c_str());
         TH1D* h_pion = (TH1D*)h_pion_orig->Clone((hName + "_norm_pion").c_str());
 
-        // 1. Normalizacja do 1
+        // 1. Normalize to 1
         if (h_muon->Integral() > 0) h_muon->Scale(1.0 / h_muon->Integral());
         if (h_pion->Integral() > 0) h_pion->Scale(1.0 / h_pion->Integral());
 
-        // 2. Automatyczne ucinanie lewego i prawego ogona
+        // 2. Automatically trim the left and right tails
         auto [minMu, maxMu] = GetTailCuts(h_muon, 0.01, 0.96);
         auto [minPi, maxPi] = GetTailCuts(h_pion, 0.01, 0.96);
 
@@ -130,19 +130,20 @@ void PlotAllFeatures() {
         c->SetGrid();
         if (name.EndsWith("_h_SpreadR") || name.EndsWith("_h_R_Disp") || name.EndsWith("_h_R_DispWeighted")) {
             h_muon->SetMinimum(0.001);
+            h_muon->SetMaximum(maxVal * 10); 
             gPad->SetLogy(1);
         }
         else gPad->SetLogy(0);
 
         h_muon->SetTitle(hName.c_str());
 
-        // Stylizacja
+        // Styling
         h_muon->SetLineColor(kBlue + 1);
         h_muon->SetLineWidth(3);
         h_pion->SetLineColor(kRed + 1);
         h_pion->SetLineWidth(3);
 
-        // Osie
+        // Axes
         h_muon->GetXaxis()->SetTitleSize(0.050);
         h_muon->GetYaxis()->SetTitleSize(0.050);
         h_muon->GetXaxis()->SetTitleOffset(1.15);
@@ -157,11 +158,11 @@ void PlotAllFeatures() {
         h_muon->GetXaxis()->SetLabelFont(42);
         h_muon->GetYaxis()->SetLabelFont(42);
 
-        // Rysowanie
+        // Drawing
         h_muon->Draw("HIST");
         h_pion->Draw("HIST SAME");
 
-        // Legenda i napisy
+        // Legend and labels
         TLegend* leg = new TLegend(0.65, 0.70, 0.90, 0.86);
         leg->SetBorderSize(1);
         leg->SetFillColor(kWhite);
