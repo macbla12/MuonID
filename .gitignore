@@ -1,3 +1,5 @@
 *.pcm
 *.d
 *.so
+*.root
+/onnxruntime
