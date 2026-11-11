@@ -90,7 +90,7 @@ void PlotAllFeatures() {
         return;
     }
 
-    const string pdfName = "Plots/CaloToF_Diag_Comparison.pdf";
+    const string pdfName = "Plots/CaloToF_Diag_Comparison_TCM.pdf";
     bool isFirstPage = true;
 
     TIter next(f_muon->GetListOfKeys());

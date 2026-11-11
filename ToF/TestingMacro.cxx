@@ -577,7 +577,7 @@ void TestingMacro()
     vector<string> hcalClusterNames = {"HcalBarrelClusters", "HcalEndcapNClusters", "LFHCALClusters"};
 
     // Output file for histograms
-    TFile *outfile = new TFile("Plots/MuonID_Performance_fromPythonFeatures.root", "RECREATE");
+    TFile *outfile = new TFile("Plots/MuonID_Performance.root", "RECREATE");
 
     // Response histograms
     TH1F *h_Response_Muon = new TH1F("h_Response_Muon", "P(muon) Response for True Muons;P(muon);Counts", 100, 0, 1);
@@ -590,8 +590,8 @@ void TestingMacro()
     TH1F *h_Muon_Total_vs_P  = new TH1F("h_Muon_Total_vs_P", "Muon Total vs p;p [GeV/c];Counts",40,0,2);
     TH1F *h_Muon_Passed_vs_P = new TH1F("h_Muon_Passed_vs_P", "Muon Passed vs p;p [GeV/c];Counts",40,0,2);
 
-    TH1F *h_Muon_Total_vs_Eta  = new TH1F("h_Muon_Total_vs_Eta", "Muon Total vs #eta;#eta;Counts",30,-1.2,3.4);
-    TH1F *h_Muon_Passed_vs_Eta = new TH1F("h_Muon_Passed_vs_Eta", "Muon Passed vs #eta;#eta;Counts",30,-1.2,3.4);
+    TH1F *h_Muon_Total_vs_Eta  = new TH1F("h_Muon_Total_vs_Eta", "Muon Total vs #eta;#eta;Counts",30,-3.4,3.4);
+    TH1F *h_Muon_Passed_vs_Eta = new TH1F("h_Muon_Passed_vs_Eta", "Muon Passed vs #eta;#eta;Counts",30,-3.4,3.4);
 
     TH1F *h_Pion_Total_vs_Pt   = new TH1F("h_Pion_Total_vs_Pt", "Pion Total vs pT;p_{T} [GeV/c];Counts",40,0,2);
     TH1F *h_Pion_Rejected_vs_Pt = new TH1F("h_Pion_Rejected_vs_Pt", "Pion Rejected vs pT;p_{T} [GeV/c];Counts",40,0,2);
@@ -599,8 +599,8 @@ void TestingMacro()
     TH1F *h_Pion_Total_vs_P    = new TH1F("h_Pion_Total_vs_P", "Pion Total vs p;p [GeV/c];Counts",40,0,2);
     TH1F *h_Pion_Rejected_vs_P = new TH1F("h_Pion_Rejected_vs_P", "Pion Rejected vs p;p [GeV/c];Counts",40,0,2);
 
-    TH1F *h_Pion_Total_vs_Eta  = new TH1F("h_Pion_Total_vs_Eta", "Pion Total vs #eta;#eta;Counts",30,-1.2,3.4);
-    TH1F *h_Pion_Rejected_vs_Eta = new TH1F("h_Pion_Rejected_vs_Eta", "Pion Rejected vs #eta;#eta;Counts",30,-1.2,3.4);
+    TH1F *h_Pion_Total_vs_Eta  = new TH1F("h_Pion_Total_vs_Eta", "Pion Total vs #eta;#eta;Counts",30,-3.4,3.4);
+    TH1F *h_Pion_Rejected_vs_Eta = new TH1F("h_Pion_Rejected_vs_Eta", "Pion Rejected vs #eta;#eta;Counts",30,-3.4,3.4);
 
     // Loop over files (muons then pions)
     for (int File = 0; File < NumOfFiles; File++)
@@ -646,6 +646,7 @@ void TestingMacro()
         while (tree_reader.Next())
         {
             eventID++;
+            if(eventID > 200000) break;
             if (eventID % 50000 == 0) cout << "File " << name << " event: " << eventID << endl;
 
             for (size_t particle = 0; particle < trackMomX.GetSize(); particle++)
@@ -659,8 +660,8 @@ void TestingMacro()
 
                 // Keep selection consistent with training macro
                 if (trackP > 1.0) continue;
-                if (trackEta >= 1.0 && trackEta <= 1.3) continue;
-                if (trackEta <= -1.25) continue;
+                //if (trackEta >= 1.0 && trackEta <= 1.3) continue;
+                //if (trackEta <= -1.25) continue;
 
                 int charge = static_cast<int>(trackCharge[particle]);
                 int simuID = simuAssoc[particle];

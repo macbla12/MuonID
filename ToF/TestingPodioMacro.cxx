@@ -1,64 +1,37 @@
-// TestingMacro_Fixed_Podio.cxx
+// TestingMacroCaloToF_Podio.cxx
 //
-// Podio / EDM4eic version of TestingMacro_Fixed.cxx.
+// Wersja podio / EDM4eic makra TestingMacro (Calo + ToF + ONNX muon ID).
+// Cechy (41 w kolejnosci RAW_COLS), cieta, MUON_ID_CUT, binning histogramow i logika
+// wydajnosci/odrzucania sa takie same. Zmienia sie tylko odczyt danych:
+// podio::Frame zamiast TTreeReader na flat branchach.
 //
-// The original TestingMacro_Fixed.cxx reads the input files through
-// TTreeReader on the flat ROOT branches produced by the podio ROOT dumper
-// (e.g. "_EcalBarrelImagingClusterAssociations_sim.index",
-// "EcalBarrelImagingClusters.hits_begin", "EcalBarrelRecHits.energy",
-// "TOFBarrelRecHits.position.x", ...).
+// - Hity kalorymetrow: cluster.getHits() (wlasciwa kolekcja, np. HcalEndcapNMergedHits).
+// - Hity ToF: TOFBarrelRecHits / TOFEndcapRecHits jako edm4eic::TrackerHit.
+//   (Jesli kompilator zglosi inny typ: frame.get("TOFBarrelRecHits")->getValueTypeName())
+// - ToFSim.cxx musi byc w tym samym katalogu.
 //
-// This file reads the *same* input files but through the podio::Frame /
-// EDM4eic collection API, exactly the way MuonID.cxx / MuonID.hpp access
-// clusters, hits, associations and ToF hits at runtime in EICrecon. The
-// physics logic (cuts, feature definitions, RAW_COLS ordering, histogram
-// binning/titles, ONNX model, output file) is left completely unchanged,
-// so this produces the same Plots/MuonID_Performance_fromPythonFeatures.root
-// as TestingMacro_Fixed.cxx.
+// Poprawka wzgledem oryginalu (bez wplywu na fizyke): pomocnicze histogramy "ECal_tmp" /
+// "HCal_tmp" byly tworzone dla KAZDEGO tracka (wyciek pamieci + smieci w pliku wyjsciowym).
+// Teraz sa tworzone raz na plik i odlaczone od pliku wyjsciowego.
 //
-// ToFSim.cxx is included as-is (RK4 propagation / field map) - no changes
-// needed there, it only takes a TLorentzVector, a charge and a TVector3 and
-// has no dependency on how the ToF hit was read.
-//
-// NOTES / ASSUMPTIONS (please verify before using for production training):
-//
-//   1) Association collection naming: for a cluster collection "XClusters"
-//      the corresponding truth-matching collection is assumed to be named
-//      "XClusterAssociations" (edm4eic::MCRecoClusterParticleAssociation),
-//      i.e. exactly the podio collection that the flat branch
-//      "_XClusterAssociations_sim.index" used in TestingMacro_Fixed.cxx
-//      comes from.
-//   2) "ReconstructedChargedParticleAssociations" is assumed to be stored in
-//      the same order as "ReconstructedChargedParticles" (same assumption
-//      the original macro made by indexing the flat "_..._sim.index" array
-//      with the track loop index "particle").
-//   3) Cluster hits are read directly via cluster.getHits() as
-//      edm4eic::CalorimeterHit (getEnergy(), getTime(), getPosition()),
-//      instead of manually walking hits_begin/hits_end into a separate
-//      RecHits array.
-//   4) ToF hit collection names/types: "TOFBarrelRecHits" / "TOFEndcapRecHits"
-//      of type edm4eic::TrackerHitCollection (getPosition(), getTime()) -
-//      same assumption as MuonID.hpp. Adjust if different in your EICrecon.
-//   5) Same timing cut (20 ns) for calo hits, same dR_cut/dist_cut (0.8 / 6.0
-//      mm) for ToF hits as the original macro.
+// Uruchom: root -l -q TestingMacroCaloToF_Podio.cxx++
 
 #include <TH1.h>
 #include <TH2.h>
 #include <TFile.h>
 #include <TROOT.h>
-#include <TTree.h>
+#include <TString.h>
 #include <TLorentzVector.h>
 #include <TVector3.h>
 #include <TVector2.h>
 #include <TMath.h>
-#include <TString.h>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <memory>
 #include <algorithm>
 #include <cmath>
 #include <glob.h>
+
 #include <onnxruntime_cxx_api.h>
 
 #include <podio/Frame.h>
@@ -74,30 +47,11 @@
 
 using namespace std;
 
-// -----------------------------------------------------------------------------
-// Include ToFSim implementation (must be present in the same directory).
-// This brings in ToFSim(), ToFResults, c_light, etc. UNCHANGED.
-// -----------------------------------------------------------------------------
+// Brings in ToFSim(), ToFResults, c_light, ... (ToFSim.cxx must be in the same directory)
 #include "ToFSim.cxx"
 
 // -----------------------------------------------------------------------------
-// Small helper: expand a shell-style wildcard (e.g. "reco_*.root") into a
-// list of real file paths. This replaces TChain::Add(pattern), which did
-// the globbing internally.
-// -----------------------------------------------------------------------------
-vector<string> ExpandGlob(const string &pattern)
-{
-    vector<string> result;
-    glob_t glob_result;
-    glob(pattern.c_str(), GLOB_TILDE, nullptr, &glob_result);
-    for (unsigned int i = 0; i < glob_result.gl_pathc; ++i)
-        result.push_back(string(glob_result.gl_pathv[i]));
-    globfree(&glob_result);
-    return result;
-}
-
-// -----------------------------------------------------------------------------
-// Utility: combine multiple ToF hits into a single beta estimate. Unchanged.
+// Combine ToF hits into one beta estimate. Bez zmian.
 // -----------------------------------------------------------------------------
 struct BetaEstimate { double beta; bool valid; };
 
@@ -117,72 +71,86 @@ BetaEstimate CombineBeta(const std::vector<std::pair<double,double>> &hits)
     return {1.0 / u_hat, true};
 }
 
-// -----------------------------------------------------------------------------
-// Calorimeter helper types and functions - podio version.
-// -----------------------------------------------------------------------------
+vector<string> ExpandGlob(const string &pattern)
+{
+    vector<string> result;
+    glob_t g;
+    glob(pattern.c_str(), GLOB_TILDE, nullptr, &g);
+    for (size_t i = 0; i < g.gl_pathc; ++i) result.push_back(g.gl_pathv[i]);
+    globfree(&g);
+    return result;
+}
 
-// Replaces the old DetectorHits struct: in podio we only need to remember
-// which association collection to pull from the Frame per detector.
+bool HasCollection(const vector<string> &names, const string &n)
+{
+    return find(names.begin(), names.end(), n) != names.end();
+}
+
+// -----------------------------------------------------------------------------
+// Calorimeter side
+// -----------------------------------------------------------------------------
 struct DetectorAssoc
 {
     string clusterName;
     string assocCollName;
-};
-
-struct HistSet
-{
-    TH1F *HitR, *HitPhi, *HitZ, *HitEnergy, *HitTime;
-    TH1F *DeltaEta, *DeltaPhi;
-    TH1F *h_EoverP, *h_NHits;
+    bool   available = true;
 };
 
 DetectorAssoc MakeDetectorAssoc(const string &clusterName)
 {
     DetectorAssoc d;
-    d.clusterName = clusterName;
-
-    // Same naming convention as the flat branch used in
-    // TestingMacro_Fixed.cxx: "_XClusterAssociations_sim.index" comes from
-    // the podio collection "XClusterAssociations"
-    // (edm4eic::MCRecoClusterParticleAssociation).
+    d.clusterName   = clusterName;
     d.assocCollName = clusterName.substr(0, clusterName.size() - 1) + "Associations";
-
-    cout << "  Detector '" << clusterName << "' -> Association collection '"
-         << d.assocCollName << "'" << endl;
     return d;
 }
+
+void CheckAvailability(vector<DetectorAssoc> &dets, const podio::Frame &frame)
+{
+    auto names = frame.getAvailableCollections();
+    for (auto &d : dets) {
+        d.available = HasCollection(names, d.assocCollName);
+        cout << "  " << d.clusterName << " -> '" << d.assocCollName << "' : "
+             << (d.available ? "OK" : "MISSING (detektor pominiety)") << endl;
+    }
+}
+
+struct HistSet
+{
+    TH1F *HitR, *HitPhi, *HitZ, *HitEnergy, *HitTime;
+    TH1F *DeltaEta, *DeltaPhi;
+    TH2F *HitEtaR, *HitPhiR, *HitEtaPhi;
+    TH1F *h_EoverP, *h_NHits;
+    TH1F *h_AvgHitEnergy, *h_EnergyStdDev, *h_EnergyConcentration;
+    TH1F *h_SpreadPhi, *h_SpreadEta, *h_SpreadR, *h_MaxHitFrac;
+    TH1F *h_R_Disp, *h_R_DispWeighted, *h_Eta_DispWeighted, *h_Phi_DispWeighted;
+};
 
 struct TrackCalHits
 {
     double sumEnergy = 0.0;
+    double phiMin = 1e9, phiMax = -1e9;
+    double etaMin = 1e9, etaMax = -1e9;
+    double Rmin = 1e9, Rmax = -1e9;
     double maxHitE = -1.0;
-    vector<double> E;
+    vector<double> R, dEta, dPhi, E;
 };
 
-// CollectHits - podio version.
-//
-// Instead of walking the flat "_XClusterAssociations_sim.index" array plus
-// "hits_begin"/"hits_end" plus a separate RecHits array by integer index
-// (as TestingMacro_Fixed.cxx does), we:
-//   1) fetch the MCRecoClusterParticleAssociation collection for each
-//      detector directly from the Frame,
-//   2) keep only the associations whose truth particle matches the track's
-//      associated sim particle (same truth-matching logic as
-//      "if (simuID != (*det.simuAssocCluster)[iCluster]) continue;"),
-//   3) read the matched cluster's hits directly via cluster.getHits().
-// Optional diagnostic histogram filling is unchanged from the original.
+// CollectHits - wersja podio (asocjacje z Frame, hity z cluster.getHits()).
 TrackCalHits CollectHits(const edm4hep::MCParticle &simPart,
-                          const vector<DetectorAssoc> &detectors,
-                          const podio::Frame &frame,
-                          const TLorentzVector &Partic,
-                          double timingCutNs,
-                          TH1F *hR=nullptr, TH1F *hPhi=nullptr, TH1F *hZ=nullptr, TH1F *hE=nullptr, TH1F *hT=nullptr,
-                          TH1F *hDEta=nullptr, TH1F *hDPhi=nullptr)
+                         const vector<DetectorAssoc> &detectors,
+                         const podio::Frame &frame,
+                         const TLorentzVector &Partic,
+                         double timingCutNs,
+                         TH1F *hR, TH2F *hEtaR, TH2F *hPhiR, TH2F *hEtaPhi,
+                         TH1F *hPhi, TH1F *hZ, TH1F *hE, TH1F *hT,
+                         TH1F *hDEta, TH1F *hDPhi)
 {
     TrackCalHits result;
 
     for (const auto &det : detectors)
     {
+        if (!det.available) continue;
+
         const auto &assocColl =
             frame.get<edm4eic::MCRecoClusterParticleAssociationCollection>(det.assocCollName);
 
@@ -196,62 +164,154 @@ TrackCalHits CollectHits(const edm4hep::MCParticle &simPart,
             {
                 float HitE = hit.getEnergy();
                 float HitT = hit.getTime();
-                auto pos = hit.getPosition();
+                auto  pos  = hit.getPosition();
 
                 if (hT) hT->Fill(HitT);
                 if (HitT > timingCutNs) continue;
 
                 TVector3 hitVec(pos.x, pos.y, pos.z);
+                double hitEta = hitVec.Eta();
+                double hitPhi = hitVec.Phi();
                 double R = sqrt(pos.x * pos.x + pos.y * pos.y);
 
-                if (hR)   hR->Fill(R);
-                if (hPhi) hPhi->Fill(hitVec.Phi());
-                if (hZ)   hZ->Fill(pos.z);
-                if (hE)   hE->Fill(HitE);
+                if (hR)      hR->Fill(R);
+                if (hEtaR)   hEtaR->Fill(hitEta, R);
+                if (hPhiR)   hPhiR->Fill(hitPhi, R);
+                if (hEtaPhi) hEtaPhi->Fill(hitEta, hitPhi);
+                if (hPhi)    hPhi->Fill(hitPhi);
+                if (hZ)      hZ->Fill(pos.z);
+                if (hE)      hE->Fill(HitE);
 
-                double dEta = hitVec.Eta() - Partic.Eta();
-                double dPhi = TVector2::Phi_mpi_pi(hitVec.Phi() - Partic.Phi());
+                double dEta = hitEta - Partic.Eta();
+                double dPhi = TVector2::Phi_mpi_pi(hitPhi - Partic.Phi());
                 if (hDEta) hDEta->Fill(dEta);
                 if (hDPhi) hDPhi->Fill(dPhi);
 
                 result.sumEnergy += HitE;
+                result.R.push_back(R);
+                result.dEta.push_back(dEta);
+                result.dPhi.push_back(dPhi);
                 result.E.push_back(HitE);
+
+                result.phiMin = min(result.phiMin, hitPhi); result.phiMax = max(result.phiMax, hitPhi);
+                result.etaMin = min(result.etaMin, hitEta); result.etaMax = max(result.etaMax, hitEta);
+                result.Rmin   = min(result.Rmin, R);        result.Rmax   = max(result.Rmax, R);
+
                 if (HitE > result.maxHitE) result.maxHitE = HitE;
             }
         }
     }
+
     return result;
 }
 
-struct TrackCaloFeatures
+struct TrackFeatures
 {
     float Energy = 0.f;
     float Number = 0.f;
     float EoverP = 0.f;
+    float AvgHitEnergy = 0.f;
+    float SpreadPhi = 0.f;
+    float SpreadEta = 0.f;
+    float SpreadR = 0.f;
     float MaxHitFrac = 0.f;
+    float EnergyStdDev = 0.f;
+    float EnergyConcentration = 0.f;
+    float R_Disp = 0.f;
+    float R_DispWeighted = 0.f;
+    float Eta_DispWeighted = 0.f;
+    float Phi_DispWeighted = 0.f;
 };
 
-// Unchanged - pure math on TrackCalHits.
-TrackCaloFeatures ComputeCaloFeatures(const TrackCalHits &hits, double trackP, HistSet &h)
+// Bez zmian (czysta matematyka).
+TrackFeatures ComputeTrackFeatures(const TrackCalHits &hits, double trackP, HistSet &h)
 {
-    TrackCaloFeatures f;
-    if (hits.sumEnergy <= 0 || hits.E.empty()) return f;
+    TrackFeatures f;
 
-    f.Energy     = static_cast<float>(hits.sumEnergy);
-    f.Number     = static_cast<float>(hits.E.size());
-    f.EoverP     = static_cast<float>(hits.sumEnergy / trackP);
-    f.MaxHitFrac = static_cast<float>(hits.maxHitE / hits.sumEnergy);
+    if (hits.sumEnergy <= 0) return f;
 
-    if (h.h_EoverP) h.h_EoverP->Fill(f.EoverP);
-    if (h.h_NHits)  h.h_NHits->Fill(f.Number);
+    int n = static_cast<int>(hits.E.size());
+    if (n == 0) return f;
+
+    double sumEnergy = hits.sumEnergy;
+    double meanE = sumEnergy / n;
+
+    double sumSqDevE = 0.0, sumE2 = 0.0;
+    for (double e : hits.E)
+    {
+        double devE = e - meanE;
+        sumSqDevE += devE * devE;
+        sumE2 += e * e;
+    }
+    double energyStdDev = sqrt(sumSqDevE / n);
+    double energyConcentration = sumE2 / (sumEnergy * sumEnergy);
+
+    h.h_NHits->Fill(n);
+    h.h_AvgHitEnergy->Fill(meanE);
+    h.h_EnergyStdDev->Fill(energyStdDev);
+    h.h_EnergyConcentration->Fill(energyConcentration);
+
+    double spreadPhi = hits.phiMax - hits.phiMin;
+    double spreadEta = hits.etaMax - hits.etaMin;
+    double spreadR   = hits.Rmax - hits.Rmin;
+
+    h.h_EoverP->Fill(sumEnergy / trackP);
+    h.h_SpreadPhi->Fill(spreadPhi);
+    h.h_SpreadEta->Fill(spreadEta);
+    h.h_SpreadR->Fill(spreadR);
+    h.h_MaxHitFrac->Fill(hits.maxHitE / sumEnergy);
+
+    double sumRw = 0.0;
+    for (int k = 0; k < n; ++k) sumRw += hits.R[k] * hits.E[k];
+    double meanR_w = sumRw / sumEnergy;
+
+    double sumR2diff = 0.0, sumR2diffW = 0.0;
+    double sumDEta2diffW = 0.0, sumDPhi2diffW = 0.0;
+    for (int k = 0; k < n; ++k)
+    {
+        double dR = hits.R[k] - meanR_w;
+        sumR2diff  += dR * dR;
+        sumR2diffW += dR * dR * hits.E[k];
+
+        sumDEta2diffW += hits.dEta[k] * hits.dEta[k] * hits.E[k];
+        sumDPhi2diffW += hits.dPhi[k] * hits.dPhi[k] * hits.E[k];
+    }
+
+    double R_disp_unweighted = (n > 1) ? sqrt(sumR2diff / (n - 1)) : 0.0;
+    double R_disp_weighted   = sqrt(sumR2diffW / sumEnergy);
+    double Eta_disp_weighted = sqrt(sumDEta2diffW / sumEnergy);
+    double Phi_disp_weighted = sqrt(sumDPhi2diffW / sumEnergy);
+
+    h.h_R_Disp->Fill(R_disp_unweighted);
+    h.h_R_DispWeighted->Fill(R_disp_weighted);
+    h.h_Eta_DispWeighted->Fill(Eta_disp_weighted);
+    h.h_Phi_DispWeighted->Fill(Phi_disp_weighted);
+
+    f.Energy               = static_cast<float>(sumEnergy);
+    f.Number               = static_cast<float>(n);
+    f.EoverP               = static_cast<float>(sumEnergy / trackP);
+    f.AvgHitEnergy         = static_cast<float>(meanE);
+    f.SpreadPhi            = static_cast<float>(spreadPhi);
+    f.SpreadEta            = static_cast<float>(spreadEta);
+    f.SpreadR              = static_cast<float>(spreadR);
+    f.MaxHitFrac           = static_cast<float>(hits.maxHitE / sumEnergy);
+    f.EnergyStdDev         = static_cast<float>(energyStdDev);
+    f.EnergyConcentration  = static_cast<float>(energyConcentration);
+    f.R_Disp               = static_cast<float>(R_disp_unweighted);
+    f.R_DispWeighted       = static_cast<float>(R_disp_weighted);
+    f.Eta_DispWeighted     = static_cast<float>(Eta_disp_weighted);
+    f.Phi_DispWeighted     = static_cast<float>(Phi_disp_weighted);
+
     return f;
 }
 
-// Unchanged.
 HistSet MakeHistSet(const string &prefix)
 {
     HistSet h;
     h.HitR      = new TH1F((prefix + "_HitR").c_str(), (prefix + " Hit R;R [mm];Counts").c_str(), 200, 0, 3200);
+    h.HitEtaR   = new TH2F((prefix + "_HitEtaR").c_str(), (prefix + " HitEta vs R;#eta;R [mm]").c_str(), 200, -3.5, 3.5, 200, 0, 3200);
+    h.HitPhiR   = new TH2F((prefix + "_HitPhiR").c_str(), (prefix + " HitPhi vs R;#phi;R [mm]").c_str(), 200, -3.15, 3.15, 200, 0, 3200);
+    h.HitEtaPhi = new TH2F((prefix + "_HitEtaPhi").c_str(), (prefix + " HitEta vs Phi;#eta;#phi").c_str(), 200, -3.5, 3.5, 200, -3.15, 3.15);
     h.HitPhi    = new TH1F((prefix + "_HitPhi").c_str(), (prefix + " Hit Phi;#phi;Counts").c_str(), 200, -3.15, 3.15);
     h.HitZ      = new TH1F((prefix + "_HitZ").c_str(), (prefix + " Hit Z;Z [mm];Counts").c_str(), 200, -3000, 3000);
     h.HitEnergy = new TH1F((prefix + "_HitEnergy").c_str(), (prefix + " Hit Energy;E [GeV];Counts").c_str(), 200, 0, 1);
@@ -260,40 +320,43 @@ HistSet MakeHistSet(const string &prefix)
     h.DeltaPhi  = new TH1F((prefix + "_DeltaPhi").c_str(), (prefix + " #Delta#phi;#Delta#phi;Counts").c_str(), 200, -1, 1);
     h.h_EoverP  = new TH1F((prefix + "_h_EoverP").c_str(), (prefix + " E/p;E/p;Counts").c_str(), 150, 0, 3);
     h.h_NHits   = new TH1F((prefix + "_h_NHits").c_str(), (prefix + " N hits;N;Counts").c_str(), 60, 0, 60);
+    h.h_AvgHitEnergy = new TH1F((prefix + "_h_AvgHitEnergy").c_str(), (prefix + " AvgHitEnergy;E [GeV];Counts").c_str(), 150, 0, 1);
+    h.h_EnergyStdDev = new TH1F((prefix + "_h_EnergyStdDev").c_str(), (prefix + " Energy StdDev;E [GeV];Counts").c_str(), 150, 0, 0.5);
+    h.h_EnergyConcentration = new TH1F((prefix + "_h_EnergyConcentration").c_str(), (prefix + " Energy Concentration;.;Counts").c_str(), 150, 0, 1);
+    h.h_SpreadPhi = new TH1F((prefix + "_h_SpreadPhi").c_str(), (prefix + " Spread Phi;#phi;Counts").c_str(), 150, 0, 3.2);
+    h.h_SpreadEta = new TH1F((prefix + "_h_SpreadEta").c_str(), (prefix + " Spread Eta;#eta;Counts").c_str(), 150, 0, 3.2);
+    h.h_SpreadR = new TH1F((prefix + "_h_SpreadR").c_str(), (prefix + " Spread R;R [mm];Counts").c_str(), 150, 0, 3200);
+    h.h_MaxHitFrac = new TH1F((prefix + "_h_MaxHitFrac").c_str(), (prefix + " MaxHitFrac;Frac;Counts").c_str(), 150, 0, 1);
+    h.h_R_Disp = new TH1F((prefix + "_h_R_Disp").c_str(), (prefix + " R Disp;R [mm];Counts").c_str(), 150, 0, 1000);
+    h.h_R_DispWeighted = new TH1F((prefix + "_h_R_DispWeighted").c_str(), (prefix + " R Disp Weighted;R [mm];Counts").c_str(), 150, 0, 1000);
+    h.h_Eta_DispWeighted = new TH1F((prefix + "_h_Eta_DispWeighted").c_str(), (prefix + " Eta Disp Weighted;#eta;Counts").c_str(), 150, 0, 1);
+    h.h_Phi_DispWeighted = new TH1F((prefix + "_h_Phi_DispWeighted").c_str(), (prefix + " Phi Disp Weighted;#phi;Counts").c_str(), 150, 0, 3.2);
     return h;
 }
 
 // -----------------------------------------------------------------------------
-// ToF helper types and functions - podio version.
-//
-// Same struct / feature definitions as TestingMacro_Fixed.cxx. Only the hit
-// source changes: instead of separate TTreeReaderArrays for position.x/y/z
-// and time, we take an edm4eic::TrackerHitCollection (same type MuonID.hpp
-// assumes for "TOFBarrelRecHits"/"TOFEndcapRecHits") and use
-// hit.getPosition() / hit.getTime() directly.
+// ToF side (kolekcje edm4eic::TrackerHit zamiast TTreeReaderArray)
 // -----------------------------------------------------------------------------
 struct TrackToFFeatures
 {
-    float Beta         = -999.f;
-    float MassSq       = -999.f;
-    float NHitsBarrel  = 0.f;
-    float NHitsEndcap  = 0.f;
-    float NHitsTotal   = 0.f;
-    float MinDistBarrel= -999.f;
-    float MinDistEndcap= -999.f;
-    float AvgLenBarrel = -999.f;
-    float AvgLenEndcap = -999.f;
-    float HasToF       = 0.f;
+    float Beta          = -999.f;
+    float MassSq        = -999.f;
+    float NHitsBarrel   = 0.f;
+    float NHitsEndcap   = 0.f;
+    float NHitsTotal    = 0.f;
+    float MinDistBarrel = -999.f;
+    float MinDistEndcap = -999.f;
+    float AvgLenBarrel  = -999.f;
+    float AvgLenEndcap  = -999.f;
+    float HasToF        = 0.f;
 };
 
-template <typename HitCollection>
 TrackToFFeatures ComputeToFFeatures(
     const TLorentzVector &Partic, int charge,
-    const HitCollection &barrelHits, const HitCollection &endcapHits,
+    const edm4eic::TrackerHitCollection &barrelHits,
+    const edm4eic::TrackerHitCollection &endcapHits,
     double dR_cut_barrel, double dR_cut_endcap,
-    double dist_cut_barrel, double dist_cut_endcap,
-    TH1D *hDRBarrel = nullptr, TH1D *hDistBarrel = nullptr,
-    TH1D *hDREndcap = nullptr, TH1D *hDistEndcap = nullptr)
+    double dist_cut_barrel, double dist_cut_endcap)
 {
     TrackToFFeatures f;
 
@@ -307,16 +370,14 @@ TrackToFFeatures ComputeToFFeatures(
     double sumLenEndcap = 0.0, minDistEndcap = 1e18;
 
     for (const auto &hit : barrelHits) {
-        auto pos = hit.getPosition();
-        TVector3 ToFPos(pos.x, pos.y, pos.z);
+        auto p = hit.getPosition();
+        TVector3 ToFPos(p.x, p.y, p.z);
         double dEta = trackEta - ToFPos.Eta();
         double dPhi = TVector2::Phi_mpi_pi(trackPhi - ToFPos.Phi());
         double dR   = std::sqrt(dEta*dEta + dPhi*dPhi);
-        if (hDRBarrel) hDRBarrel->Fill(dR);
 
         if (dR < dR_cut_barrel && charge * dPhi < 0) {
             ToFResults tof = ToFSim(Partic, charge, ToFPos);
-            if (hDistBarrel) hDistBarrel->Fill(tof.distance_to_TOF);
             if (tof.distance_to_TOF < dist_cut_barrel) {
                 double length = tof.DistanceCheck ? tof.track_length : ToFPos.Mag();
                 matchedBarrel.push_back({hit.getTime(), length});
@@ -327,16 +388,14 @@ TrackToFFeatures ComputeToFFeatures(
     }
 
     for (const auto &hit : endcapHits) {
-        auto pos = hit.getPosition();
-        TVector3 ToFPos(pos.x, pos.y, pos.z);
+        auto p = hit.getPosition();
+        TVector3 ToFPos(p.x, p.y, p.z);
         double dEta = trackEta - ToFPos.Eta();
         double dPhi = TVector2::Phi_mpi_pi(trackPhi - ToFPos.Phi());
         double dR   = std::sqrt(dEta*dEta + dPhi*dPhi);
-        if (hDREndcap) hDREndcap->Fill(dR);
 
         if (dR < dR_cut_endcap && charge * dPhi < 0) {
             ToFResults tof = ToFSim(Partic, charge, ToFPos);
-            if (hDistEndcap) hDistEndcap->Fill(tof.distance_to_TOF);
             if (tof.distance_to_TOF < dist_cut_endcap) {
                 double length = tof.DistanceCheck ? tof.track_length : ToFPos.Mag();
                 matchedEndcap.push_back({hit.getTime(), length});
@@ -374,10 +433,7 @@ TrackToFFeatures ComputeToFFeatures(
 }
 
 // -----------------------------------------------------------------------------
-// ONNX runtime helper: run the merged ONNX model (preprocessor + XGBoost).
-// The ONNX graph expects a single input named "raw_features" with shape (N,21)
-// and returns "probabilities" (softmax) or similar; we read P(muon) = probs[1].
-// Unchanged.
+// ONNX runtime helper (bez zmian): input "raw_features" (1,41), output "probabilities".
 // -----------------------------------------------------------------------------
 float run_muon_id(
     Ort::Session& session,
@@ -398,60 +454,52 @@ float run_muon_id(
         output_names, 1);
 
     float* probs = output_tensors[0].GetTensorMutableData<float>();
-    // Defensive: if model returns a single score, user may need to adapt.
-    return probs[1];
+    return probs[1];   // P(muon)
 }
 
 // -----------------------------------------------------------------------------
-// Build raw feature vector in the exact order used by the Python RAW_COLS.
-// Unchanged.
+// 41-element raw feature vector in RAW_COLS order (bez zmian).
 // -----------------------------------------------------------------------------
-static const int N_RAW = 21;
+static const int N_RAW = 41;
 static const float MISSING_SENTINEL = -999.f;
 
 std::vector<float> build_raw_features_from_components(
-    float ECalEnergy, float ECalNumber, float ECalEoverP, float ECalMaxHitFrac,
-    float HCalEnergy, float HCalNumber, float HCalEoverP, float HCalMaxHitFrac,
-    float ToFBeta, float ToFMassSq, float ToFNHitsBarrel, float ToFNHitsEndcap,
-    float ToFNHitsTotal, float ToFMinDistBarrel, float ToFMinDistEndcap,
-    float ToFAvgLenBarrel, float ToFAvgLenEndcap, float ToFHasToF,
+    // ECal (14)
+    float ECalEnergy, float ECalNumber, float ECalEoverP, float ECalAvgHitEnergy,
+    float ECalSpreadPhi, float ECalSpreadEta, float ECalSpreadR, float ECalMaxHitFrac,
+    float ECalEnergyStdDev, float ECalEnergyConcentration,
+    float ECalR_Disp, float ECalR_DispWeighted, float ECalEta_DispWeighted, float ECalPhi_DispWeighted,
+    // HCal (14)
+    float HCalEnergy, float HCalNumber, float HCalEoverP, float HCalAvgHitEnergy,
+    float HCalSpreadPhi, float HCalSpreadEta, float HCalSpreadR, float HCalMaxHitFrac,
+    float HCalEnergyStdDev, float HCalEnergyConcentration,
+    float HCalR_Disp, float HCalR_DispWeighted, float HCalEta_DispWeighted, float HCalPhi_DispWeighted,
+    // ToF (10)
+    float ToFBeta, float ToFMassSq, float ToFNHitsBarrel, float ToFNHitsEndcap, float ToFNHitsTotal,
+    float ToFMinDistBarrel, float ToFMinDistEndcap, float ToFAvgLenBarrel, float ToFAvgLenEndcap, float ToFHasToF,
+    // Track (3)
     float TrackMomentum, float TrackEta, float TrackPhi)
 {
-    std::vector<float> raw;
-    raw.reserve(N_RAW);
+    return {
+        ECalEnergy, ECalNumber, ECalEoverP, ECalAvgHitEnergy,
+        ECalSpreadPhi, ECalSpreadEta, ECalSpreadR, ECalMaxHitFrac,
+        ECalEnergyStdDev, ECalEnergyConcentration,
+        ECalR_Disp, ECalR_DispWeighted, ECalEta_DispWeighted, ECalPhi_DispWeighted,
 
-    raw.push_back(ECalEnergy);
-    raw.push_back(ECalNumber);
-    raw.push_back(ECalEoverP);
-    raw.push_back(ECalMaxHitFrac);
+        HCalEnergy, HCalNumber, HCalEoverP, HCalAvgHitEnergy,
+        HCalSpreadPhi, HCalSpreadEta, HCalSpreadR, HCalMaxHitFrac,
+        HCalEnergyStdDev, HCalEnergyConcentration,
+        HCalR_Disp, HCalR_DispWeighted, HCalEta_DispWeighted, HCalPhi_DispWeighted,
 
-    raw.push_back(HCalEnergy);
-    raw.push_back(HCalNumber);
-    raw.push_back(HCalEoverP);
-    raw.push_back(HCalMaxHitFrac);
+        ToFBeta, ToFMassSq, ToFNHitsBarrel, ToFNHitsEndcap, ToFNHitsTotal,
+        ToFMinDistBarrel, ToFMinDistEndcap, ToFAvgLenBarrel, ToFAvgLenEndcap, ToFHasToF,
 
-    raw.push_back(ToFBeta);
-    raw.push_back(ToFMassSq);
-    raw.push_back(ToFNHitsBarrel);
-    raw.push_back(ToFNHitsEndcap);
-    raw.push_back(ToFNHitsTotal);
-
-    raw.push_back(ToFMinDistBarrel);
-    raw.push_back(ToFMinDistEndcap);
-    raw.push_back(ToFAvgLenBarrel);
-    raw.push_back(ToFAvgLenEndcap);
-    raw.push_back(ToFHasToF);
-
-    raw.push_back(TrackMomentum);
-    raw.push_back(TrackEta);
-    raw.push_back(TrackPhi);
-
-    return raw;
+        TrackMomentum, TrackEta, TrackPhi
+    };
 }
 
 // -----------------------------------------------------------------------------
-// Main testing macro: iterate over muon/pion files, compute features, run ONNX,
-// fill histograms for response, efficiency and rejection vs p, pT, eta.
+// Main testing macro
 // -----------------------------------------------------------------------------
 void TestingPodioMacro()
 {
@@ -459,188 +507,217 @@ void TestingPodioMacro()
     gROOT->ProcessLine("gErrorIgnoreLevel = 3000;");
 
     const double TIMING_CUT_NS = 20.0;
-    const float MUON_ID_CUT = 0.2f;
+    const float  MUON_ID_CUT   = 0.5f;
+    const long   MAX_EVENTS    = 200000;   // jak w oryginale; -1 = wszystkie
 
-    // Initialize ONNX Runtime
+    // ONNX Runtime
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MuonID");
     Ort::SessionOptions session_options;
     session_options.SetIntraOpNumThreads(1);
     session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
-    // Load merged ONNX model (preprocessor + XGBoost)
     Ort::Session session(env, "ONNX/xgb_muonID.onnx", session_options);
     auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 
     static constexpr int NumOfFiles = 2;
-    vector<TString> filePatterns(NumOfFiles);
-    //filePatterns.at(0) = "/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
-    filePatterns.at(0)="/run/media/epic/Data/Muons/Grape-10x275/Current/reco10x275_1*.root";
+    vector<string> filePatterns(NumOfFiles);
+    filePatterns.at(0) = "/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
+    //filePatterns.at(0) = "/run/media/epic/Data/Muons/Grape-10x275/Current/reco10x275_1*.root";
     filePatterns.at(1) = "/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
-    //filePatterns.at(1)="/run/media/epic/Data/Tau/reco/Energy_10x275/old/double_pi/recoDoublePi.root";
+    //filePatterns.at(1) = "/run/media/epic/Data/Tau/reco/Energy_10x275/old/double_pi/recoDoublePi.root";
 
-    vector<string> ecalClusterNames = {"EcalBarrelImagingClusters","EcalBarrelScFiClusters", "EcalEndcapPClusters", "EcalEndcapNClusters"};
+    vector<string> ecalClusterNames = {"EcalBarrelImagingClusters", "EcalBarrelScFiClusters", "EcalEndcapPClusters", "EcalEndcapNClusters"};
     vector<string> hcalClusterNames = {"HcalBarrelClusters", "HcalEndcapNClusters", "LFHCALClusters"};
 
-    // Output file for histograms
-    TFile *outfile = new TFile("Plots/MuonID_Performance_fromPythonFeatures.root", "RECREATE");
+    TFile *outfile = new TFile("Plots/MuonID_Performance_Podio.root", "RECREATE");
 
     // Response histograms
     TH1F *h_Response_Muon = new TH1F("h_Response_Muon", "P(muon) Response for True Muons;P(muon);Counts", 100, 0, 1);
     TH1F *h_Response_Pion = new TH1F("h_Response_Pion", "P(muon) Response for True Pions;P(muon);Counts", 100, 0, 1);
 
-    // Efficiency / rejection counters vs pT, p, eta
-    TH1F *h_Muon_Total_vs_Pt = new TH1F("h_Muon_Total_vs_Pt", "Muon Total vs pT;p_{T} [GeV/c];Counts",30,0,2);
-    TH1F *h_Muon_Passed_vs_Pt = new TH1F("h_Muon_Passed_vs_Pt", "Muon Passed vs pT;p_{T} [GeV/c];Counts",30,0,2);
+    // Efficiency / rejection counters
+    TH1F *h_Muon_Total_vs_Pt  = new TH1F("h_Muon_Total_vs_Pt", "Muon Total vs pT;p_{T} [GeV/c];Counts", 40, 0, 2);
+    TH1F *h_Muon_Passed_vs_Pt = new TH1F("h_Muon_Passed_vs_Pt", "Muon Passed vs pT;p_{T} [GeV/c];Counts", 40, 0, 2);
 
-    TH1F *h_Muon_Total_vs_P  = new TH1F("h_Muon_Total_vs_P", "Muon Total vs p;p [GeV/c];Counts",40,0,2);
-    TH1F *h_Muon_Passed_vs_P = new TH1F("h_Muon_Passed_vs_P", "Muon Passed vs p;p [GeV/c];Counts",40,0,2);
+    TH1F *h_Muon_Total_vs_P   = new TH1F("h_Muon_Total_vs_P", "Muon Total vs p;p [GeV/c];Counts", 40, 0, 2);
+    TH1F *h_Muon_Passed_vs_P  = new TH1F("h_Muon_Passed_vs_P", "Muon Passed vs p;p [GeV/c];Counts", 40, 0, 2);
 
-    TH1F *h_Muon_Total_vs_Eta  = new TH1F("h_Muon_Total_vs_Eta", "Muon Total vs #eta;#eta;Counts",30,-1.2,3.4);
-    TH1F *h_Muon_Passed_vs_Eta = new TH1F("h_Muon_Passed_vs_Eta", "Muon Passed vs #eta;#eta;Counts",30,-1.2,3.4);
+    TH1F *h_Muon_Total_vs_Eta  = new TH1F("h_Muon_Total_vs_Eta", "Muon Total vs #eta;#eta;Counts", 30, -3.4, 3.4);
+    TH1F *h_Muon_Passed_vs_Eta = new TH1F("h_Muon_Passed_vs_Eta", "Muon Passed vs #eta;#eta;Counts", 30, -3.4, 3.4);
 
-    TH1F *h_Pion_Total_vs_Pt   = new TH1F("h_Pion_Total_vs_Pt", "Pion Total vs pT;p_{T} [GeV/c];Counts",30,0,2);
-    TH1F *h_Pion_Rejected_vs_Pt = new TH1F("h_Pion_Rejected_vs_Pt", "Pion Rejected vs pT;p_{T} [GeV/c];Counts",30,0,2);
+    TH1F *h_Pion_Total_vs_Pt    = new TH1F("h_Pion_Total_vs_Pt", "Pion Total vs pT;p_{T} [GeV/c];Counts", 40, 0, 2);
+    TH1F *h_Pion_Rejected_vs_Pt = new TH1F("h_Pion_Rejected_vs_Pt", "Pion Rejected vs pT;p_{T} [GeV/c];Counts", 40, 0, 2);
 
-    TH1F *h_Pion_Total_vs_P    = new TH1F("h_Pion_Total_vs_P", "Pion Total vs p;p [GeV/c];Counts",40,0,2);
-    TH1F *h_Pion_Rejected_vs_P = new TH1F("h_Pion_Rejected_vs_P", "Pion Rejected vs p;p [GeV/c];Counts",40,0,2);
+    TH1F *h_Pion_Total_vs_P     = new TH1F("h_Pion_Total_vs_P", "Pion Total vs p;p [GeV/c];Counts", 40, 0, 2);
+    TH1F *h_Pion_Rejected_vs_P  = new TH1F("h_Pion_Rejected_vs_P", "Pion Rejected vs p;p [GeV/c];Counts", 40, 0, 2);
 
-    TH1F *h_Pion_Total_vs_Eta  = new TH1F("h_Pion_Total_vs_Eta", "Pion Total vs #eta;#eta;Counts",30,-1.2,3.4);
-    TH1F *h_Pion_Rejected_vs_Eta = new TH1F("h_Pion_Rejected_vs_Eta", "Pion Rejected vs #eta;#eta;Counts",30,-1.2,3.4);
+    TH1F *h_Pion_Total_vs_Eta    = new TH1F("h_Pion_Total_vs_Eta", "Pion Total vs #eta;#eta;Counts", 30, -3.4, 3.4);
+    TH1F *h_Pion_Rejected_vs_Eta = new TH1F("h_Pion_Rejected_vs_Eta", "Pion Rejected vs #eta;#eta;Counts", 30, -3.4, 3.4);
 
-    // Loop over files (muons then pions)
+    // Puste kolekcje uzywane, gdy kolekcji ToF nie ma w pliku.
+    static const edm4eic::TrackerHitCollection emptyToF;
+
+    // Pomocnicze histogramy dla ComputeTrackFeatures - tworzone RAZ, odlaczone od pliku wyjsciowego.
+    TH1::AddDirectory(kFALSE);
+    HistSet ecalHists = MakeHistSet("ECal_tmp");
+    HistSet hcalHists = MakeHistSet("HCal_tmp");
+    TH1::AddDirectory(kTRUE);
+
     for (int File = 0; File < NumOfFiles; File++)
     {
         bool isMuonFile = (File == 0);
         string name = isMuonFile ? "Muons" : "Pions";
 
-        // Expand the wildcard pattern into a concrete list of files
-        // (replaces TChain::Add(pattern)).
-        vector<string> fileList = ExpandGlob(string(filePatterns.at(File)));
+        vector<string> fileList = ExpandGlob(filePatterns.at(File));
+        if (fileList.empty()) {
+            cerr << "[ERROR] No files match: " << filePatterns.at(File) << endl;
+            continue;
+        }
 
         podio::ROOTReader reader;
         reader.openFiles(fileList);
 
-        unsigned nEvents = reader.getEntries("events");
-        cout << "Total events in chain (" << name << "): " << nEvents << endl;
+        unsigned nEntries = reader.getEntries("events");
+        cout << "Total events in chain (" << name << "): " << nEntries << " (" << fileList.size() << " files)" << endl;
 
-        // Build detector groups for calo (association-collection names derived automatically).
         vector<DetectorAssoc> ecalDetectors;
         for (auto &n : ecalClusterNames) ecalDetectors.push_back(MakeDetectorAssoc(n));
 
         vector<DetectorAssoc> hcalDetectors;
         for (auto &n : hcalClusterNames) hcalDetectors.push_back(MakeDetectorAssoc(n));
 
-        int eventID = 0;
+        bool hasBToF = true, hasEToF = true;
 
-        //for (unsigned entry = 0; entry < nEvents; ++entry)
-        for (unsigned entry = 0; entry < 10000; ++entry)
+        long nToProcess  = (MAX_EVENTS > 0) ? min<long>(MAX_EVENTS, nEntries) : nEntries;
+        long nMisaligned = 0;
+
+        for (long entry = 0; entry < nToProcess; ++entry)
         {
-            eventID++;
-            if (eventID > 200000) break;
-            if (eventID % 50000 == 0) cout << "File " << name << " event: " << eventID << endl;
+            if ((entry + 1) % 50000 == 0) cout << "File " << name << " event: " << entry + 1 << endl;
 
             podio::Frame frame(reader.readEntry("events", entry));
+
+            if (entry == 0) {
+                cout << "Checking collections in first event:" << endl;
+                CheckAvailability(ecalDetectors, frame);
+                CheckAvailability(hcalDetectors, frame);
+                auto names = frame.getAvailableCollections();
+                hasBToF = HasCollection(names, "TOFBarrelRecHits");
+                hasEToF = HasCollection(names, "TOFEndcapRecHits");
+                cout << "  TOFBarrelRecHits: " << (hasBToF ? "OK" : "MISSING") << endl;
+                cout << "  TOFEndcapRecHits: " << (hasEToF ? "OK" : "MISSING") << endl;
+            }
 
             const auto &tracks =
                 frame.get<edm4eic::ReconstructedParticleCollection>("ReconstructedChargedParticles");
             const auto &trackAssocs =
                 frame.get<edm4eic::MCRecoParticleAssociationCollection>("ReconstructedChargedParticleAssociations");
 
-            // ToF hit collections (fetched once per event, same role as the
-            // per-event TTreeReaderArrays in the original macro).
-            const auto &tofBarrelHits =
-                frame.get<edm4eic::TrackerHitCollection>("TOFBarrelRecHits");
-            const auto &tofEndcapHits =
-                frame.get<edm4eic::TrackerHitCollection>("TOFEndcapRecHits");
+            const auto &barrelToF = hasBToF ? frame.get<edm4eic::TrackerHitCollection>("TOFBarrelRecHits") : emptyToF;
+            const auto &endcapToF = hasEToF ? frame.get<edm4eic::TrackerHitCollection>("TOFEndcapRecHits") : emptyToF;
 
-            for (size_t particle = 0; particle < tracks.size(); particle++)
+            for (size_t particle = 0; particle < tracks.size(); ++particle)
             {
                 const auto rcp = tracks[particle];
 
                 auto mom = rcp.getMomentum();
                 TLorentzVector Partic;
                 Partic.SetPxPyPzE(mom.x, mom.y, mom.z, rcp.getEnergy());
-                double trackP  = Partic.P();
-                double trackPt = Partic.Pt();
+                double trackP   = Partic.P();
+                double trackPt  = Partic.Pt();
                 double trackEta = Partic.Eta();
                 double trackPhi = Partic.Phi();
 
-                // Keep selection consistent with training macro
-                if (trackP > 2.0) continue;
-                if (trackEta >= 1.0 && trackEta <= 1.3) continue;
-                if (trackEta <= -1.25) continue;
+                // Selekcja zgodna z treningiem
+                if (trackP > 1.0) continue;
+                //if (trackEta >= 1.0 && trackEta <= 1.3) continue;
+                //if (trackEta <= -1.25) continue;
 
                 int charge = static_cast<int>(rcp.getCharge());
 
-                // Same assumption as the original macro's "int simuID =
-                // simuAssoc[particle];": the association collection is
-                // parallel-ordered to the track collection.
                 if (particle >= trackAssocs.size()) continue;
+                if (trackAssocs[particle].getRec() != rcp) nMisaligned++;
                 const auto simPart = trackAssocs[particle].getSim();
 
-                // Collect calorimeter hits and compute features
-                HistSet ecalHists = MakeHistSet("ECal_tmp");
-                HistSet hcalHists = MakeHistSet("HCal_tmp");
+                // -------- calorimeters --------
                 TrackCalHits ecalHits = CollectHits(simPart, ecalDetectors, frame, Partic, TIMING_CUT_NS,
-                    ecalHists.HitR, ecalHists.HitPhi, ecalHists.HitZ, ecalHists.HitEnergy, ecalHists.HitTime,
+                    ecalHists.HitR, ecalHists.HitEtaR, ecalHists.HitPhiR, ecalHists.HitEtaPhi,
+                    ecalHists.HitPhi, ecalHists.HitZ, ecalHists.HitEnergy, ecalHists.HitTime,
                     ecalHists.DeltaEta, ecalHists.DeltaPhi);
-                TrackCaloFeatures ecalF = ComputeCaloFeatures(ecalHits, trackP, ecalHists);
+                TrackFeatures ecalF = ComputeTrackFeatures(ecalHits, trackP, ecalHists);
 
                 TrackCalHits hcalHits = CollectHits(simPart, hcalDetectors, frame, Partic, TIMING_CUT_NS,
-                    hcalHists.HitR, hcalHists.HitPhi, hcalHists.HitZ, hcalHists.HitEnergy, hcalHists.HitTime,
+                    hcalHists.HitR, hcalHists.HitEtaR, hcalHists.HitPhiR, hcalHists.HitEtaPhi,
+                    hcalHists.HitPhi, hcalHists.HitZ, hcalHists.HitEnergy, hcalHists.HitTime,
                     hcalHists.DeltaEta, hcalHists.DeltaPhi);
-                TrackCaloFeatures hcalF = ComputeCaloFeatures(hcalHits, trackP, hcalHists);
+                TrackFeatures hcalF = ComputeTrackFeatures(hcalHits, trackP, hcalHists);
 
-                // Compute ToF features
+                // -------- ToF --------
                 TrackToFFeatures tofF = ComputeToFFeatures(
-                    Partic, charge,
-                    tofBarrelHits, tofEndcapHits,
+                    Partic, charge, barrelToF, endcapToF,
                     /*dR_cut_barrel*/0.8, /*dR_cut_endcap*/0.8,
-                    /*dist_cut_barrel*/6.0, /*dist_cut_endcap*/6.0
-                );
+                    /*dist_cut_barrel*/6.0, /*dist_cut_endcap*/6.0);
 
-                // Drop tracks invisible everywhere (same logic as training)
+                // Drop tracks invisible everywhere (jak w treningu)
                 if (ecalF.Number <= 0 && hcalF.Number <= 0 && tofF.HasToF < 0.5) continue;
 
                 // Map computed features -> raw fields expected by ONNX preprocessor
-                float ECalEnergy     = ecalF.Energy;
-                float ECalNumber     = ecalF.Number;
-                float ECalEoverP     = (ecalF.Number > 0) ? ecalF.EoverP : MISSING_SENTINEL;
-                float ECalMaxHitFrac = (ecalF.Number > 0) ? ecalF.MaxHitFrac : MISSING_SENTINEL;
+                float ECalEnergy              = ecalF.Energy;
+                float ECalNumber              = ecalF.Number;
+                float ECalEoverP              = (ecalF.Number > 0) ? ecalF.EoverP : MISSING_SENTINEL;
+                float ECalAvgHitEnergy        = (ecalF.Number > 0) ? ecalF.AvgHitEnergy : MISSING_SENTINEL;
+                float ECalSpreadPhi           = (ecalF.Number > 0) ? ecalF.SpreadPhi : MISSING_SENTINEL;
+                float ECalSpreadEta           = (ecalF.Number > 0) ? ecalF.SpreadEta : MISSING_SENTINEL;
+                float ECalSpreadR             = (ecalF.Number > 0) ? ecalF.SpreadR : MISSING_SENTINEL;
+                float ECalMaxHitFrac          = (ecalF.Number > 0) ? ecalF.MaxHitFrac : MISSING_SENTINEL;
+                float ECalEnergyStdDev        = (ecalF.Number > 0) ? ecalF.EnergyStdDev : MISSING_SENTINEL;
+                float ECalEnergyConcentration = (ecalF.Number > 0) ? ecalF.EnergyConcentration : MISSING_SENTINEL;
+                float ECalR_Disp              = (ecalF.Number > 0) ? ecalF.R_Disp : MISSING_SENTINEL;
+                float ECalR_DispWeighted      = (ecalF.Number > 0) ? ecalF.R_DispWeighted : MISSING_SENTINEL;
+                float ECalEta_DispWeighted    = (ecalF.Number > 0) ? ecalF.Eta_DispWeighted : MISSING_SENTINEL;
+                float ECalPhi_DispWeighted    = (ecalF.Number > 0) ? ecalF.Phi_DispWeighted : MISSING_SENTINEL;
 
-                float HCalEnergy     = hcalF.Energy;
-                float HCalNumber     = hcalF.Number;
-                float HCalEoverP     = (hcalF.Number > 0) ? hcalF.EoverP : MISSING_SENTINEL;
-                float HCalMaxHitFrac = (hcalF.Number > 0) ? hcalF.MaxHitFrac : MISSING_SENTINEL;
+                float HCalEnergy              = hcalF.Energy;
+                float HCalNumber              = hcalF.Number;
+                float HCalEoverP              = (hcalF.Number > 0) ? hcalF.EoverP : MISSING_SENTINEL;
+                float HCalAvgHitEnergy        = (hcalF.Number > 0) ? hcalF.AvgHitEnergy : MISSING_SENTINEL;
+                float HCalSpreadPhi           = (hcalF.Number > 0) ? hcalF.SpreadPhi : MISSING_SENTINEL;
+                float HCalSpreadEta           = (hcalF.Number > 0) ? hcalF.SpreadEta : MISSING_SENTINEL;
+                float HCalSpreadR             = (hcalF.Number > 0) ? hcalF.SpreadR : MISSING_SENTINEL;
+                float HCalMaxHitFrac          = (hcalF.Number > 0) ? hcalF.MaxHitFrac : MISSING_SENTINEL;
+                float HCalEnergyStdDev        = (hcalF.Number > 0) ? hcalF.EnergyStdDev : MISSING_SENTINEL;
+                float HCalEnergyConcentration = (hcalF.Number > 0) ? hcalF.EnergyConcentration : MISSING_SENTINEL;
+                float HCalR_Disp              = (hcalF.Number > 0) ? hcalF.R_Disp : MISSING_SENTINEL;
+                float HCalR_DispWeighted      = (hcalF.Number > 0) ? hcalF.R_DispWeighted : MISSING_SENTINEL;
+                float HCalEta_DispWeighted    = (hcalF.Number > 0) ? hcalF.Eta_DispWeighted : MISSING_SENTINEL;
+                float HCalPhi_DispWeighted    = (hcalF.Number > 0) ? hcalF.Phi_DispWeighted : MISSING_SENTINEL;
 
-                float ToFBeta           = tofF.Beta;
-                float ToFMassSq         = tofF.MassSq;
-                float ToFNHitsBarrel    = tofF.NHitsBarrel;
-                float ToFNHitsEndcap    = tofF.NHitsEndcap;
-                float ToFNHitsTotal     = tofF.NHitsTotal;
-                float ToFMinDistBarrel  = tofF.MinDistBarrel;
-                float ToFMinDistEndcap  = tofF.MinDistEndcap;
-                float ToFAvgLenBarrel   = tofF.AvgLenBarrel;
-                float ToFAvgLenEndcap   = tofF.AvgLenEndcap;
-                float ToFHasToF         = tofF.HasToF;
+                float ToFBeta          = (tofF.HasToF > 0.5f) ? tofF.Beta : MISSING_SENTINEL;
+                float ToFMassSq        = (tofF.HasToF > 0.5f) ? tofF.MassSq : MISSING_SENTINEL;
+                float ToFNHitsBarrel   = tofF.NHitsBarrel;
+                float ToFNHitsEndcap   = tofF.NHitsEndcap;
+                float ToFNHitsTotal    = tofF.NHitsTotal;
+                float ToFMinDistBarrel = (tofF.HasToF > 0.5f) ? tofF.MinDistBarrel : MISSING_SENTINEL;
+                float ToFMinDistEndcap = (tofF.HasToF > 0.5f) ? tofF.MinDistEndcap : MISSING_SENTINEL;
+                float ToFAvgLenBarrel  = (tofF.HasToF > 0.5f) ? tofF.AvgLenBarrel : MISSING_SENTINEL;
+                float ToFAvgLenEndcap  = (tofF.HasToF > 0.5f) ? tofF.AvgLenEndcap : MISSING_SENTINEL;
+                float ToFHasToF        = tofF.HasToF;
 
-                float TrackMomentum = static_cast<float>(trackP);
-                float TrackEta_f    = static_cast<float>(trackEta);
-                float TrackPhi_f    = static_cast<float>(trackPhi);
-
-                // Build raw vector in the exact RAW_COLS order
                 std::vector<float> raw = build_raw_features_from_components(
-                    ECalEnergy, ECalNumber, ECalEoverP, ECalMaxHitFrac,
-                    HCalEnergy, HCalNumber, HCalEoverP, HCalMaxHitFrac,
+                    ECalEnergy, ECalNumber, ECalEoverP, ECalAvgHitEnergy,
+                    ECalSpreadPhi, ECalSpreadEta, ECalSpreadR, ECalMaxHitFrac,
+                    ECalEnergyStdDev, ECalEnergyConcentration,
+                    ECalR_Disp, ECalR_DispWeighted, ECalEta_DispWeighted, ECalPhi_DispWeighted,
+                    HCalEnergy, HCalNumber, HCalEoverP, HCalAvgHitEnergy,
+                    HCalSpreadPhi, HCalSpreadEta, HCalSpreadR, HCalMaxHitFrac,
+                    HCalEnergyStdDev, HCalEnergyConcentration,
+                    HCalR_Disp, HCalR_DispWeighted, HCalEta_DispWeighted, HCalPhi_DispWeighted,
                     ToFBeta, ToFMassSq, ToFNHitsBarrel, ToFNHitsEndcap, ToFNHitsTotal,
                     ToFMinDistBarrel, ToFMinDistEndcap, ToFAvgLenBarrel, ToFAvgLenEndcap, ToFHasToF,
-                    TrackMomentum, TrackEta_f, TrackPhi_f
-                );
+                    static_cast<float>(trackP), static_cast<float>(trackEta), static_cast<float>(trackPhi));
 
-                // Run ONNX model (preprocessor + XGBoost) and get P(muon)
                 float Pmu = run_muon_id(session, memory_info, raw);
 
-                // Fill histograms and counters
                 if (isMuonFile)
                 {
                     h_Response_Muon->Fill(Pmu);
@@ -671,11 +748,14 @@ void TestingPodioMacro()
                         h_Pion_Rejected_vs_Eta->Fill(trackEta);
                     }
                 }
-            } // end loop over particles in event
-        } // end event loop
-    } // end file loop
+            } // tracks
+        } // events
 
-    // Compute efficiency / rejection histograms (divide with binomial errors)
+        cout << "End of " << name << ": " << nToProcess << " events, track<->assoc misalignment: "
+             << nMisaligned << " (powinno byc 0)" << endl;
+    } // files
+
+    // Efficiency / rejection (binomial errors)
     TH1F *h_Muon_Efficiency_vs_Pt  = (TH1F*)h_Muon_Passed_vs_Pt->Clone("h_Muon_Efficiency_vs_Pt");
     h_Muon_Efficiency_vs_Pt->SetTitle("Muon Efficiency vs p_{T};p_{T} [GeV/c];Efficiency");
     h_Muon_Efficiency_vs_Pt->Divide(h_Muon_Passed_vs_Pt, h_Muon_Total_vs_Pt, 1.0, 1.0, "B");
@@ -700,15 +780,13 @@ void TestingPodioMacro()
     h_Pion_Rejection_vs_Eta->SetTitle("Pion Rejection vs #eta;#eta;Rejection Fraction");
     h_Pion_Rejection_vs_Eta->Divide(h_Pion_Rejected_vs_Eta, h_Pion_Total_vs_Eta, 1.0, 1.0, "B");
 
-    // Write output
     outfile->Write();
     outfile->Close();
 
-    cout << "Histograms saved to Plots/MuonID_Performance_fromPythonFeatures.root" << endl;
+    cout << "Histograms saved to Plots/MuonID_Performance_Podio.root" << endl;
 }
 
-// If compiled as a standalone program, provide a main that calls
-// TestingMacro_Fixed_Podio(). Unchanged pattern from the original file.
+// Standalone program entry point (poza ROOT/Cling).
 #ifndef __CLING__
 int main(int argc, char** argv)
 {

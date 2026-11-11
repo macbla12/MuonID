@@ -339,7 +339,7 @@ void TestingPodioMacro()
     gROOT->ProcessLine("gErrorIgnoreLevel = 3000;");
 
     const double TIMING_CUT_NS = 20.0;
-    const float MUON_ID_CUT = 0.511f;
+    const float MUON_ID_CUT = 0.5f;
 
     // ONNX Runtime initialization
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MuonID");
@@ -350,8 +350,8 @@ void TestingPodioMacro()
     static constexpr int NumOfFiles = 2;
     vector<TString> filePatterns(NumOfFiles);
 
-    //filePatterns.at(0) = "/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
-    filePatterns.at(0) = "/run/media/epic/Data/Muons/Grape-10x275/Current/reco10x275_1*.root";
+    filePatterns.at(0) = "/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
+    //filePatterns.at(0) = "/run/media/epic/Data/Muons/Grape-10x275/Current/reco10x275_1*.root";
     filePatterns.at(1) = "/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
     //filePatterns.at(1) = "/run/media/epic/Data/Tau/reco/Energy_10x275/old/double_pi/recoDoublePi.root";
 
@@ -359,7 +359,7 @@ void TestingPodioMacro()
     vector<string> hcalClusterNames = {"HcalBarrelClusters", "HcalEndcapNClusters", "LFHCALClusters"};
 
     // Output file
-    TFile *outfile = new TFile("Plots/MuonID_Performance.root", "RECREATE");
+    TFile *outfile = new TFile("Plots/MuonID_Performance_Podio.root", "RECREATE");
 
     // -----------------------------------------------------------------
     // Response and efficiency histogram declarations (unchanged)
@@ -373,8 +373,8 @@ void TestingPodioMacro()
     TH1F *h_Muon_Total_vs_P  = new TH1F("h_Muon_Total_vs_P", "Muon Total vs p;p [GeV/c];Counts", 40, 0, 20);
     TH1F *h_Muon_Passed_vs_P = new TH1F("h_Muon_Passed_vs_P", "Muon Passed vs p;p [GeV/c];Counts", 40, 0, 20);
 
-    TH1F *h_Muon_Total_vs_Eta  = new TH1F("h_Muon_Total_vs_Eta", "Muon Total vs #eta;#eta;Counts", 30, -1.2, 3.4);
-    TH1F *h_Muon_Passed_vs_Eta = new TH1F("h_Muon_Passed_vs_Eta", "Muon Passed vs #eta;#eta;Counts", 30, -1.2, 3.4);
+    TH1F *h_Muon_Total_vs_Eta  = new TH1F("h_Muon_Total_vs_Eta", "Muon Total vs #eta;#eta;Counts", 30, -3.4, 3.4);
+    TH1F *h_Muon_Passed_vs_Eta = new TH1F("h_Muon_Passed_vs_Eta", "Muon Passed vs #eta;#eta;Counts", 30, -3.4, 3.4);
 
     TH1F *h_Pion_Total_vs_Pt   = new TH1F("h_Pion_Total_vs_Pt", "Pion Total vs pT;p_{T} [GeV/c];Counts", 30, 0, 20);
     TH1F *h_Pion_Rejected_vs_Pt = new TH1F("h_Pion_Rejected_vs_Pt", "Pion Rejected vs pT;p_{T} [GeV/c];Counts", 30, 0, 20);
@@ -382,8 +382,8 @@ void TestingPodioMacro()
     TH1F *h_Pion_Total_vs_P    = new TH1F("h_Pion_Total_vs_P", "Pion Total vs p;p [GeV/c];Counts", 40, 0, 20);
     TH1F *h_Pion_Rejected_vs_P = new TH1F("h_Pion_Rejected_vs_P", "Pion Rejected vs p;p [GeV/c];Counts", 40, 0, 20);
 
-    TH1F *h_Pion_Total_vs_Eta  = new TH1F("h_Pion_Total_vs_Eta", "Pion Total vs #eta;#eta;Counts", 30, -1.2, 3.4);
-    TH1F *h_Pion_Rejected_vs_Eta = new TH1F("h_Pion_Rejected_vs_Eta", "Pion Rejected vs #eta;#eta;Counts", 30, -1.2, 3.4);
+    TH1F *h_Pion_Total_vs_Eta  = new TH1F("h_Pion_Total_vs_Eta", "Pion Total vs #eta;#eta;Counts", 30, -3.4, 3.4);
+    TH1F *h_Pion_Rejected_vs_Eta = new TH1F("h_Pion_Rejected_vs_Eta", "Pion Rejected vs #eta;#eta;Counts", 30, -3.4, 3.4);
 
     for (int File = 0; File < NumOfFiles; File++)
     {
@@ -409,8 +409,8 @@ void TestingPodioMacro()
 
         int eventID = 0;
 
-        for (unsigned entry = 0; entry < 10000; ++entry)
-        //for (unsigned entry = 0; entry < nEvents; ++entry)
+        //for (unsigned entry = 0; entry < 10000; ++entry)
+        for (unsigned entry = 0; entry < nEvents; ++entry)
         {
             eventID++;
             if (eventID == 200000) break;
@@ -435,8 +435,8 @@ void TestingPodioMacro()
                 double trackEta = Partic.Eta();
 
                 if (trackP <= 1) continue;
-                if (trackEta >= 1 && trackEta <= 1.3) continue;
-                if (trackEta <= -1.25) continue;
+                //if (trackEta >= 1 && trackEta <= 1.3) continue;
+                //if (trackEta <= -1.25) continue;
 
                 // Same assumption as the original macro's "int simuID =
                 // simuAssoc[particle];": the association collection is

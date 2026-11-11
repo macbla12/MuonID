@@ -101,7 +101,7 @@ static const double TIMING_CUT_NS = 20.0;
 
 static const float MISSING_SENTINEL = -999.f;
 
-static const int NUMBEROFEVENTS = 300000;
+static const int NUMBEROFEVENTS = 200000;
 
 // =====================================================================
 // Small helper: expand a shell-style wildcard (e.g. "reco_*.root") into a
@@ -632,8 +632,8 @@ void TestingMuonID()
     TH1F *h_Muon_Total_vs_P  = new TH1F("h_Muon_Total_vs_P", "Muon Total vs p;p [GeV/c];Counts", 40, 0, PHIGH_MAX_GEV);
     TH1F *h_Muon_Passed_vs_P = new TH1F("h_Muon_Passed_vs_P", "Muon Passed vs p;p [GeV/c];Counts", 40, 0, PHIGH_MAX_GEV);
 
-    TH1F *h_Muon_Total_vs_Eta  = new TH1F("h_Muon_Total_vs_Eta", "Muon Total vs #eta;#eta;Counts", 50, -1.2, 3.4);
-    TH1F *h_Muon_Passed_vs_Eta = new TH1F("h_Muon_Passed_vs_Eta", "Muon Passed vs #eta;#eta;Counts", 50, -1.2, 3.4);
+    TH1F *h_Muon_Total_vs_Eta  = new TH1F("h_Muon_Total_vs_Eta", "Muon Total vs #eta;#eta;Counts", 50, -3.4, 3.4);
+    TH1F *h_Muon_Passed_vs_Eta = new TH1F("h_Muon_Passed_vs_Eta", "Muon Passed vs #eta;#eta;Counts", 50, -3.4, 3.4);
 
     TH1F *h_Pion_Total_vs_Pt   = new TH1F("h_Pion_Total_vs_Pt", "Pion Total vs pT;p_{T} [GeV/c];Counts", 40, 0, PHIGH_MAX_GEV);
     TH1F *h_Pion_Rejected_vs_Pt = new TH1F("h_Pion_Rejected_vs_Pt", "Pion Rejected vs pT;p_{T} [GeV/c];Counts", 40, 0, PHIGH_MAX_GEV);
@@ -641,8 +641,8 @@ void TestingMuonID()
     TH1F *h_Pion_Total_vs_P    = new TH1F("h_Pion_Total_vs_P", "Pion Total vs p;p [GeV/c];Counts", 40, 0, PHIGH_MAX_GEV);
     TH1F *h_Pion_Rejected_vs_P = new TH1F("h_Pion_Rejected_vs_P", "Pion Rejected vs p;p [GeV/c];Counts", 40, 0, PHIGH_MAX_GEV);
 
-    TH1F *h_Pion_Total_vs_Eta  = new TH1F("h_Pion_Total_vs_Eta", "Pion Total vs #eta;#eta;Counts", 50, -1.2, 3.4);
-    TH1F *h_Pion_Rejected_vs_Eta = new TH1F("h_Pion_Rejected_vs_Eta", "Pion Rejected vs #eta;#eta;Counts", 50, -1.2, 3.4);
+    TH1F *h_Pion_Total_vs_Eta  = new TH1F("h_Pion_Total_vs_Eta", "Pion Total vs #eta;#eta;Counts", 50, -3.4, 3.4);
+    TH1F *h_Pion_Rejected_vs_Eta = new TH1F("h_Pion_Rejected_vs_Eta", "Pion Rejected vs #eta;#eta;Counts", 50, -3.4, 3.4);
 
     // -- Muon efficiency eps_mu(p), separately for Low-p / High-p --
     TH1F *h_Muon_Total_vs_P_LowP  = new TH1F("h_Muon_Total_vs_P_LowP",
@@ -730,8 +730,8 @@ void TestingMuonID()
                 double trackEta = Partic.Eta();
                 double trackPhi = Partic.Phi();
 
-                if (trackEta >= 1 && trackEta <= 1.3) continue;
-                if (trackEta <= -1.0) continue;
+                //if (trackEta >= 1 && trackEta <= 1.3) continue;
+                //if (trackEta <= -1.0) continue;
 
                 if (particle >= trackAssocs.size()) continue;
                 const auto simPart = trackAssocs[particle].getSim();

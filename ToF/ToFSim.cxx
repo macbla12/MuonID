@@ -86,7 +86,7 @@ ToFResults ToFSim(TLorentzVector particle, int charge, TVector3 TOF_pos)
     TVector3 particle_mom = particle.Vect();
     if (field_data.empty())
     {
-        std::string path = "/opt/software/linux-x86_64_v2/epic-git.6644324d24120168ad5e5eb725a77ea1d542b87f_main-djwkjya7qg4uxg375f4y6qwf52vld7sr/share/epic/fieldmaps/MARCO_v.7.6.2.2.11_1.7T_Magnetic_Field_Map_2024_05_02_rad_coords_cm_T.BMap.txt";
+        std::string path = "/opt/software/linux-x86_64_v2/epic-26.10.0-4hia2pzkaw5v4kbyc6awpdckjpjtthhg/share/epic/fieldmaps/MARCO_v.7.6.2.2.11_1.7T_Magnetic_Field_Map_2024_05_02_rad_coords_cm_T.BMap.txt";
         std::ifstream file(path);
         if (!file.is_open()) {
             std::cerr << "There's no file!" << std::endl;

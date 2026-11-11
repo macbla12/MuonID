@@ -246,7 +246,7 @@ xgb = XGBClassifier(
 
 # Single source of sig/bkg reweighting: penalize false positives (background
 # mis-tagged as muon) by this factor. This is the ONLY scaling knob used.
-fp_penalty = 1
+fp_penalty = 0.2
 sample_weights = np.where(y_train == 0, fp_penalty, 1.0)
 
 xgb.fit(

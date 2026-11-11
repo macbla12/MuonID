@@ -72,7 +72,7 @@ void PlotAllFeatures() {
         return;
     }
 
-    const string pdfName = "Plots/HitsAll_Comparison.pdf";
+    const string pdfName = "Plots/HitsAll_TCM_Comparison.pdf";
     bool isFirstPage = true;
 
     TIter next(f_muon->GetListOfKeys());

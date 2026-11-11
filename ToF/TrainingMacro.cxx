@@ -451,7 +451,7 @@ TrackToFFeatures ComputeToFFeatures(
 // ================================  MAIN  ====================================
 // =============================================================================
 
-void CombinedCaloToFAnalysis()
+void TrainingMacro()
 {
     gROOT->SetBatch(kTRUE);
     gROOT->ProcessLine("gErrorIgnoreLevel = 3000;");
@@ -461,8 +461,8 @@ void CombinedCaloToFAnalysis()
     std::vector<int>     filePDG = {13, 211};
     std::vector<string>  fileName = {"Muons", "Pions"};
 
-    files.at(0) = "/run/media/epic/Data/Background/Muons/Continuous/reco_*.root";
-    files.at(1) = "/run/media/epic/Data/Background/Pions/Continuous/reco_*.root";
+    files.at(0) = "/run/media/epic/Data/Background/Muons/Continuous/reco_aMuonsLow*.root";
+    files.at(1) = "/run/media/epic/Data/Background/Pions/Continuous/reco_piPlusLow*.root";
 
     // ToF matching cuts -- tuned in IDAnalysis.cxx, keep in sync.
     double dR_cut_barrel   = 0.8;
@@ -621,8 +621,8 @@ void CombinedCaloToFAnalysis()
                 double trackEta = Partic.Eta();
 
                 if (trackP <= 0 || trackP > pMax) continue;
-                if (trackEta >= 1 && trackEta <= 1.3) continue;
-                if (trackEta <= -1.25) continue;
+                //if (trackEta >= 1 && trackEta <= 1.3) continue;
+                //if (trackEta <= -1.25) continue;
 
                 int charge = (int)trackCharge[particle];
                 int simuID = simuAssoc[particle];

@@ -363,7 +363,7 @@ void TrainingMacro()
     float TrackMomentum, TrackEta;
     float IsMuon, FileIndex;
 
-    TFile *mlFile = new TFile("ONNX/MLDataHitsLow.root", "RECREATE");
+    TFile *mlFile = new TFile("ONNX/MLDataHits.root", "RECREATE");
     TTree *MLDataTree = new TTree("MLDataTree", "MLDataTree");
 
     MLDataTree->Branch("ECalEnergy", &ECalEnergy, "ECalEnergy/F");
@@ -451,8 +451,8 @@ void TrainingMacro()
                 double trackEta = Partic.Eta();
 
                 if (trackP <= 1) continue;
-                if (trackEta >= 1 && trackEta <= 1.3) continue;
-                if (trackEta <= -1.25) continue;
+                //if (trackEta >= 1 && trackEta <= 1.3) continue;
+                //if (trackEta <= -1.25) continue;
 
                 int simuID = simuAssoc[particle];
 
