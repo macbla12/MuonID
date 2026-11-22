@@ -599,14 +599,30 @@ void ProcessFiles(const vector<string> &fileList, int species, const string &tag
     // species: 0 = Muon, 1..4 = Pion, Electron, Kaon, Proton
     Group *gSpecies = (species == 0) ? &H.muon : &H.bkg.at(species - 1);
 
-    vector<string> collections = {
-        "ReconstructedParticles", "MCParticles", "ReconstructedParticleAssociations",
-        "HcalBarrelTrackClusterMatches", "HcalEndcapNTrackClusterMatches", "LFHCALTrackClusterMatches",
-        "EcalBarrelClusters", "EcalBarrelImagingRecHits", "EcalBarrelScFiRecHits",
-        "EcalEndcapNClusters", "EcalEndcapNRecHits", "EcalEndcapPClusters", "EcalEndcapPRecHits",
-        "HcalBarrelClusters", "HcalBarrelRecHits", "HcalEndcapNClusters", "HcalEndcapNMergedHits",
-        "LFHCALClusters", "LFHCALRecHits",
-        "TOFBarrelSharedRecHits", "TOFEndcapSharedRecHits", "CentralTrackSegments"
+    
+    vector<std::string> collections = {
+        "ReconstructedParticles", 
+        "MCParticles", 
+        "ReconstructedParticleAssociations", 
+        "HcalBarrelTrackClusterMatches", 
+        "HcalEndcapNTrackClusterMatches", 
+        "LFHCALTrackClusterMatches", 
+        "EcalBarrelClusters",
+        "EcalBarrelImagingRecHits",
+        "EcalBarrelScFiRecHits",
+        "EcalEndcapNClusters",
+        "EcalEndcapNRecHits",
+        "EcalEndcapPClusters",
+        "EcalEndcapPRecHits",
+        "HcalBarrelClusters",
+        "HcalBarrelRecHits",
+        "HcalEndcapNClusters",
+        "HcalEndcapNMergedHits",
+        "LFHCALClusters",
+        "LFHCALRecHits",
+        "CentralTrackSegments",
+        "CentralCKFTracks",
+        "CentralTrackSeeds",
     };
 
     podio::ROOTReader reader;

@@ -131,15 +131,15 @@ static void DrawCurves(const vector<Curve> &cv, const string &xTitle, const stri
     c.SetGrid();
     if (logY) c.SetLogy();
 
-    double ymin = logY ? 1e-3 : 0.6;
+    double ymin = logY ? 1e-3 : 0.5;
     double ymax = logY ? 5.0   : 1.2;
 
     bool first = true;
     bool zoom = (outName.find("zoom") != string::npos);
     for (auto &cu : v) {
         StylePoints(cu.h, cu.col, cu.mk);
-        if(zoom) cu.h->Rebin(2);
-        if(zoom) cu.h->Scale(0.5);
+        //if(zoom) cu.h->Rebin(2);
+        //if(zoom) cu.h->Scale(0.5);
         cu.h->SetMinimum(ymin);
         cu.h->SetMaximum(ymax);
         cu.h->GetXaxis()->SetTitle(xTitle.c_str());

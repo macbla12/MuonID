@@ -4,13 +4,14 @@ This directory contains code for particle identification in EPIC analyses: featu
 
 ## Main directories
 
-- [`CalorimetryHits/`](CalorimetryHits/) — the current analysis of calorimeter-hit features. It contains macros for data preparation, classifier training and testing, and exported ONNX models. This code was used in the algorithm presented in Glasgow.
-- [`ToF/`](ToF/) — analysis of information from the Time of Flight detector. It contains feature preparation, classifier training and testing, and ONNX models; it is part of the algorithm presented in Glasgow.
-- [`MuonID/`](MuonID/) — implementation of the `MuonID(...)` function, which can be called from an analysis for a reconstructed track and event frame. The function returns a muon-identification probability score. It does not loop over events, perform truth selection, apply a threshold, or fill histograms; those steps belong in the analysis code.
-- [`FinalClassificator/`](FinalClassificator/) — macro for checking the performance of the complete classification algorithm.
+- [`MuonID/`](MuonID/) — reusable implementation of the `MuonID(...)` function, prepared for integration into another analysis, together with [`example.cxx`](MuonID/example.cxx) showing how to call it. The function takes a reconstructed particle and event frame and returns a muon probability score; its optional `hasDetectorInfo` output indicates whether the track had enough detector information to be scored. The caller handles event loops, truth selection, thresholds, and histograms.
+- [`FiveParticleClassificator/`](FiveParticleClassificator/) — detailed testing and performance studies of the `MuonID` function for five particle species.
+- [`PionMuonClassificator/`](PionMuonClassificator/) — an earlier version of the classifier, limited to separating pions and muons.
+- [`CalorimetryHits/`](CalorimetryHits/) — exploratory work on calorimeter hits and clusters, including checks and older algorithms; it is not the current, reusable `MuonID` implementation.
+- [`ToF/`](ToF/) — exploratory checks and older algorithms involving Time-of-Flight information, similar in purpose to `CalorimetryHits/`.
 - [`Tracker/`](Tracker/) — auxiliary checks and track-feature analysis; it is not the main classifier.
-- [`DRICH/`](DRICH/) — auxiliary checks of dRICH detector features; it is not the main classifier.
-- [`CalorimetryClusters/`](CalorimetryClusters/) — an older version of the calorimeter analysis based on clusters. These are legacy materials, not the main current algorithm workflow.
+- [`DRICH/`](DRICH/) — an initial investigation into using dRICH information for classification. There are no results yet.
+- [`CalorimetryClusters/`](CalorimetryClusters/) — an older version of the calorimeter analysis based on clusters. These are legacy materials, not the main current algorithm workflow. This code was used in the algorithm presented in Glasgow.
 
 ## Requirements
 
@@ -29,17 +30,19 @@ source Identification/onnx_setup.sh
 
 `onnx_setup.sh` sets `LD_LIBRARY_PATH` and the header search paths for the ONNX Runtime bundled with this repository. If EIC Shell is installed elsewhere, use the path for your installation.
 
-## Running
+## Using `MuonID`
 
-Most analyses are implemented as ROOT macros (`.cxx`). Run them from the relevant module directory after setting up EIC Shell and ONNX Runtime, for example:
+Include the implementation and call it for a reconstructed particle and its event frame:
 
-```bash
-cd Identification/CalorimetryHits
-root -l -b -q 'TrainingMacro.cxx+'
+```cpp
+#include "MuonID.cxx"
+
+bool hasDetectorInfo = false;
+const float muonProbability = MuonID(reconstructedParticle, &event, &hasDetectorInfo);
 ```
 
-Input files, collection names, model paths, and output directories may be configured directly in the macros. Check and adapt these settings to your data before running. Testing macros evaluate a trained model; training scripts and macros prepare data and train classifiers.
+`muonProbability` is the model's muon score. Check `hasDetectorInfo` before using it: when false, the track could not be scored and the returned value should not be treated as a classifier result. See [`MuonID/example.cxx`](MuonID/example.cxx) for a complete analysis example. When integrating the function elsewhere, make the required ONNX model files available at the paths expected by the implementation.
 
 ## ONNX models
 
-The models used by `MuonID` are in `CalorimetryHits/ONNX/` and `ToF/ONNX/`. When retraining or replacing a model, check that the feature count and ordering match the implementation in `MuonID/MuonID.cxx` and the model paths configured in that file.
+The ONNX models used by `MuonID` are in [`MuonID/ONNX/`](MuonID/ONNX/). When replacing a model, ensure that its feature count and ordering match the implementation and that its path is configured correctly in `MuonID.cxx`.
